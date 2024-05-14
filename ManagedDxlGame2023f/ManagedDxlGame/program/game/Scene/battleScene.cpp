@@ -389,8 +389,9 @@ void BattleScene::ItemDropProcess()
 		//持ち物がいっぱいだったら
 		else {
 			battle_log->addLog("持ち物がいっぱいの為アイテムを入手する事ができませんでした");
-		}
+		}   
 	}
+
 	//レアドロップ
 	else if (rand_val < RareDrop) {
 		//敵のアイテムをインベントリに格納する
