@@ -109,16 +109,19 @@ void Enemy::InitEnemyArray(int id)
 	//“G‚Ì”z—ñ‚ğˆê“xƒNƒŠƒA‚µ‚Ä“¯‚¶î•ñ‚ğæ“¾‚Å‚«‚È‚¢‚æ‚¤‚É‚·‚é
 	Enemy_Array.clear();
 
+	//‰Šú‚Ì“G(ã‚¢)
 	if (id == 1) {
 		for (int i = 0; i < Enemy_num; i++) {
 			Enemy_Array.emplace_back(GetEnemyStatus(i));
 		}
 	}
+	//•½Œ´‚Ì“G(•’Ê)
 	else if (id == 2) {
 
 		for (int i = 6; i < Enemy_Csv_Array.size(); i++) {
 
 			//“G‚É‚æ‚Á‚ÄID‚ğæ“¾‚·‚é
+			//ƒTƒCƒY‚ª5ŒÂ‚É‚È‚é‚Ü‚Å‰ñ‚·
 			if (Enemy_num > Enemy_Array.size()) {
 				auto enmeyid = GetEnemyStatus(std::stoi(Enemy_Csv_Array[i][1].c_str()));
 
@@ -131,14 +134,42 @@ void Enemy::InitEnemyArray(int id)
 			}
 		}
 	}
+	//rŒ´‚Ì“G(­‚µ‹­‚¢)
 	else if (id == 3) {
-		for (int i = 10; i < Enemy_num; i++) {
-			Enemy_Array.emplace_back(GetEnemyStatus(i));
+
+		for (int i = 11; i < Enemy_Csv_Array.size(); i++) {
+
+			//“G‚É‚æ‚Á‚ÄID‚ğæ“¾‚·‚é
+			//ƒTƒCƒY‚ª5ŒÂ‚É‚È‚é‚Ü‚Å‰ñ‚·
+			if (Enemy_num > Enemy_Array.size()) {
+				auto enmeyid = GetEnemyStatus(std::stoi(Enemy_Csv_Array[i][1].c_str()));
+
+				//“G‚ğ”z—ñ‚ÉŠi”[‚·‚é
+				Enemy_Array.emplace_back(GetEnemyStatus(enmeyid.getEnemyId()));
+			}
+			//“G‚ÌÅ‘å‚Ì”‚ğã‰ñ‚Á‚½‚çˆ—‚ğ”²‚¯‚é
+			else {
+				break;
+			}
 		}
 	}
+	//ƒ{ƒXƒGƒŠƒA‚É‚¢‚é“G(‹­‚¢)
 	else if (id == 4) {
-		for (int i = 15; i < Enemy_num; i++) {
-			Enemy_Array.emplace_back(GetEnemyStatus(i));
+
+		for (int i = 17; i < Enemy_Csv_Array.size(); i++) {
+
+			//“G‚É‚æ‚Á‚ÄID‚ğæ“¾‚·‚é
+			//ƒTƒCƒY‚ª5ŒÂ‚É‚È‚é‚Ü‚Å‰ñ‚·
+			if (Enemy_num > Enemy_Array.size()) {
+				auto enmeyid = GetEnemyStatus(std::stoi(Enemy_Csv_Array[i][1].c_str()));
+
+				//“G‚ğ”z—ñ‚ÉŠi”[‚·‚é
+				Enemy_Array.emplace_back(GetEnemyStatus(enmeyid.getEnemyId()));
+			}
+			//“G‚ÌÅ‘å‚Ì”‚ğã‰ñ‚Á‚½‚çˆ—‚ğ”²‚¯‚é
+			else {
+				break;
+			}
 		}
 	}
 }
