@@ -17,12 +17,13 @@ BattleScene::BattleScene(tnl::Vector3 pos,std::vector<Enemy::EnemyStatus>enemy_a
 	enemy_index = rand() % 5;
 
 	//新しい配列を生成する
-	auto& enemy_ = enemy_Array[enemy_index];
+	auto& enemy_ = enemy_Array[4];
 
 	//敵のグラフィックハンドルを読み込む
 	Enemy_ghdl = ResourceManager::getResourceManager()->LoadGraphEX(enemy_.getEnemyGhdl().c_str());
 
-	enemy->InitEnemyItemDrop(enemy_index);
+	//敵のアイテムドロップを格納する
+	enemy->InitEnemyItemDrop(enemy_.getEnemyId());
 
 	//メニューの初期化
 	InitMenuWindow();
@@ -376,24 +377,8 @@ void BattleScene::ItemDropProcess()
 	//敵のアイテム配列を取得する
 	auto& EnemyItemDrop = enemy->getItemDropArray();
 
-	//通常ドロップ
-	if (rand_val < NomalDrop) {
-		//敵のアイテムをインベントリに格納する
-		GameManager::getGameManager()->getInventory()->AddInventory(EnemyItemDrop[0].getItemId());
-
-		//ログをながす
-		//持ち物がいっぱいじゃなかったら
-		if (GameManager::getGameManager()->getInventory()->GetInventoryList().size() != 20) {
-			battle_log->addItemDrop("プレイヤー", EnemyItemDrop[0].getItemName());
-		}
-		//持ち物がいっぱいだったら
-		else {
-			battle_log->addLog("持ち物がいっぱいの為アイテムを入手する事ができませんでした");
-		}
-	}
-
 	//レアドロップ
-	else if (rand_val < RareDrop) {
+	if (rand_val < RareDrop ) {
 		//敵のアイテムをインベントリに格納する
 		GameManager::getGameManager()->getInventory()->AddInventory(EnemyItemDrop[1].getItemId());
 
@@ -401,6 +386,21 @@ void BattleScene::ItemDropProcess()
 		//持ち物がいっぱいじゃなかったら
 		if (GameManager::getGameManager()->getInventory()->GetInventoryList().size() != 20) {
 			battle_log->addItemDrop("プレイヤー", EnemyItemDrop[1].getItemName());
+		}
+		//持ち物がいっぱいだったら
+		else {
+			battle_log->addLog("持ち物がいっぱいの為アイテムを入手する事ができませんでした");
+		}
+	}
+	//通常ドロップ
+	else if (rand_val > RareDrop && rand_val < (NomalDrop + RareDrop)) {
+		//敵のアイテムをインベントリに格納する
+		GameManager::getGameManager()->getInventory()->AddInventory(EnemyItemDrop[0].getItemId());
+
+		//ログをながす
+		//持ち物がいっぱいじゃなかったら
+		if (GameManager::getGameManager()->getInventory()->GetInventoryList().size() != 20) {
+			battle_log->addItemDrop("プレイヤー", EnemyItemDrop[0].getItemName());
 		}
 		//持ち物がいっぱいだったら
 		else {

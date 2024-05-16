@@ -108,18 +108,11 @@ private:
 	//逃げれる確率
 	int probability = 50;
 
-	//敵を倒した時のフラグ
-	bool DeadEnemy_flag = false;
-
 	//通常ドロップ
-	float NomalDrop = 30;
+	const float NomalDrop = 30;
 
 	//レアドロップ
-	float RareDrop = 10;
-
-	//プレイヤーのターンを示すフラグ
-	bool PlayerTurn = false;
-
+	const float RareDrop = 10;
 
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -141,6 +134,11 @@ private:
 	//通常攻撃をした時のフラグ
 	bool Nomal_Attack_Flag = false;
 
+	//プレイヤーのターンを示すフラグ
+	bool PlayerTurn = false;
+
+	//敵を倒した時のフラグ
+	bool DeadEnemy_flag = false;
 
 //------------------------------------------------------------------------------------------------------------------------
 //シーケンス

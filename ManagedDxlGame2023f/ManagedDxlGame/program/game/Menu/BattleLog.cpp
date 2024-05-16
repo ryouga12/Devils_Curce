@@ -3,9 +3,9 @@
 void BattleLog::addLog(const std::string& log)
 {
 	// ƒƒO”‚ª8ŒÂ‚ð’´‚¦‚Ä‚¢‚éê‡AÅ‰‚ÌƒƒO‚ðíœ‚·‚é
-	/*if (logs.size() >= 8) {
+	if (logs.size() >= 8) {
 		logs.erase(logs.begin());
-	}*/
+	}
 	logs.push_back(log);
 }
 

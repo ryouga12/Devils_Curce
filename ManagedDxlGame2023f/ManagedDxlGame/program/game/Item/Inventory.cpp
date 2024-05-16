@@ -10,7 +10,7 @@ Inventory::Inventory()
 	InitMenuWinodow();
 
 	//デバック
-	AddInventory(item->GetItemById(16).getItemId());
+	AddInventory(item->GetItemById(26).getItemId());
 
 }
 

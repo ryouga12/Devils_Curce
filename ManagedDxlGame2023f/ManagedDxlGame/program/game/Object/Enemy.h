@@ -61,6 +61,17 @@ public:
 		float getThunderResist() const {
 			return ThunderResist;
 		}
+		//通常ドロップのアイテムのIDを返す
+		int getNomalDrop()const {
+			return Nomal_Drop;
+		}
+		//レアドロップのアイテムIDを返す
+		int getRareDrop()const {
+			return RareDrop;
+		}
+
+		//---セッター---//
+
 		//敵の名前をセットする
 		void SetEnemyName(std::string newname) {
 			name = newname;
@@ -107,6 +118,14 @@ public:
 		void SetThunderResist(float newresist) {
 			ThunderResist = newresist;
 		}
+		//敵の通常ドロップのIDをセットする
+		void SetNomalDropID(int newID) {
+			Nomal_Drop = newID;
+		}
+		//敵のレアドロップのIDをセットする
+		void SetRareDoropID(int newID) {
+			RareDrop = newID;
+		}
 
 	private:
 
@@ -122,6 +141,8 @@ public:
 		float FireResist;
 		float IceResist;
 		float ThunderResist;
+		int Nomal_Drop;
+		int RareDrop;
 
 	};
 
@@ -135,7 +156,7 @@ public:
 	EnemyStatus GetEnemyStatus(int id) const;
 	
 	//敵の配列を受け取る為のゲッター
-	std::vector<EnemyStatus> GetEnemyArray(int id);
+	std::vector<EnemyStatus> GetEnemyArray(int id); 
 
 	//敵のIDによってドロップのアイテムを切り替える
 	void InitEnemyItemDrop(int EnemyID);
@@ -157,7 +178,7 @@ private:
 	std::vector<EnemyStatus>Enemy_Type_Array;
 
 	//csvを入れておく配列
-	std::vector<std::vector<tnl::CsvCell>>Enemy_Csv_Array;
+	std::vector<std::vector<std::string>>Enemy_Csv_Array;
 
 	//---敵を入れておく配列---//
 
