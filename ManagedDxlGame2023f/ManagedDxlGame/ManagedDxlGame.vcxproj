@@ -196,7 +196,6 @@
     <ClCompile Include="program\game\Object\NPC.cpp" />
     <ClCompile Include="program\game\Object\Player.cpp" />
     <ClCompile Include="program\game\Scene\battleScene.cpp" />
-    <ClCompile Include="program\game\Scene\BossScene.cpp" />
     <ClCompile Include="program\game\Scene\mapScene.cpp" />
     <ClCompile Include="program\game\Scene\resultScene.cpp" />
     <ClCompile Include="program\game\Scene\tittleScene.cpp" />
@@ -275,7 +274,6 @@
     <ClInclude Include="program\game\Object\Player.h" />
     <ClInclude Include="program\game\Scene\BaseScene.h" />
     <ClInclude Include="program\game\Scene\battleScene.h" />
-    <ClInclude Include="program\game\Scene\BossScene.h" />
     <ClInclude Include="program\game\Scene\mapScene.h" />
     <ClInclude Include="program\game\Scene\resultScene.h" />
     <ClInclude Include="program\game\Scene\tittleScene.h" />

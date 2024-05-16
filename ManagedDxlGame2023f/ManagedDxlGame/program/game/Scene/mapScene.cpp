@@ -2,7 +2,6 @@
 #include"../Manager/SceneManager.h"
 #include"resultScene.h"
 #include"../Object/Player.h"
-#include"../Scene/BossScene.h"
 
 //------------------------------------------------------------------------------------------------------------------------
 //初期化　&  解放
@@ -138,12 +137,6 @@ bool MapScene::seqIdle(float delta_time)
 		SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
 		//インベントリを表示する
 		GameManager::getGameManager()->getInventory()->SetSelect_num(first_menu);
-	}
-	
-	//デバック
-	if (tnl::Input::IsKeyDownTrigger(eKeys::KB_F1)) {
-		auto mgr = SceneManager::GetInstance();
-		mgr->changeScene(new BossScene());
 	}
 
 	return true;

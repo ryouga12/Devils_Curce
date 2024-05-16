@@ -254,9 +254,6 @@
     <ClCompile Include="program\game\Manager\MapManager.cpp">
       <Filter>program\[003] game\Manager</Filter>
     </ClCompile>
-    <ClCompile Include="program\game\Scene\BossScene.cpp">
-      <Filter>program\[003] game\Scene</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ManagedDxlGame.rc">
@@ -502,9 +499,6 @@
     </ClInclude>
     <ClInclude Include="program\game\Manager\MapManager.h">
       <Filter>program\[003] game\Manager</Filter>
-    </ClInclude>
-    <ClInclude Include="program\game\Scene\BossScene.h">
-      <Filter>program\[003] game\Scene</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

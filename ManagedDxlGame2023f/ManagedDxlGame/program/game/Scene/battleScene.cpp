@@ -368,10 +368,10 @@ void BattleScene::ItemDropProcess()
 
 	//疑似乱数を生成する(メルセンヌツイスター)
 	std::mt19937 gen(rd());
-	std::uniform_real_distribution<> dis(0.0, 1.0);
+	std::uniform_real_distribution<> dis(0, 100);
 
 	//0から1の一様乱数を生成する
-	double rand_val = dis(gen);
+	int rand_val = dis(gen);
 
 	//敵のアイテム配列を取得する
 	auto& EnemyItemDrop = enemy->getItemDropArray();
@@ -389,7 +389,7 @@ void BattleScene::ItemDropProcess()
 		//持ち物がいっぱいだったら
 		else {
 			battle_log->addLog("持ち物がいっぱいの為アイテムを入手する事ができませんでした");
-		}   
+		}
 	}
 
 	//レアドロップ

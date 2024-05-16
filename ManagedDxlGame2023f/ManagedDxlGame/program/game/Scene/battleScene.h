@@ -112,10 +112,10 @@ private:
 	bool DeadEnemy_flag = false;
 
 	//通常ドロップ
-	float NomalDrop = 0.3;
+	float NomalDrop = 30;
 
 	//レアドロップ
-	float RareDrop = 0.1;
+	float RareDrop = 10;
 
 	//プレイヤーのターンを示すフラグ
 	bool PlayerTurn = false;
