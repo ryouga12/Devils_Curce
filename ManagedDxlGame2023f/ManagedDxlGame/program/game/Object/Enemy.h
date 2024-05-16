@@ -156,7 +156,14 @@ public:
 	EnemyStatus GetEnemyStatus(int id) const;
 	
 	//敵の配列を受け取る為のゲッター
-	std::vector<EnemyStatus> GetEnemyArray(int id); 
+	std::vector<EnemyStatus>& GetEnemyArray(){
+		return Enemy_Array;
+
+		//敵の配列を取得できなかったらエラー用の配列を返す
+		if (Enemy_Array.size() == 0) {
+			return Null_Array;
+		}
+	}
 
 	//敵のIDによってドロップのアイテムを切り替える
 	void InitEnemyItemDrop(int EnemyID);
@@ -165,6 +172,9 @@ public:
 	std::vector<ItemBase>& getItemDropArray() {
 		return Enemy_Drop_Item;
 	}
+
+	//敵の情報を配列に格納する
+	void InitEnemyArray(int id);
 
 private:
 
@@ -182,46 +192,19 @@ private:
 
 	//---敵を入れておく配列---//
 
-	//最初のエリアで出てくる敵
-	std::vector<EnemyStatus>First_Area_Enemy;
-	//次のエリアで出てくる敵
-	std::vector<EnemyStatus>Second_Area_Enemy;
-	//さらに次のエリアで出てくる敵
-	std::vector<EnemyStatus>Third_Area_Enemy;
-	//ボスのエリアで出て来る敵
-	std::vector<EnemyStatus>Boss_Area_Enemy;
 	//エラー時に返す用の配列
 	std::vector<EnemyStatus>Null_Array;
+	//敵を入れておく配列
+	std::vector<EnemyStatus>Enemy_Array;
+
 
 	//---敵のドロップアイテムを格納しおく配列---//
 
 	std::vector<ItemBase>Enemy_Drop_Item;
 
-	//敵のIDの列挙体
-	enum {
-		SLIM,
-		BAT,
-		SNAKE,
-		ARMORBEETLE,
-		MONSTERDOG,
-		BLOODBAT,
-		TYRANTWORM,
-		MONSTERPLANT,
-		GOBLIN,
-		GHOSTMUSH,
-		SALAMANDER,
-		MOKUJIN,
-		CATKNIGHT,
-		PUMOKINGHOST,
-		NEOSLIM,
-		WOODWALKER,
-		BIGGOBLIN,
-		GOLDREAPER,
-		BLOODHOUND,
-		LITTLEDEMON
-	};
-
 	//アイテムのポインタ
 	Shared<Item>item = nullptr;
 
+	//敵の数
+	int Enemy_num = 5;
 };

@@ -68,7 +68,7 @@ void MapScene::Update(float delta_time)
 		if (GameManager::getGameManager()->TimeCount(delta_time, Time)) {
 			auto mgr = SceneManager::GetInstance();
 			//ƒV[ƒ“‚ð‘JˆÚ‚³‚¹‚é(ƒvƒŒƒCƒ„[‚ÌÀ•W‚ð“n‚·,ƒCƒ“ƒxƒ“ƒgƒŠ‚ð“n‚·,ƒvƒŒƒCƒ„[‚ð“n‚·,“G‚Ì”z—ñ‚ð“n‚·,”wŒi‚ð“n‚·)
-			mgr->changeScene(new BattleScene(GameManager::getGameManager()->getPlayer()->getPlayerPos(), enemy_array, background_hdl));
+			mgr->changeScene(new BattleScene(GameManager::getGameManager()->getPlayer()->getPlayerPos(), background_hdl , enemy_id));
 			//•à”‚ð0‚É‚·‚é
 			GameManager::getGameManager()->getPlayer()->StepReset();
 		}
@@ -180,29 +180,44 @@ void MapScene::WorldMapCollision()
 		if (encount_kind.count(mapChipValue)) {
 			int encount = tnl::IsIntersectRect(GameManager::getGameManager()->getPlayer()->getPlayerPos(), GameManager::getGameManager()->getPlayer()->getPlayerSize(PlyerWidth), GameManager::getGameManager()->getPlayer()->getPlayerSize(PlyerHeight), worldMap_C->MapChipPos(), map_chip_width_, map_chip_height_);
 
-			//mapã‚Ì‚Ç‚±‚É‹‚é‚©‚É‚æ‚Á‚Ä“G‚ð•Ï‚¦‚é
+				//mapã‚Ì‚Ç‚±‚É‹‚é‚©‚É‚æ‚Á‚Ä“G‚ð•Ï‚¦‚é
 			if (encount) {
 				//•½Œ´‚É‚¢‚éê‡
 				if (mapChipValue == plain) {
-					enemy_array = enemy->GetEnemyArray(enemy_1);
+
+					//Å‰‚Ì“G‚ÌID‚ð“n‚·
+					enemy_id = 1;
+
+					//mapChip‚É‰ž‚¶‚Ä”wŒi‚ð•Ï‚¦‚é
 					background_hdl = ResourceManager::getResourceManager()->LoadGraphEX("graphics/haikei/battle_field_01.jpg");
 				}
 				else if (mapChipValue == plain_second) {
-					enemy_array = enemy->GetEnemyArray(enemy_2);
+
+					//•½Œ´‚Ì“G‚ÌID‚ð“n‚·
+					enemy_id = 2;
+
+					//mapChip‚É‰ž‚¶‚Ä”wŒi‚ð•Ï‚¦‚é
 					background_hdl = ResourceManager::getResourceManager()->LoadGraphEX("graphics/haikei/battle_field_02.jpg");;
 				}
 				//rŒ´‚É‚¢‚éê‡
 				else if (mapChipValue == wilderness[0] || mapChipValue == wilderness[1]) {
-					enemy_array = enemy->GetEnemyArray(enemy_3);
+
+					//rŒ´‚É‚¢‚é“G‚ÌID‚ð“n‚·
+					enemy_id = 3;
+
+					//mapChip‚É‰ž‚¶‚Ä”wŒi‚ð•Ï‚¦‚é
 					background_hdl = ResourceManager::getResourceManager()->LoadGraphEX("graphics/haikei/battle_field_03.jpg");;
 				}
 				//ƒ{ƒXƒGƒŠƒA‚Ìê‡
 				else if (mapChipValue == boss_area) {
-					enemy_array = enemy->GetEnemyArray(enemy_4);
+
+					//ƒ{ƒXƒGƒŠƒA‚É‚¢‚é“G‚ÌID‚ð“n‚·
+					enemy_id = 4;
+
+					//mapChip‚É‰ž‚¶‚Ä”wŒi‚ð•Ï‚¦‚é
 					background_hdl = ResourceManager::getResourceManager()->LoadGraphEX("graphics/haikei/pipo-battlebg014b.jpg");
 				}
 			}
-
 		}
 	}
 

@@ -24,7 +24,7 @@ class BattleScene : public  BaseScene{
 public:
 
 	BattleScene() {};
-	BattleScene(tnl::Vector3 pos , std::vector<Enemy::EnemyStatus>enemy_array , int background );
+	BattleScene(tnl::Vector3 pos ,int background, int EnemyID);
 	virtual~BattleScene()override;
 
 	//更新処理
@@ -82,9 +82,6 @@ public:
 	void SetWeaponType();
 
 private:
-
-	//敵の配列
-	std::vector<Enemy::EnemyStatus>enemy_Array;
 
 	//敵のグラフィックハンドル
 	int Enemy_ghdl;

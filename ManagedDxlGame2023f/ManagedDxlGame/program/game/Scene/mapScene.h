@@ -159,16 +159,9 @@ private:
 
 	//バトルシーンで使うハンドル
 	int background_hdl = 0;
-	
-	//敵の配列
-	std::vector<Enemy::EnemyStatus>enemy_array;
 
 	//敵の配列のID
-	int enemy_1 = 1;
-	int enemy_2 = 2;
-	int enemy_3 = 3;
-	int enemy_4 = 4;
-	
+	int enemy_id = 0;
 //------------------------------------------------------------------------------------------------------------------------
 //インベントリ関係
 private:

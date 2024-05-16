@@ -8,16 +8,19 @@
 //------------------------------------------------------------------------------------------------------------------------
 //初期化　&  解放
 
-BattleScene::BattleScene(tnl::Vector3 pos,std::vector<Enemy::EnemyStatus>enemy_array, int background ) : enemy_Array(enemy_array), background_(background), map_pos(pos)
+BattleScene::BattleScene(tnl::Vector3 pos, int background, int EnemyID ) : background_(background), map_pos(pos)
 {
 	enemy = std::make_shared<Enemy>();
 	battle_log = std::make_shared<BattleLog>();
+
+	//敵を配列に格納する
+	enemy->InitEnemyArray(EnemyID);
 
 	//インデックスを1～4のランダムな数字に設定する
 	enemy_index = rand() % 5;
 
 	//新しい配列を生成する
-	auto& enemy_ = enemy_Array[4];
+	auto& enemy_ = enemy->GetEnemyArray()[enemy_index];
 
 	//敵のグラフィックハンドルを読み込む
 	Enemy_ghdl = ResourceManager::getResourceManager()->LoadGraphEX(enemy_.getEnemyGhdl().c_str());
@@ -44,7 +47,7 @@ BattleScene::BattleScene(tnl::Vector3 pos,std::vector<Enemy::EnemyStatus>enemy_a
 //デストラクタ
 BattleScene::~BattleScene()
 {
-	auto& enemy = enemy_Array[enemy_index];
+	auto& enemyArray = enemy->GetEnemyArray()[enemy_index];
 
 	//サウンドを消去する
 	SoundManager::getSoundManager()->daleteSound("sound/SoundEffect/decision.mp3");
@@ -55,7 +58,7 @@ BattleScene::~BattleScene()
 	SoundManager::getSoundManager()->daleteSound("sound/SoundEffect/syouri.mp3");
 
 	//画像を消去する
-	ResourceManager::getResourceManager()->deleteGraphEx(enemy.getEnemyGhdl().c_str());
+	ResourceManager::getResourceManager()->deleteGraphEx(enemyArray.getEnemyGhdl().c_str());
 	ResourceManager::getResourceManager()->deleteGraphEx("graphics/haikei/battle_field_01.jpg");
 	ResourceManager::getResourceManager()->deleteGraphEx("graphics/haikei/battle_field_02.jpg");
 	ResourceManager::getResourceManager()->deleteGraphEx("graphics/haikei/battle_field_03.jpg");
@@ -156,7 +159,7 @@ void BattleScene::PlayerUpdate()
 	//プレイヤーのステータスを取得する
 	auto& PlayerStatus = GameManager::getGameManager()->getPlayer()->getPlayerStatusSave();
 	//敵のステータスを取得する
-	auto& enemyStatus = enemy_Array[enemy_index];
+	auto& enemyStatus = enemy->GetEnemyArray()[enemy_index];
 
 	//プレイヤーのアクションの時
 	if (select_sequence == Sequence::PlayerAction) {
@@ -890,7 +893,7 @@ bool BattleScene::seqIdle(float delta_time)
 {
 	//ステータスを取得する
 	auto& PlayerStatus = GameManager::getGameManager()->getPlayer()->getPlayerStatusSave();
-	auto& enemyStatus = enemy_Array[enemy_index];
+	auto& enemyStatus = enemy->GetEnemyArray()[enemy_index];
 
 	//シーケンスの初期化
 	if (sequence_.isStart()) {
@@ -923,7 +926,7 @@ bool BattleScene::seqIdle(float delta_time)
 bool BattleScene::seqPlayerAction(float delta_time)
 {
 	auto& playerStatus = GameManager::getGameManager()->getPlayer()->getPlayerStatusSave();
-	auto& enemyStatus = enemy_Array[enemy_index];
+	auto& enemyStatus = enemy->GetEnemyArray()[enemy_index];
 	auto enemyHp = enemyStatus.getEnemyHp();
 
 	if (sequence_.isStart()) {
@@ -968,7 +971,7 @@ bool BattleScene::seqPlayerAction(float delta_time)
 bool BattleScene::seqEnemyAction(float delta_time)
 {
 	auto& PlayerStatus = GameManager::getGameManager()->getPlayer()->getPlayerStatusSave();
-	auto& enemyStatus = enemy_Array[enemy_index];
+	auto& enemyStatus = enemy->GetEnemyArray()[enemy_index];
 	auto enemyAttack = enemyStatus.getEnemyAttack();
 	auto PlayerDefance = PlayerStatus.getDefance();
 	auto PlayerHp = PlayerStatus.getcurentHp();
@@ -1056,7 +1059,7 @@ bool BattleScene::seqEnemyAction(float delta_time)
 bool BattleScene::seqChangeScene(float delta_time)
 {
 	//敵のステータス
-	auto& enemyStatus = enemy_Array[enemy_index];
+	auto& enemyStatus = enemy->GetEnemyArray()[enemy_index];
 	//プレイヤーのステータス
 	auto& playerStatus = GameManager::getGameManager()->getPlayer()->getPlayerStatusSave();
 

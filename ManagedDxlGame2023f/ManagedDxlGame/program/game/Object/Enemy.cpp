@@ -63,31 +63,6 @@ void Enemy::EnemyLoadTypeInfo()
 
 void Enemy::EnemyInit()
 {
-	//---敵の配列を入れる---//
-	First_Area_Enemy.emplace_back(GetEnemyStatus(0));
-	First_Area_Enemy.emplace_back(GetEnemyStatus(1));
-	First_Area_Enemy.emplace_back(GetEnemyStatus(2));
-	First_Area_Enemy.emplace_back(GetEnemyStatus(3));
-	First_Area_Enemy.emplace_back(GetEnemyStatus(4));
-
-	Second_Area_Enemy.emplace_back(GetEnemyStatus(5));
-	Second_Area_Enemy.emplace_back(GetEnemyStatus(6));
-	Second_Area_Enemy.emplace_back(GetEnemyStatus(7));
-	Second_Area_Enemy.emplace_back(GetEnemyStatus(8));
-	Second_Area_Enemy.emplace_back(GetEnemyStatus(9));
-
-	Third_Area_Enemy.emplace_back(GetEnemyStatus(10));
-	Third_Area_Enemy.emplace_back(GetEnemyStatus(11));
-	Third_Area_Enemy.emplace_back(GetEnemyStatus(12));
-	Third_Area_Enemy.emplace_back(GetEnemyStatus(13));
-	Third_Area_Enemy.emplace_back(GetEnemyStatus(14));
-
-	Boss_Area_Enemy.emplace_back(GetEnemyStatus(15));
-	Boss_Area_Enemy.emplace_back(GetEnemyStatus(16));
-	Boss_Area_Enemy.emplace_back(GetEnemyStatus(17));
-	Boss_Area_Enemy.emplace_back(GetEnemyStatus(18));
-	Boss_Area_Enemy.emplace_back(GetEnemyStatus(19));
-
 	//エラー用の配列をクリアして初期化する
 	Null_Array.clear();
 }
@@ -106,26 +81,6 @@ Enemy::EnemyStatus Enemy::GetEnemyStatus(int id) const
 	}
 }
 
-std::vector<Enemy::EnemyStatus> Enemy::GetEnemyArray(int id)
-{
-	if (id == 1) {
-		return First_Area_Enemy;
-	}
-	else if (id == 2) {
-		return Second_Area_Enemy;
-	}
-	else if (id == 3) {
-		return Third_Area_Enemy;
-	}
-	else if (id == 4) {
-		return Boss_Area_Enemy;
-	}
-	//エラー用の配列
-	else {
-		return Null_Array;
-	}
-}
-
 //アイテムのドロップを決める
 void Enemy::InitEnemyItemDrop(int EnemyID)
 {
@@ -133,12 +88,57 @@ void Enemy::InitEnemyItemDrop(int EnemyID)
 
 	//配列のIDを比較して該当したIDをインベントリに格納する
 	for (int i = 0; i < Enemy_Csv_Array.size(); i++) {
+
+		//配列の1行目は説明の為+1して確認を行う
 		if (EnemyID == std::stoi(Enemy_Csv_Array[i + 1][1].c_str())) {
 
 			//インベントリにそれぞれに対応したアイテムを格納
 			Enemy_Drop_Item.emplace_back(item->GetItemById(std::stoi(Enemy_Csv_Array[i + 1][12].c_str())));
-			Enemy_Drop_Item.emplace_back(item->GetItemById(std::stoi(Enemy_Csv_Array[i + 1][13].c_str())));
+ 			Enemy_Drop_Item.emplace_back(item->GetItemById(std::stoi(Enemy_Csv_Array[i + 1][13].c_str())));
 			break;
+		}
+	}
+
+}
+
+//敵の配列を初期化する
+//引数のIDはどのマップチップに居るかで配列に入れる敵の情報を決める
+void Enemy::InitEnemyArray(int id)
+{
+	//敵の配列をクリアする
+	//敵の配列を一度クリアして同じ情報を取得できないようにする
+	Enemy_Array.clear();
+
+	if (id == 1) {
+		for (int i = 0; i < Enemy_num; i++) {
+			Enemy_Array.emplace_back(GetEnemyStatus(i));
+		}
+	}
+	else if (id == 2) {
+
+		for (int i = 6; i < Enemy_Csv_Array.size(); i++) {
+
+			//敵によってIDを取得する
+			if (Enemy_num > Enemy_Array.size()) {
+				auto enmeyid = GetEnemyStatus(std::stoi(Enemy_Csv_Array[i][1].c_str()));
+
+				//敵を配列に格納する
+				Enemy_Array.emplace_back(GetEnemyStatus(enmeyid.getEnemyId()));
+			}
+			//敵の最大の数を上回ったら処理を抜ける
+			else {
+				break;
+			}
+		}
+	}
+	else if (id == 3) {
+		for (int i = 10; i < Enemy_num; i++) {
+			Enemy_Array.emplace_back(GetEnemyStatus(i));
+		}
+	}
+	else if (id == 4) {
+		for (int i = 15; i < Enemy_num; i++) {
+			Enemy_Array.emplace_back(GetEnemyStatus(i));
 		}
 	}
 }
