@@ -1,11 +1,13 @@
 #pragma once
 #include "../../dxlib_ext/dxlib_ext.h"
-#include"../Item/ItemBase.h"
 #include"../Item/Item.h"
+#include"Actor.h"
+#include"Player.h"
 
 class ItemBase;
 
-class Enemy {
+
+class Enemy : public Actor{
 public:
 
 	Enemy();
@@ -176,6 +178,23 @@ public:
 	//敵の情報を配列に格納する
 	void InitEnemyArray(int id);
 
+	////敵の攻撃処理(主に子クラスで定義する)
+	//virtual void EnemyAction()= 0;
+
+	//敵の死亡処理
+	virtual void DeadEnemy(Player::PlayerStatus& player);
+
+	//敵のインデックスをセットする
+	void SetEnemyindex(int newIndex) {
+		enemy_index = newIndex;
+	}
+
+	//敵のインデックスを取得する
+	int GetEnemy_Index()const {
+		return enemy_index;
+	}
+
+
 private:
 
 	//Enemyのステータスを入れておく変数
@@ -207,6 +226,12 @@ private:
 
 	//敵の数
 	int Enemy_num = 5;
+
+	//敵のインデックス
+	int enemy_index = 0;
+
+protected:
+	
 };
 
 //------------------------------------------------------------------------------------------------------------
@@ -217,6 +242,12 @@ private:
 
 class MobMonster : public Enemy {
 public:
+
+	MobMonster();
+	~MobMonster();
+
+	//敵の攻撃処理
+	/*void EnemyAction()override;*/
 
 private:
 
@@ -231,6 +262,12 @@ private:
 class BossMonster : public Enemy {
 
 public:
+
+	BossMonster();
+	~BossMonster();
+
+	//敵の攻撃処理
+	/*void EnemyAction()override;*/
 
 private:
 

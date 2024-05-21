@@ -2,10 +2,6 @@
 #include"../Object/Player.h"
 #include"Weapon.h"
 #include"Inventory.h"
-#include"../Menu/MenuWindow.h"
-#include"../Manager/ResourceManager.h"
-#include"../Manager/SoundManager.h"
-
 
 class WeaponShop {
 public:

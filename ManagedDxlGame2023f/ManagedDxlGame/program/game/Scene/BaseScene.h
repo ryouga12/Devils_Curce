@@ -2,7 +2,6 @@
 //シーンの基底クラス
 
 
-
 class BaseScene {
 public:
 

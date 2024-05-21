@@ -4,23 +4,14 @@
 
 #pragma once
 #include	<unordered_set>
-#include"../Scene/BaseScene.h"
 #include "../../dxlib_ext/dxlib_ext.h"
-#include"../Map/Mapchip.h"
-#include"../Manager/Camera.h"
-#include"../Item/Weapon.h"
-#include"../Item/Item.h"
 #include"../Manager/ResourceManager.h"
 #include"../Scene/village.h"
-#include"battleScene.h"
-#include"../Object/Enemy.h"
 #include"../Manager/GameManager.h"
-#include"../../game/Skill/Skill.h"
-//#include"../Item/Inventory.h"
-//#include"../Item/WeaponShop.h"
 
-
-
+class BaseScene;
+class Enemy;
+class MapChip;
 
 class MapScene : public BaseScene {
 public:

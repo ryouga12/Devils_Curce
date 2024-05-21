@@ -10,7 +10,7 @@ Inventory::Inventory()
 	InitMenuWinodow();
 
 	//デバック
-	AddInventory(item->GetItemById(26).getItemId());
+	AddInventory(item->GetItemById(21).getItemId());
 
 }
 
@@ -43,7 +43,8 @@ void Inventory::draw()
 	}
 	//選択されたのがアイテムメニューだったら
 	else if (select_menu == MenuWindow_I::ItemMenu) {
-		ItemMenu();
+		menu_window->Menu_draw();
+		ItemMenu(DrawPos, CurentPageText, cursorX,item_per_page);
 	}
 	//選択されたのがプレイヤーの強さメニューだったら
 	else if (select_menu == MenuWindow_I::StatusMenu) {
@@ -51,7 +52,8 @@ void Inventory::draw()
 	}
 	//選択されたのがアイテムの詳細メニューだったら
 	else if (select_menu == MenuWindow_I::ItemUseMenu) {
-		ItemMenu();
+		menu_window->Menu_draw();
+		ItemMenu(DrawPos, CurentPageText, cursorX, item_per_page);
 		ItemUseMenu();
 		if (item_coment == ItemComent::No) {
 			item_coment_window->Menu_draw();
@@ -59,7 +61,8 @@ void Inventory::draw()
 		}
 	}
 	else if (select_menu == MenuWindow_I::ItemDetailMenu) {
-		ItemMenu();
+		menu_window->Menu_draw();
+		ItemMenu(DrawPos, CurentPageText, cursorX, item_per_page);
 		ItemUseMenu();
 		ItemDetail();
 	}
@@ -312,6 +315,57 @@ void Inventory::InventoryItemUse(int itemid)
 
 }
 
+//カーソル移動時のインデックス操作と取得
+void Inventory::ItemCurourIndex(int ItemPerPage)
+{
+	//---選択したアイテムにをIDとして取得する---//
+
+	// 上キーが押されたときの処理
+	//一番上にカーソルがいた場合それ以上にいかないようにする
+	if (currentPage == 0 && selectedIndex == 0 && tnl::Input::IsKeyDownTrigger(eKeys::KB_UP)) {
+		// 何もしない
+		return;
+	}
+	if (tnl::Input::IsKeyDownTrigger(eKeys::KB_UP)) {
+		if (selectedIndex % ItemPerPage == 0) {
+			// カーソルがページ内の最上部にいる場合は、一つ上のページの最後の要素を選択
+			if (currentPage > 0) {
+				--currentPage;
+				// インデックスを更新してページの最後の要素を選択する
+				selectedIndex = (currentPage + 1) * ItemPerPage - 1;
+			}
+		}
+		else {
+			// それ以外の場合は、一つ上の要素を選択
+			--selectedIndex;
+		}
+	}
+
+	// 下キーが押されたときの処理
+	if (selectedIndex == InventoryList.size() - 1 && tnl::Input::IsKeyDownTrigger(eKeys::KB_DOWN))return;
+	if (tnl::Input::IsKeyDownTrigger(eKeys::KB_DOWN)) {
+		if ((selectedIndex + 1) % ItemPerPage == 0) {
+			// カーソルがページ内の最下部にいる場合は、一つ下のページの最初の要素を選択
+			//今の所プレイヤーが持てるインベントリは20で考えている為4ページ分まで開けるようにする
+			if (currentPage < 4) {
+				++currentPage;
+				// インデックスを更新してページの最初の要素を選択する
+				selectedIndex = currentPage * ItemPerPage;
+			}
+		}
+		else {
+			// それ以外の場合は、一つ下の要素を選択
+			++selectedIndex;
+		}
+	}
+
+	// selectedIndexが有効な範囲内にあるか確認して、選択されたアイテムのIDを取得する
+	if (selectedIndex >= 0 && selectedIndex < InventoryList.size()) {
+		ItemBase selectedItem = InventoryList[selectedIndex];
+		selectedItemId = selectedItem.getItemId();
+	}
+}
+
 //インベントリのメニューを切り替える
 void Inventory::SetSelect_num(int select_menu_)
 {
@@ -473,20 +527,16 @@ void Inventory::First_Menu()
 }
 
 //アイテムの表示
-void Inventory::ItemMenu()
+void Inventory::ItemMenu(const tnl::Vector2i& itemDrawPos, tnl::Vector2i& curentPageText, int CousourX , int itemParPage)
 {
 	int i = 0;
 	int y = 34;
 	int equipY = 30;
 
-	menu_window->Menu_draw();
-
-		//1ページ当たりのアイテム数
-		item_per_page = 5;
 
 		//現在のページに基づいて表示するアイテムの範囲を計算
-		start_index = currentPage * item_per_page;
-		end_index = min((start_index + item_per_page) , InventoryList.size());
+		start_index = currentPage * itemParPage;
+		end_index = min((start_index + itemParPage) , InventoryList.size());
 
 		for (int index = start_index; index < end_index; ++index) {
 			//
@@ -495,22 +545,22 @@ void Inventory::ItemMenu()
 			std::string ItemName = InventoryData.getItemName();
 
 			// アイテムの描画
-			DrawStringEx(DrawPos.x, DrawPos.y + y * i, Color_White, "%s", ItemName.c_str());
+			DrawStringEx(itemDrawPos.x, itemDrawPos.y + y * i, Color_White, "%s", ItemName.c_str());
 
 			// カーソルを描画する位置を決定
-			int cursorY = DrawPos.y + y * (selectCursor % item_per_page);
-			ResourceManager::getResourceManager()->DrawRotaGraphEx("graphics/cur_sannkaku2.png", cursorX, cursorY, cursorSize, 0, true);
+			int cursorY = itemDrawPos.y + y * (selectCursor % itemParPage);
+			ResourceManager::getResourceManager()->DrawRotaGraphEx("graphics/cur_sannkaku2.png", CousourX, cursorY, cursorSize, 0, true);
 		
 			//装備できるアイテムだった場合
 			if (InventoryData.getItemType() == 1 || InventoryData.getItemType() == 2) {
 				// アイテムが装備されているか、選択されたアイテムかを確認
 				if ((equipWeapon && InventoryData.getItemId() == equippedWeapon.back().getItemId())) {
 					// 装備中のアイテムまたは選択されたアイテムの場合、"[E]" を表示
-					DrawStringEx(equipText.x, equipText.y + equipY * i, Color_White, "[E]");
+					DrawStringEx(itemDrawPos.x - 30, itemDrawPos.y + equipY * i, Color_White, "[E]");
 				}
 				if ((equipArmor && InventoryData.getItemId() == equippedArmor.back().getItemId())) {
 					// 装備中のアイテムまたは選択されたアイテムの場合、"[E]" を表示
-					DrawStringEx(equipText.x, equipText.y + equipY * i, Color_White, "[E]");
+					DrawStringEx(itemDrawPos.x - 30 , itemDrawPos.y + equipY * i, Color_White, "[E]");
 				}
 				++i;
 			}
@@ -522,7 +572,7 @@ void Inventory::ItemMenu()
 			
 		}
 		//ページの表示
-		DrawStringEx(CurentPageText.x, CurentPageText.y, Color_White , "%d / 4", currentPage + 1);
+		DrawStringEx(curentPageText.x, curentPageText.y, Color_White , "%d / 4", currentPage + 1);
 
 }
 
@@ -623,52 +673,9 @@ void Inventory::swichInventoryUpdate(float deltatime)
 			select_menu = MenuWindow_I::ItemUseMenu;
 		}
 
-		//---選択したアイテムにをIDとして取得する---//
-
-			// 上キーが押されたときの処理
-			//一番上にカーソルがいた場合それ以上にいかないようにする
-		if (currentPage == 0 && selectedIndex == 0 && tnl::Input::IsKeyDownTrigger(eKeys::KB_UP)) {
-			// 何もしない
-			return;
-		}
-		if (tnl::Input::IsKeyDownTrigger(eKeys::KB_UP)) {
-			if (selectedIndex % item_per_page == 0) {
-				// カーソルがページ内の最上部にいる場合は、一つ上のページの最後の要素を選択
-				if (currentPage > 0) {
-					--currentPage;
-					// インデックスを更新してページの最後の要素を選択する
-					selectedIndex = (currentPage + 1) * item_per_page - 1;
-				}
-			}
-			else {
-				// それ以外の場合は、一つ上の要素を選択
-				--selectedIndex;
-			}
-		}
-
-		// 下キーが押されたときの処理
-		if (selectedIndex == InventoryList.size() - 1 && tnl::Input::IsKeyDownTrigger(eKeys::KB_DOWN))return;
-		if (tnl::Input::IsKeyDownTrigger(eKeys::KB_DOWN)) {
-			if ((selectedIndex + 1) % item_per_page == 0) {
-				// カーソルがページ内の最下部にいる場合は、一つ下のページの最初の要素を選択
-				//今の所プレイヤーが持てるインベントリは20で考えている為4ページ分まで開けるようにする
-				if (currentPage < 4) {
-					++currentPage;
-					// インデックスを更新してページの最初の要素を選択する
-					selectedIndex = currentPage * item_per_page;
-				}
-			}
-			else {
-				// それ以外の場合は、一つ下の要素を選択
-				++selectedIndex;
-			}
-		}
-
-		// selectedIndexが有効な範囲内にあるか確認して、選択されたアイテムのIDを取得する
-		if (selectedIndex >= 0 && selectedIndex < InventoryList.size()) {
-			ItemBase selectedItem = InventoryList[selectedIndex];
-			selectedItemId = selectedItem.getItemId();
-		}
+		//インデックス操作
+		ItemCurourIndex(item_per_page);
+		
 
 		CusorMove();
 
@@ -769,54 +776,8 @@ void Inventory::swichInventoryUpdate(float deltatime)
 			}
 		}
 
-		// 上キーが押されたときの処理
-		if (SkillCurentPage == 0 && selectedSkillIndex == 0 && tnl::Input::IsKeyDownTrigger(eKeys::KB_UP)) {
-			// 何もしない
-			return;
-		}
-
-		if (tnl::Input::IsKeyDownTrigger(eKeys::KB_UP)) {
-			if (selectedSkillIndex % item_per_page == 0) {
-				// カーソルがページ内の最上部にいる場合は、一つ上のページの最後の要素を選択
-				if (SkillCurentPage > 0) {
-					--SkillCurentPage;
-					// インデックスを更新してページの最後の要素を選択する
-					selectedSkillIndex = (SkillCurentPage + 1) * item_per_page - 1;
-				}
-			}
-			else {
-				// それ以外の場合は、一つ上の要素を選択
-				--selectedSkillIndex;
-			}
-		}
-
-		// 下キーが押されたときの処理
-		if (selectedSkillIndex == SkillList.size() - 1 && tnl::Input::IsKeyDownTrigger(eKeys::KB_DOWN)) {
-			// 何もしない
-			return;
-		}
-
-		if (tnl::Input::IsKeyDownTrigger(eKeys::KB_DOWN)) {
-			if ((selectedSkillIndex + 1) % item_per_page == 0) {
-				// カーソルがページ内の最下部にいる場合は、一つ下のページの最初の要素を選択
-				// スキルが持てるインベントリは 20 で考えている為 4 ページ分まで開けるようにする
-				if (SkillCurentPage < 4) {
-					++SkillCurentPage;
-					// インデックスを更新してページの最初の要素を選択する
-					selectedSkillIndex = currentPage * item_per_page;
-				}
-			}
-			else {
-				// それ以外の場合は、一つ下の要素を選択
-				++selectedSkillIndex;
-			}
-		}
-
-		// selectedSkillIndex が有効な範囲内にあるか確認して、選択されたスキルの ID を取得する
-		if (selectedSkillIndex >= 0 && selectedSkillIndex < SkillList.size()) {
-			Shared<Skill> selectedSkill = SkillList[selectedSkillIndex];
-			selectedSkillId = selectedSkill->getId();
-		}
+		//スキルのカーソル移動時のインデックス操作
+		SkillCurourIndex();
 
 
 		//特技のカーソル移動
@@ -950,6 +911,53 @@ void Inventory::SkillCousorMove()
 		SkillCousour = (SkillCousour + 1) % SkillNum;
 	}
 
+}
+
+//スキルカーソルの移動時のインデックス操作
+void Inventory::SkillCurourIndex()
+{
+	// 上キーが押されたときの処理
+	if (SkillCurentPage == 0 && selectedSkillIndex == 0 && tnl::Input::IsKeyDownTrigger(eKeys::KB_UP)) {
+		// 何もしない
+		return;
+	}
+
+	if (tnl::Input::IsKeyDownTrigger(eKeys::KB_UP)) {
+		if (selectedSkillIndex % item_per_page == 0) {
+			// カーソルがページ内の最上部にいる場合は、一つ上のページの最後の要素を選択
+			if (SkillCurentPage > 0) {
+				--SkillCurentPage;
+				// インデックスを更新してページの最後の要素を選択する
+				selectedSkillIndex = (SkillCurentPage + 1) * item_per_page - 1;
+			}
+		}
+		else {
+			// それ以外の場合は、一つ上の要素を選択
+			--selectedSkillIndex;
+		}
+	}
+
+	// 下キーが押されたときの処理
+	if (selectedSkillIndex == SkillList.size() - 1 && tnl::Input::IsKeyDownTrigger(eKeys::KB_DOWN)) {
+		// 何もしない
+		return;
+	}
+
+	if (tnl::Input::IsKeyDownTrigger(eKeys::KB_DOWN)) {
+		if ((selectedSkillIndex + 1) % item_per_page == 0) {
+			// カーソルがページ内の最下部にいる場合は、一つ下のページの最初の要素を選択
+			// スキルが持てるインベントリは 20 で考えている為 4 ページ分まで開けるようにする
+			if (SkillCurentPage < 4) {
+				++SkillCurentPage;
+				// インデックスを更新してページの最初の要素を選択する
+				selectedSkillIndex = currentPage * item_per_page;
+			}
+		}
+		else {
+			// それ以外の場合は、一つ下の要素を選択
+			++selectedSkillIndex;
+		}
+	}
 }
 
 //スキルをセットする

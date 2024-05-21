@@ -7,10 +7,6 @@
 #include "../../dxlib_ext/dxlib_ext.h"
 #include"Actor.h"
 #include"../Manager/Camera.h"
-#include"../Manager/ResourceManager.h"
-
-
-class Actor;
 
 //アニメーションを切り替える秒数
 static const float ChangeAnimationTime = 0.1f;

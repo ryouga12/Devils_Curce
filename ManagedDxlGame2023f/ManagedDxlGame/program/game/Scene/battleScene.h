@@ -1,13 +1,8 @@
 #pragma once
-#include"../Scene/BaseScene.h"
 #include "../../dxlib_ext/dxlib_ext.h"
-#include"../Menu/MenuWindow.h"
 #include"../Manager/ResourceManager.h"
-#include"../Menu/BattleLog.h"
-#include"../Manager/animation.h"
 #include"../Manager/GameManager.h"
-#include"../../game/Skill/Skill.h"
-#include"../Manager/Camera.h"
+#include"../Manager/SceneManager.h"
 #include<random>
 
 //-----------------------------------------------------------------------------------------------------
@@ -18,6 +13,12 @@
 
 class Player;
 class Enemy;
+class Menu;
+class MenuWindow;
+class MapScene;
+class RusultScene;
+class Battle_Log;
+class BaseScene;
 
 class BattleScene : public  BaseScene{
 
@@ -38,9 +39,6 @@ public:
 
 	//バトルシーン内で切り替える関数
 	virtual void MenuUpdate(Player::PlayerStatus& playerStatus,Enemy::EnemyStatus& enemyStatus_);
-
-	//Inventoryを表示させる
-	virtual void InventoryItemDraw();
 
 	//アイテム選択時の処理
 	void ItemSelectProcess();
@@ -86,9 +84,6 @@ private:
 	//敵のグラフィックハンドル
 	int Enemy_ghdl;
 
-	//敵を取得するインデックス
-	int enemy_index;
-
 	//背景の画像
 	int background_ = 0;
 
@@ -115,7 +110,6 @@ private:
 //------------------------------------------------------------------------------------------------------------------------
 //それぞれのフラグ
 
-
 	//レベルアップ時のフラグ
 	bool levelUp_flag = false;
 
@@ -136,6 +130,19 @@ private:
 
 	//敵を倒した時のフラグ
 	bool DeadEnemy_flag = false;
+
+	//スキルを使用した時のフラグ
+	bool SkillUseFlag = false;
+
+	//スキルを使用した時のフラグ(攻撃系)
+	bool Skill_Attack_Flag = false;
+
+	//スキルを使用した時のフラグ(バフ系)
+	bool Skill_Buff_Flag = false;
+
+	//特技を使えるかのフラグ(主にMpが足りたらtrue、足りなかったらfalse)
+	bool Skill_Chaeck_Flag = true;
+
 
 //------------------------------------------------------------------------------------------------------------------------
 //シーケンス
@@ -221,16 +228,18 @@ private:
 	const int itemPerPage = 4;
 	//アイテムを表示するy座標
 	const int StartY = 550;
+	//アイテムを表示する際の座標
+	const tnl::Vector2i item_draw_pos = { 350 , 550 };
+	//アイテムのページ数の描画座標
+	tnl::Vector2i item_curent_page = { 400 , 700 };
 	//各行の高さ
 	const int lineHeight = 30;
 	//各ページ
 	int currentPage = 0;
-	//最初は一番上なので0に設定する
-	int selectedIndex = 0;
-	//取得したアイテムのIDを一時的に保持するための変数
-	int selectedItemId = 0;
 	//カーソルのサイズ
 	const float cursourSize = 0.3f;
+	//カーソルのY座標
+	const int curourY = 330;
 	//アイテムを使う
 	const int ItemUse = 0;
 	//アイテムを使うウィンドウを閉じる
@@ -274,26 +283,8 @@ private:
 	//スキルべージ
 	int SkillCurentPage = 0;
 
-	//どのスキルを選択しているか
-	int selectedSkillIndex = 0;
-
-	//スキルのID
-	int selectedSkillId = 0;
-
 	//バトルシーン用のスキル表示
 	void InventorySkillDraw();
-
-	//スキルを使用した時のフラグ
-	bool SkillUseFlag = false;
-
-	//スキルを使用した時のフラグ(攻撃系)
-	bool Skill_Attack_Flag = false;
-
-	//スキルを使用した時のフラグ(バフ系)
-	bool Skill_Buff_Flag = false;
-
-	//特技を使えるかのフラグ(主にMpが足りたらtrue、足りなかったらfalse)
-	bool Skill_Chaeck_Flag = true;
 
 	//スキルを使用した際のMp確認
 	void SkillUseMpChack(Player::PlayerStatus& playerStatus);

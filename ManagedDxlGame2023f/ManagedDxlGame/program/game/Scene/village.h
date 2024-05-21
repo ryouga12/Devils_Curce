@@ -7,20 +7,10 @@
 #include	<unordered_set>
 #include"../Scene/BaseScene.h"
 #include "../../dxlib_ext/dxlib_ext.h"
-#include"../Map/Mapchip.h"
-#include"../Manager/Camera.h"
-#include"../Manager/ResourceManager.h"
-#include"../Menu/MenuWindow.h"
-#include"../Item/Weapon.h"
 #include"../Object/NPC.h"
 #include"../Item/WeaponShop.h"
 #include"../Manager/SoundManager.h"
-#include"../Manager/GameManager.h"
 #include"../Manager/EventManager.h"
-#include"../../game/Skill/Skill.h"
-
-
-
 
 class VillageScene : public BaseScene {
 public:

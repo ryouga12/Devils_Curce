@@ -85,14 +85,19 @@ void GameManager::displayDialogue()
 
 bool GameManager::TimeCount(float delta_time, float Time)
 {
-	count_Time += delta_time;
-
-	if (count_Time > Time) {
-		count_Time = 0;
-		return true;
+	//指定した時間までプラスする
+	while (count_Time < Time) {
+		count_Time += delta_time;
+		//指定時間が過ぎたらTrueにする
+		if (count_Time > Time) {
+			count_Time = 0;
+			return true;
+		}
+		else {
+			return false;
+		}
 	}
-
-	return false;
+		
 }
 
 

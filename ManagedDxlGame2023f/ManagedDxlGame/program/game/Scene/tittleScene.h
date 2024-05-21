@@ -3,17 +3,11 @@
 ///ƒ^ƒCƒgƒ‹‰æ–Ê‚Ìˆ—‚È‚Ç
 ///
 
-
-#include"../Scene/BaseScene.h"
 #include "../../dxlib_ext/dxlib_ext.h"
 #include"../Manager/SceneManager.h"
 #include"village.h"
 #include"../Manager/GameManager.h"
-#include"../Menu/MenuWindow.h"
-#include"../Item/Item.h"
-#include"../Object/Enemy.h"
 #include"../Manager/SoundManager.h"
-#include"../../game/Skill/Skill.h"
 
 
 class TittleScene : public BaseScene  {

@@ -1,5 +1,6 @@
 #include "Enemy.h"
 
+
 Enemy::Enemy()
 {
 	//csv‚Ì“Ç‚İ‚İ	
@@ -12,6 +13,7 @@ Enemy::Enemy()
 	EnemyInit();
 
 	item = std::make_shared<Item>();
+
 }
 
 void Enemy::EnemyLoadTypeInfo()
@@ -56,7 +58,6 @@ void Enemy::EnemyLoadTypeInfo()
 
 
 	}
-
 
 
 }
@@ -156,7 +157,7 @@ void Enemy::InitEnemyArray(int id)
 	//ƒ{ƒXƒGƒŠƒA‚É‚¢‚é“G(‹­‚¢)
 	else if (id == 4) {
 
-		for (int i = 17; i < Enemy_Csv_Array.size(); i++) {
+		for (int i = 16; i < Enemy_Csv_Array.size(); i++) {
 
 			//“G‚É‚æ‚Á‚ÄID‚ğæ“¾‚·‚é
 			//ƒTƒCƒY‚ª5ŒÂ‚É‚È‚é‚Ü‚Å‰ñ‚·
@@ -172,4 +173,13 @@ void Enemy::InitEnemyArray(int id)
 			}
 		}
 	}
+}
+
+//“G‚Ì€–Sˆ—(‚±‚Ì“G‚Ìˆ—‚ªƒtƒ‰ƒO‚Ì•Ï‚í‚è)
+void Enemy::DeadEnemy(Player::PlayerStatus& player)
+{
+	////“G‚ÌHp‚ª0‚É‚È‚Á‚½‚çˆ—‚ğŒÄ‚Ño‚·
+	//if (Enemy_Array[enemy_index].getEnemyHp() <= 0) {
+	//	battleScene->deadEnemyProcess(player, Enemy_Array[enemy_index]);
+	//}
 }

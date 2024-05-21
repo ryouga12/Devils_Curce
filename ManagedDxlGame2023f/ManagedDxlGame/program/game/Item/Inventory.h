@@ -4,9 +4,10 @@
 #include"../Manager/ResourceManager.h"
 #include"../Menu/MenuWindow.h"
 #include"../Manager/SoundManager.h"
-#include"../Skill/BaseSkill.h"
 #include"../Skill/Skill.h"
 #include"../Menu/BattleLog.h"
+
+class ItemBase;
 
 class Inventory
 {
@@ -54,6 +55,32 @@ public:
 	//バトルログのポインタをセットする
 	void SetBattleLog(Shared<BattleLog>battle_log) { battleLog = battle_log; }
 
+	//アイテムのカーソルの移動処理の際のインデックスの操作
+	void ItemCurourIndex(int ItemPerPage);
+
+	//スキルのカーソルの移動処理の際のインデックスの操作
+	void SkillCurourIndex();
+
+	//インデックスを0にする
+	void SelectedIndexClear() {
+		selectedIndex = 0;
+	}
+
+	//アイテムのインデックスを取得する
+	int GetSelectedIndex()const {
+		return selectedIndex;
+	}
+
+	//取得したアイテムのidを取得する
+	int GetSelectedItemId()const {
+		return selectedItemId;
+	}
+
+	//スキルのインデックスを取得する
+	int GetSkillSelectedIndex()const {
+		return selectedSkillIndex;
+	}
+	//スキル
 
 private:
 
@@ -87,6 +114,9 @@ private:
 
 public:
 
+	//アイテムのメニュー
+	void ItemMenu(const tnl::Vector2i& itemDrawPos, tnl::Vector2i& curentPageText, int CousourX ,int itemParPage);
+
 	//インベントリをセットする
 	void SetSelect_num(int select_menu);
 
@@ -104,6 +134,8 @@ public:
 	void CusorMove();
 	//カーソルを一番上に戻す関数
 	void CursorReset();
+	//ページのリセット
+	void CurentPageReset() { currentPage = 0; }
 	//使用時Hp回復系
 	void ItemHpHeal(float percentage , int itemid);
 	
@@ -115,8 +147,6 @@ private:
 	void InitMenuWinodow();
 	//最初のメニュー
 	void First_Menu();
-	//アイテムのメニュー
-	void ItemMenu();
 	//プレイヤーのステータスを表示するメニュー
 	void PlyStatusMenu();
 	//武器の中の詳細や使うための描画
@@ -167,10 +197,10 @@ private:
 	bool equipArmor = false;
 
 	//武器を装備した際の[E]を表示する座標
-	const tnl::Vector2i equipText = { 80 , 100 };
+	tnl::Vector2i equipText = { 80 , 100 };
 
 	//現在のページを表示座標
-	const tnl::Vector2i CurentPageText = { 100 , 280 };
+	tnl::Vector2i CurentPageText = { 100 , 280 };
 
 	//白色
 	const int Color_White = -1;
@@ -251,9 +281,6 @@ private :
 
 	//スキルの要素番号
 	int selectedSkillIndex = 0;
-
-	//スキルのID
-	int selectedSkillId = 0;
 
 	//特技用のインベントリ
 	std::vector<Shared<Skill>> SkillList;

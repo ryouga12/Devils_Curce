@@ -6,9 +6,10 @@
 #include"../Menu/MenuWindow.h"
 #include "../../dxlib_ext/dxlib_ext.h"
 #include "../Item/Inventory.h"
-#include"../Skill/Skill.h"
-#include"../Object/Player.h"
+#include"SceneManager.h"
 
+class Player;
+class Skill;
 
 class GameManager {
 public:

@@ -35,7 +35,7 @@ Player::Player() : money(1000)
 	PlyStatusLoad();
 
 	//ステータスを設定する(Lv1からスタート)
-	SetPlayerStatus(8);
+	SetPlayerStatus(1);
 
 }
 

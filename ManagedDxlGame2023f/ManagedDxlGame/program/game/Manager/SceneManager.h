@@ -5,9 +5,10 @@
 
 #pragma once
 #include"../Scene/BaseScene.h"
+#include"../Scene/mapScene.h"
+#include"../Scene/resultScene.h"
+#include"../Scene/battleScene.h"
 #include "../../dxlib_ext/dxlib_ext.h"
-
-class BaseScene;
 
 class SceneManager {
 public:

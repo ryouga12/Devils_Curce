@@ -6,7 +6,6 @@
 #pragma once
 #include "Item.h"
 #include<unordered_map>
-#include"../Object/Actor.h"
 #include "../../dxlib_ext/dxlib_ext.h"
 #include"../Item/ItemBase.h"
 
