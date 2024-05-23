@@ -9,8 +9,9 @@
 #include "../../dxlib_ext/dxlib_ext.h"
 #include"../Item/ItemBase.h"
 
+class Actor;
 
-class Weapon : public ItemBase{
+class Weapon : public ItemBase , Actor{
 public:
 
 	Weapon();

@@ -6,10 +6,10 @@
 #include "../../dxlib_ext/dxlib_ext.h"
 #include"../Manager/ResourceManager.h"
 #include"../Item/ItemBase.h"
+#include"../Object/Actor.h"
 
 
-
-class Item : public  ItemBase{
+class Item : public  ItemBase,Actor{
 public:
 	
 	Item();

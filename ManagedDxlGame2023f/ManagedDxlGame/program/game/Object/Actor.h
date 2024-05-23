@@ -5,15 +5,28 @@
 class BattleScene;
 
 class Actor {
+public:
+
+	Actor() {};
+	virtual~Actor() {};
+
+	enum class ActorType {
+		NONE,
+		ENEMY,
+
+	};
+
+	ActorType actor_type = ActorType::NONE;
+
+	//空のポインタをセットする
+	void SetBattleScene(BattleScene* battle_scene) {
+		battleScene = battle_scene;
+	}
+
 protected:
 	
 	//空のポインタを用意してそれぞれで設定して処理を変える
-	Shared<BattleScene>battleScene = nullptr;
+	//Sheadポインターにする場合、weakポインターにする必要がある
+	BattleScene* battleScene = nullptr;
 
-public:
-
-	//空のポインタをセットする
-	void SetBattleScene(Shared<BattleScene>battle_scene) {
-		battleScene = battle_scene;
-	}
 };

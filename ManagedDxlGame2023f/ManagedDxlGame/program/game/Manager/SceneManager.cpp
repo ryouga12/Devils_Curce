@@ -1,4 +1,5 @@
 #include"SceneManager.h"
+#include"GameManager.h"
 #include"../Scene/BaseScene.h"
 
 SceneManager::SceneManager(BaseScene* start_scene) : now_scene_(start_scene) {
@@ -18,9 +19,10 @@ void SceneManager::Destroy() {
 }
 
 
-void SceneManager::changeScene(BaseScene* next_scene, float trans_time) {
+void SceneManager::changeScene(BaseScene* next_scene, float transout_time, float transin_time) {
 	next_scene_ = next_scene;
-	trans_time_ = trans_time;
+	transout_time_ = transout_time;
+	transin_time_ = transin_time;
 	sequence_.change(&SceneManager::seqTransOut);
 }
 
@@ -34,8 +36,9 @@ void SceneManager::update(float delta_time) {
 
 }
 
-bool SceneManager::seqTransOut(const float delta_time) {
-	int alpha = (sequence_.getProgressTime() / trans_time_ * 255.0f);
+bool SceneManager::seqTransOut(const float delta_time) 
+{
+	int alpha = (sequence_.getProgressTime() / transout_time_ * 255.0f);
 	if (alpha >= 255) {
 		sequence_.change(&SceneManager::seqTransIn);
 		delete now_scene_;
@@ -49,7 +52,16 @@ bool SceneManager::seqTransOut(const float delta_time) {
 }
 
 bool SceneManager::seqTransIn(const float delta_time) {
-	int alpha = 255 - (sequence_.getProgressTime() / trans_time_ * 255.0f);
+
+	if (sequence_.isStart()) {
+
+		auto target_pos = GameManager::getGameManager()->getPlayer()->getPlayerPos();
+
+		GameManager::getGameManager()->getCamera()->SetTargetPos(target_pos);
+
+	}
+
+	int alpha = 255 - (sequence_.getProgressTime() / transin_time_ * 255.0f);
 	if (alpha <= 0) {
 		sequence_.change(&SceneManager::seqRunScene);
 	}

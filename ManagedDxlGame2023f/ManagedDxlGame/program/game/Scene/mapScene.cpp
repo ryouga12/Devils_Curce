@@ -6,17 +6,13 @@
 //------------------------------------------------------------------------------------------------------------------------
 //初期化　&  解放
 
-MapScene::MapScene(tnl::Vector3 PlyerPos) : pos(PlyerPos){
-	
-	//Playerの初期位置を決める
-	GameManager::getGameManager()->getPlayer()->SetPlayerPosition(pos);
-
-	//カメラをプレイヤーに合わせる
-	GameManager::getGameManager()->getCamera()->SetTargetPos(pos);
+MapScene::MapScene(){
 
 	mapchip = std::make_shared<MapChip>();
 	enemy = std::make_shared<Enemy>();
-
+	
+	//Actorリストに敵を追加する
+	actor_list.emplace_back(enemy);
 
 	//MapChipの読み込み
 	worldMapLoad();
@@ -26,7 +22,6 @@ MapScene::MapScene(tnl::Vector3 PlyerPos) : pos(PlyerPos){
 
 	//BGMを流す
 	SoundManager::getSoundManager()->sound_Play("sound/BGM/sfc-harukanaru-daichi.mp3", DX_PLAYTYPE_LOOP);
-
 }
 
 MapScene::~MapScene()
@@ -66,9 +61,11 @@ void MapScene::Update(float delta_time)
 
 		//0.5秒経過したらシーンを遷移させる
 		if (GameManager::getGameManager()->TimeCount(delta_time, Time)) {
+			//敵のタイプをセットする
+			enemy->SetEnemyType(Enemy::Enemytype::MOB);
 			auto mgr = SceneManager::GetInstance();
-			//シーンを遷移させる(プレイヤーの座標を渡す,インベントリを渡す,プレイヤーを渡す,敵の配列を渡す,背景を渡す)
-			mgr->changeScene(new BattleScene(GameManager::getGameManager()->getPlayer()->getPlayerPos(), background_hdl , enemy_id));
+			//シーンを遷移させる(プレイヤーの座標を渡す,敵のID,敵のポインタを渡す)
+			mgr->changeScene(new BattleScene(GameManager::getGameManager()->getPlayer()->getPlayerPos(), background_hdl , enemy_id ,enemy));
 			//歩数を0にする
 			GameManager::getGameManager()->getPlayer()->StepReset();
 		}
@@ -126,7 +123,7 @@ bool MapScene::seqIdle(float delta_time)
 		if (GameManager::getGameManager()->TimeCount(delta_time, TimeSE)) {
 			//村シーンに切り替える
 			auto mgr = SceneManager::GetInstance();
-			mgr->changeScene(new VillageScene(village_Pos));
+			mgr->changeScene(new VillageScene(village_Pos),0.3f, 3.0f);
 			sequence_.change(&MapScene::seqChangeScene);
 			TimeFlag = false;
 		}

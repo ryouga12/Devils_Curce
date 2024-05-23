@@ -1,5 +1,8 @@
 #include "Enemy.h"
-
+#include"../Scene/battleScene.h"
+#include"../Menu/BattleLog.h"
+#include"../Manager/GameManager.h"
+#include"../Object/Player.h"
 
 Enemy::Enemy()
 {
@@ -14,6 +17,16 @@ Enemy::Enemy()
 
 	item = std::make_shared<Item>();
 
+
+	actor_type = Actor::ActorType::ENEMY;
+}
+
+//描画処理
+void Enemy::Draw()
+{
+	if (!dead_enemy_flag) {
+		DrawRotaGraph(600, 320, 0.8f, 0, enemy_hdl, true);
+	}
 }
 
 void Enemy::EnemyLoadTypeInfo()
@@ -175,11 +188,98 @@ void Enemy::InitEnemyArray(int id)
 	}
 }
 
-//敵の死亡処理(この敵の処理がフラグの変わり)
-void Enemy::DeadEnemy(Player::PlayerStatus& player)
+//敵の死亡処理
+bool Enemy::ChackDeadEnemy()
 {
-	////敵のHpが0になったら処理を呼び出す
-	//if (Enemy_Array[enemy_index].getEnemyHp() <= 0) {
-	//	battleScene->deadEnemyProcess(player, Enemy_Array[enemy_index]);
-	//}
+	//敵のHpが0になったかチェックを行う
+	if (Enemy_Array[enemy_index].getEnemyHp() <= 0) {
+
+		//敵が死んでたら死亡処理を呼び出す
+		battleScene->DeadEnemyProcces(GameManager::getGameManager()->getPlayer()->getPlayerStatusSave(), Enemy_Array[enemy_index]);
+
+		//レベルアップ処理
+		battleScene->ChackPlayerLevelUp(GameManager::getGameManager()->getPlayer()->getPlayerStatusSave());
+
+		return true;
+	}
+	else {
+		return false;
+	}
+	
+}
+
+//敵のポインタを初期化する
+void Enemy::InitEnemyPointer(Shared<Enemy>& enemy_pointer,int enemy_id)
+{
+	switch (enemy_type)
+	{
+	case Enemy::Enemytype::NONE:
+		break;
+	
+	//モブモンスターのポインタを格納する
+	case Enemy::Enemytype::MOB:
+
+		enemy_pointer = std::make_shared<MobMonster>(enemy_id);
+
+		break;
+
+	//ボスのポインタを格納する
+	case Enemy::Enemytype::BOSS:
+
+		enemy_pointer = std::make_shared<BossMonster>();
+		break;
+
+	default:
+		
+		tnl::DebugTrace("-----------------------------------------------------------------------------------\n");
+		tnl::DebugTrace("敵のポインタを生成できませんでした");
+		tnl::DebugTrace("-----------------------------------------------------------------------------------\n");
+
+		break;
+	}
+}
+
+//------------------------------------------------------------------------------------------------------------
+//
+//雑魚モンスター
+//
+//-------------------------------------------------------------------------------------------------------------
+
+
+MobMonster::MobMonster(int enemy_id)
+{
+	//敵を配列に格納する
+	InitEnemyArray(enemy_id);
+
+	//インデックスを1～4のランダムな数字に設定する
+	enemy_index = rand() % 5;
+
+	//新しい配列を生成する
+	auto& enemy_ = GetEnemyArray()[enemy_index];
+
+	//敵のグラフィックハンドルを読み込む
+	enemy_hdl = ResourceManager::getResourceManager()->LoadGraphEX(enemy_.getEnemyGhdl().c_str());
+
+	//敵のアイテムドロップを格納する
+	InitEnemyItemDrop(enemy_.getEnemyId());
+}
+
+//雑魚モンスターの攻撃処理
+void MobMonster::EnemyAction(Shared<BattleLog>battle_log)
+{
+	//プレイヤーの防御力を取得する
+	auto PlayerDefance = GameManager::getGameManager()->getPlayer()->getPlayerStatusSave().getDefance();
+
+	//ダメージを計算する「
+	int damage = Enemy_Array[enemy_index].getEnemyAttack() - PlayerDefance;
+
+	//ダメージが0を下回るときに0に設定する
+	if (damage <= 0) { damage = 0; }
+
+	//プレイヤーのHpを減らす
+	GameManager::getGameManager()->getPlayer()->getPlayerStatusSave().SetPlayerCurentHp(GameManager::getGameManager()->getPlayer()->getPlayerStatusSave().getcurentHp() - damage);
+
+	//バトルログを流す
+	battle_log->addDamagePlayerLog("Enemy", "Player", damage);
+
 }

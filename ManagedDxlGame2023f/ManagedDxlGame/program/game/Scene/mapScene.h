@@ -15,7 +15,7 @@ class MapChip;
 
 class MapScene : public BaseScene {
 public:
-	MapScene(tnl::Vector3 PlyerPos);
+	MapScene();
 	~MapScene()override;
 
 	void Update(float delta_time)override;

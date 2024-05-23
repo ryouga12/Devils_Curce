@@ -2,15 +2,21 @@
 #include "../../dxlib_ext/dxlib_ext.h"
 #include"../Item/Item.h"
 #include"Actor.h"
-#include"Player.h"
 
 class ItemBase;
-
+class BattleLog;
+class GameManager;
+class SoundManager;
+class SceneManager;
+class Player;
 
 class Enemy : public Actor{
 public:
 
 	Enemy();
+
+	//描画処理
+	void Draw();
 
 	//Enemyのステータス
 	struct EnemyStatus
@@ -178,24 +184,41 @@ public:
 	//敵の情報を配列に格納する
 	void InitEnemyArray(int id);
 
-	////敵の攻撃処理(主に子クラスで定義する)
-	//virtual void EnemyAction()= 0;
+	//敵の攻撃処理(主に子クラスで定義する)
+	virtual void EnemyAction(Shared<BattleLog>battle_log) {};
 
 	//敵の死亡処理
-	virtual void DeadEnemy(Player::PlayerStatus& player);
-
-	//敵のインデックスをセットする
-	void SetEnemyindex(int newIndex) {
-		enemy_index = newIndex;
-	}
+	virtual bool ChackDeadEnemy();
 
 	//敵のインデックスを取得する
 	int GetEnemy_Index()const {
 		return enemy_index;
 	}
 
+	//フラグ立てる(画像を消す)
+	void DeadEnemyFlag() {
+		dead_enemy_flag = true;
+	}
+
+
+	//敵のポインタを初期化する
+	void InitEnemyPointer(Shared<Enemy>&enemy_pointer , int enemy_id);
+
+	//敵の種類
+	enum class Enemytype {
+		NONE,
+		MOB,
+		BOSS
+	};
+
+	//敵のタイプをセットする
+	void SetEnemyType(Enemytype enemyType) {
+		enemy_type = enemyType;
+	}
 
 private:
+
+	Enemytype enemy_type = Enemytype::NONE;
 
 	//Enemyのステータスを入れておく変数
 	EnemyStatus Enemy_Status_Type;
@@ -210,13 +233,13 @@ private:
 	std::vector<std::vector<std::string>>Enemy_Csv_Array;
 
 	//---敵を入れておく配列---//
-
+protected:
 	//エラー時に返す用の配列
 	std::vector<EnemyStatus>Null_Array;
 	//敵を入れておく配列
 	std::vector<EnemyStatus>Enemy_Array;
 
-
+private:
 	//---敵のドロップアイテムを格納しおく配列---//
 
 	std::vector<ItemBase>Enemy_Drop_Item;
@@ -227,11 +250,17 @@ private:
 	//敵の数
 	int Enemy_num = 5;
 
-	//敵のインデックス
-	int enemy_index = 0;
+	//死んだ判定のフラグ(主にfalseの場合敵の画像を表示する)
+	bool dead_enemy_flag = false;
 
 protected:
 	
+	//敵の画像ハンドル
+	int enemy_hdl = 0;
+
+	//敵のインデックス
+	int enemy_index = 0;
+
 };
 
 //------------------------------------------------------------------------------------------------------------
@@ -243,11 +272,11 @@ protected:
 class MobMonster : public Enemy {
 public:
 
-	MobMonster();
-	~MobMonster();
+	MobMonster(int enemy_id);
+	~MobMonster()override {};
 
 	//敵の攻撃処理
-	/*void EnemyAction()override;*/
+	void EnemyAction(Shared<BattleLog>battle_log)override;
 
 private:
 
@@ -263,11 +292,11 @@ class BossMonster : public Enemy {
 
 public:
 
-	BossMonster();
-	~BossMonster();
+	/*BossMonster() {};
+	~BossMonster()override {};*/
 
 	//敵の攻撃処理
-	/*void EnemyAction()override;*/
+	/*void EnemyAction(Player::PlayerStatus& player, Shared<BattleLog>battle_log)override;*/
 
 private:
 

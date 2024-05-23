@@ -174,9 +174,10 @@ bool VillageScene::seqIdle(float delta_time)
 	if (TimeCount) {
 		//0.2•bSE‚ð—¬‚µ‚Ä‚©‚ç‘JˆÚ‚³‚¹‚é
 		if (GameManager::getGameManager()->TimeCount(delta_time, TimeSE)) {
+			GameManager::getGameManager()->getPlayer()->SetPlayerPosition(first_world_pos);
 			sequence_.change(&VillageScene::seqChangeScene);
 			auto mgr = SceneManager::GetInstance();
-			mgr->changeScene(new MapScene(first_world_pos));
+			mgr->changeScene(new MapScene(), 1.0f, 3.0f);
 		}
 	}
 

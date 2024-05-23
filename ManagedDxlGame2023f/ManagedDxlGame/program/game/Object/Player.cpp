@@ -1,5 +1,11 @@
 #include "Player.h"
 #include"../Manager/Camera.h"
+#include"../Menu/BattleLog.h"
+#include"Enemy.h"
+#include"../Skill/Skill.h"
+#include"../Manager/SoundManager.h"
+#include"../Manager/SceneManager.h"
+#include"../Manager/GameManager.h"
 
 
 Player::Player() : money(1000)
@@ -114,6 +120,62 @@ void Player::player_draw(const KonCamera& camera ,float scale)
 
 }
 
+//プレイヤーの行動処理
+void Player::PlayerMoveProcess(float delta_time , Shared<BattleLog>& basttle_log , Shared<Enemy>& enemy , Shared<Nomal_Attack>& nomal_attack , const tnl::Vector3& map_pos)
+{
+	switch (player_state)
+	{
+	
+	//通常時
+	case Player::PlayerState::IDLE:
+
+		//プレイヤーのコマンド処理
+		battleScene->MenuUpdate(plyerstatusSave, enemy->GetEnemyArray()[enemy->GetEnemy_Index()]);
+
+		break;
+
+	//通常攻撃時
+	case Player::PlayerState::NOMALATTACK:
+
+		//通常攻撃時の処理
+		PlayerAttackProcess(enemy->GetEnemyArray()[enemy->GetEnemy_Index()], basttle_log , nomal_attack);
+
+		//// エネミーの体力が0以下になったら、死亡演出 + レベルアップ判定
+		//enemy->DeadEnemy();
+
+		break;
+
+
+	//特技の攻撃時
+	case Player::PlayerState::SKILLATTACK:
+
+		//特技使用時の処理
+		battleScene->SkillSelectProcess();
+
+		break;
+
+	//逃走時
+	case Player::PlayerState::FLEE:
+
+		//逃げる際の処理
+		battleScene->FleeProcess(plyerstatusSave, enemy->GetEnemyArray()[enemy->GetEnemy_Index()], delta_time);
+
+		break;
+
+	//死亡時
+	case Player::PlayerState::DEAD:
+
+		//プレイヤーの死亡処理
+		DeadPlayerProcess(basttle_log);
+
+		break;
+
+
+	default:
+		break;
+	}
+}
+
 //csvでステータスを読み込む
 void Player::PlyStatusLoad()
 {
@@ -187,6 +249,46 @@ Player::PlayerStatus Player::GetPlyerStatus(int level) const
 		// IDに対応するアイテムが見つからない場合は、適当なデフォルト値を返すかエラー処理を行うなど
 		return PlayerStatus{};
 	}
+}
+
+//プレイヤーの死亡処理
+void Player::DeadPlayerProcess(Shared<BattleLog>& battle_log)
+{
+	//プレイヤーのHPが0を下回ったら
+	if (plyerstatusSave.getcurentHp() <= 0) {
+
+		//ログを流す
+		battle_log->addLog("全滅した");
+
+		//プレイヤーのHpを0にする
+		plyerstatusSave.SetPlayerCurentHp(0);
+
+		//BGMを止める
+		SoundManager::getSoundManager()->StopSound("sound/BGM/sentou.mp3");
+		SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/zenmetu.mp3", DX_PLAYTYPE_BACK);
+
+		//バトルを終了させる
+		battleScene->SetBattleState(BattleScene::BattleState::IDLE);
+	}
+}
+
+//プレイヤーの通常攻撃処理
+void Player::PlayerAttackProcess(Enemy::EnemyStatus& enemy_status, Shared<BattleLog>& battle_log , Shared<Nomal_Attack>& nomal_attack)
+{
+	//敵が死んで居たら処理をとばす
+	if (enemy_status.getEnemyHp() <= 0)return;
+
+	//決定音を鳴らす
+	SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
+
+	// ダメージを計算し、ダメージが 0 以下ならば、1にする ( 最低でも1ダメージは与える)
+	int damage = nomal_attack->SkillUse(plyerstatusSave, enemy_status);
+
+	// 敵のHPを減らす
+	enemy_status.SetEnemyHp(enemy_status.getEnemyHp() - damage);
+
+	// 戦闘ログにダメージ結果を出力
+	battle_log->addDamageLog("Player", "Enemy", damage);
 }
 
 //void Player::PlyerSave()

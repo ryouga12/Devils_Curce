@@ -7,6 +7,7 @@
 #include "../../dxlib_ext/dxlib_ext.h"
 #include"Actor.h"
 #include"../Manager/Camera.h"
+#include"Enemy.h"
 
 //アニメーションを切り替える秒数
 static const float ChangeAnimationTime = 0.1f;
@@ -26,6 +27,13 @@ enum {
 	//最大値
 	DIR_MAX
 };
+
+class BattleLog;
+class SoundManager;
+class GameManager;
+class SceneManager;
+class Skill;
+class Nomal_Attack;
 
 class Player : public Actor {
 public:
@@ -137,9 +145,36 @@ public:
 
 	};
 
+	//プレイヤーの状態
+	enum class PlayerState {
+		IDLE,
+		NOMALATTACK,
+		SKILLATTACK,
+		FLEE,
+		DEAD,
+	};
+
+	//プレイヤーの状態を切り替える
+	void SetPlayerState(PlayerState new_player_state) {
+		player_state = new_player_state;
+	}
+
+	//プレイヤーの状態を取得する
+	PlayerState GetPlayerState(){
+		return player_state;
+	}
+
+	//プレイヤーの行動
+	void PlayerMoveProcess(float delta_time, Shared<BattleLog>& basttle_log , Shared<Enemy>& enemy, Shared<Nomal_Attack>& nomal_attack , const tnl::Vector3& map_pos);
+
+
 private:
 
 	//---プレイヤー関係---//
+
+	//現在のプレイヤーの状態
+	PlayerState player_state = PlayerState::IDLE;
+
 	float first_pos_x = 195;						//ゲームが始まった時のｘ座標
 	float first_pos_y = 312;						//ゲームが始まった時のy座標
 	int Total_Frame = 3;							//プレイヤーの総フレーム(3)
@@ -180,6 +215,9 @@ private:
 
 	//名前
 	std::string name = "";
+
+	//武器のタイプ(通常攻撃のエフェクトの切り替えの為)
+	int weapon_type = 0;
 
 public:
 	
@@ -248,6 +286,12 @@ private:
 	//csv読み取り用の配列
 	std::vector<std::vector<tnl::CsvCell>>PlyerStatus_Csv_Info;
 
+	//全滅した時に流すSEの音
+	const float annihilation_Time = 3.5f;
+
+	//---フラグ関係---//
+
+
 
 public:
 
@@ -273,9 +317,16 @@ public:
 		return numberStep;
 	}
 
+	
 	bool getPlayerControl() {
 		return plyControl;
 	}
+
+	//プレイヤーの死亡処理
+	void DeadPlayerProcess(Shared<BattleLog>& battle_log);
+
+	//プレイヤーの攻撃処理
+	void PlayerAttackProcess(Enemy::EnemyStatus& enemy_status,Shared<BattleLog>& battle_log , Shared<Nomal_Attack>& nomal_attack);
 
 	//セーブロード機能を実験中（のちに追加予定）
 	/*void PlyerSave();

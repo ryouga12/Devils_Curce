@@ -20,8 +20,9 @@ public:
 	}
 
 	//ターゲットの座標をセットする
-	void SetTargetPos(tnl::Vector3 newpos) {
-		target_ = newpos;
+	void SetTargetPos(tnl::Vector3 target_pos) {
+		// カメラの位置を更新
+		target_ = target_pos;
 	}
 
 private:

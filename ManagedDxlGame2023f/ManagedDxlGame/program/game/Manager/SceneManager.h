@@ -10,18 +10,21 @@
 #include"../Scene/battleScene.h"
 #include "../../dxlib_ext/dxlib_ext.h"
 
+class GameManager;
+
+
 class SceneManager {
 public:
 	static SceneManager* GetInstance(BaseScene* start_scene = nullptr);
 	static void Destroy();
 
-	void changeScene(BaseScene* next_scene, float trans_time = 0.5f);
+	void changeScene(BaseScene* next_scene, float transout_time = 0.5f, float transin_time = 0.5f);
 
 	void update(float delta_time);
 
 private:
 	SceneManager(BaseScene* start_scene);
-	float trans_time_ = 0.5f;
+	float transin_time_ = 1.0f, transout_time_ = 1.0f;
 	BaseScene* now_scene_ = nullptr;
 	BaseScene* next_scene_ = nullptr;
 	int tansition_graph_hdl_ = 0;

@@ -19,13 +19,14 @@ class MapScene;
 class RusultScene;
 class Battle_Log;
 class BaseScene;
+class Actor;
 
 class BattleScene : public  BaseScene{
 
 public:
 
 	BattleScene() {};
-	BattleScene(tnl::Vector3 pos ,int background, int EnemyID);
+	BattleScene(tnl::Vector3 pos ,int background, int EnemyID , Shared<Enemy>enemy);
 	virtual~BattleScene()override;
 
 	//更新処理
@@ -49,23 +50,20 @@ public:
 	//スキル選択時の処理
 	void SkillSelectProcess();
 
-	//プレイヤーの更新処理
-	void PlayerUpdate();
-
 	//メニューの初期化
 	void InitMenuWindow();
 
 	//アニメーション時のターンチェンジ
 	void AnimationTurnChange(int enemyhp, float delta_time);
 
-	//逃げるを選択した際の処理
-	void FleeProcess(float delta_time);
+	//敵の死亡処理、演出
+	void DeadEnemyProcces(Player::PlayerStatus& playerStatus,Enemy::EnemyStatus& enemy_status);
 
-	// 死んだエネミーの死亡演出
-	void deadEnemyProcess(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_);
+	// レベルアップ判定
+	void ChackPlayerLevelUp(Player::PlayerStatus& player_status);
 
-	// レベルアップ判定とレベルアップ処理
-	void levelUpProcess(Player::PlayerStatus& playerStatus);
+	//レベルアップ処理
+	void LevelUpProcess(Player::PlayerStatus& player_status);
 
 	//HPやMPバーの処理
 	void PlayerStatusDraw();
@@ -79,10 +77,24 @@ public:
 	//武器のタイプをSetする
 	void SetWeaponType();
 
-private:
+	//逃げるを選択した際の処理
+	void FleeProcess(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus , float delta_time);
 
-	//敵のグラフィックハンドル
-	int Enemy_ghdl;
+
+	//バトルシーンの状態を管理する
+	//IDLE : バトルが終了した待機状態
+	//BATTLE : 戦闘
+	enum class BattleState {
+		IDLE,
+		BATTLE,
+	};
+
+	//バトルの状態をセットする
+	void SetBattleState(BattleState newState) {
+		battle_state = newState;
+	}
+
+private:
 
 	//背景の画像
 	int background_ = 0;
@@ -116,12 +128,6 @@ private:
 	//逃げる時のフラグ
 	bool flee_flag = false;
 
-	//全滅した時のフラグ
-	bool annihilation_flag = false;
-
-	//エネミーを倒した時のフラグ
-	bool enemy_annihilation_flag = false;
-
 	//通常攻撃をした時のフラグ
 	bool Nomal_Attack_Flag = false;
 
@@ -149,17 +155,20 @@ private:
 
 private:
 
-	tnl::Sequence<BattleScene> sequence_ = tnl::Sequence<BattleScene>(this, &BattleScene::seqIdle);
+	TNL_CO_SEQUENCE(BattleScene, &BattleScene::seqIdle);
+
 	bool seqIdle(float delta_time);
 	//プレイヤーのシーケンス
 	bool seqPlayerAction(float delta_time);
+
 	//エネミーのシーケンス
 	bool seqEnemyAction(float delta_time);
 
 	//遷移させる為のシーケンス
-	bool seqChangeScene(float delta_time);
+	bool seqChangeTurn(float delta_time);
 
-	TNL_CO_SEQUENCE(BattleScene, &BattleScene::seqIdle);
+	//アニメーションを流す為のシーケンス
+	bool seqAnimation(float delta_time);
 
 	enum class Sequence {
 		Idle,
@@ -168,6 +177,9 @@ private:
 	};
 
 	Sequence select_sequence = Sequence::Idle;
+
+	//バトルシーンの状態
+	BattleState battle_state = BattleState::BATTLE;
 
 //--------------------------------------------------------------------------------------------------------------------------
 //ポインタ変数
@@ -248,8 +260,6 @@ private:
 	const int Color_Black = 0;
 	//白色
 	const int Color_White = -1;
-	//全滅した時に流すSEの音
-	const float annihilation_Time = 3.5f;
 	//ターンを切り替える時に少し遅延を入れる
 	const float Change_Turn_Time = 1;
 	//アニメーションを流す時間
@@ -287,12 +297,18 @@ private:
 	void InventorySkillDraw();
 
 	//スキルを使用した際のMp確認
-	void SkillUseMpChack(Player::PlayerStatus& playerStatus);
+	bool SkillUseMpChack(Player::PlayerStatus& playerStatus);
 
 	//スキルを使用した際の処理
 	void SkillUseProcess(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_);
 
 	//武器のタイプ(通常攻撃のエフェクトの切り替えの為)
-	int WeaponType = 0;
+	int weapon_type = 0;
+
+
+//---------------------------------------------------
+
+	//全滅した時に流すSEの音
+	const float annihilation_Time = 3.5f;
 
 };

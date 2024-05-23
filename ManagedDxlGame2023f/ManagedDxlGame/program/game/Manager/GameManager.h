@@ -15,7 +15,6 @@ class GameManager {
 public:
 //------------------------------------------
 // シングルトン設計
-//フライウェイトパターンを使う
 
 	static GameManager* getGameManager();
 	static void delateGameManager() { delete getGameManager(); }
