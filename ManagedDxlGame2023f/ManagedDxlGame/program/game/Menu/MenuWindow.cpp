@@ -73,7 +73,7 @@ void MenuWindow::Read()
 		menuInit = true;
 	}
 	if (m_IsStartOpend)return;
-	if (manageSelectFlag != false) {
+	if (manageSelectFlag) {
 		//一つ下にずれる
 		if (tnl::Input::IsKeyDownTrigger(eKeys::KB_DOWN)) {
 			Select_Num = (Select_Num + 1) % read_menu_element_num;			
@@ -114,15 +114,10 @@ void MenuWindow::All()
 }
 
 //カーソル制御
-void MenuWindow::SetSelectCousourMove(int flag)
+void MenuWindow::SetSelectCousourMove()
 {
-	if (flag == 0) {
-		manageSelectFlag = true;
-	}
-	else if (flag == 1) {
-		manageSelectFlag = false;
-	}
-
+	//フラグを反転する
+	manageSelectFlag = !manageSelectFlag;
 }
 
 

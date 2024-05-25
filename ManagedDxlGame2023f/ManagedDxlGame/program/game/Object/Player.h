@@ -149,7 +149,7 @@ public:
 	enum class PlayerState {
 		IDLE,
 		NOMALATTACK,
-		SKILLATTACK,
+		SKILL,
 		FLEE,
 		DEAD,
 	};

@@ -49,7 +49,11 @@ public:
 
 	int getSelectNum() { return Select_Num;}
 
-	void SetSelectCousourMove(int flag);
+	void SetSelectCousourMove();
+
+	bool getSelectCursour(){
+		return manageSelectFlag;
+	}
 
 private:
 

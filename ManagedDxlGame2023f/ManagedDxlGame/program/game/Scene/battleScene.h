@@ -39,7 +39,7 @@ public:
 	void BattleDraw();
 
 	//バトルシーン内で切り替える関数
-	virtual void MenuUpdate(Player::PlayerStatus& playerStatus,Enemy::EnemyStatus& enemyStatus_);
+	void MenuUpdate(Player::PlayerStatus& playerStatus,Enemy::EnemyStatus& enemyStatus_);
 
 	//アイテム選択時の処理
 	void ItemSelectProcess();
@@ -59,11 +59,8 @@ public:
 	//敵の死亡処理、演出
 	void DeadEnemyProcces(Player::PlayerStatus& playerStatus,Enemy::EnemyStatus& enemy_status);
 
-	// レベルアップ判定
+	// レベルアップ判定 & 処理
 	void ChackPlayerLevelUp(Player::PlayerStatus& player_status);
-
-	//レベルアップ処理
-	void LevelUpProcess(Player::PlayerStatus& player_status);
 
 	//HPやMPバーの処理
 	void PlayerStatusDraw();
@@ -82,11 +79,9 @@ public:
 
 
 	//バトルシーンの状態を管理する
-	//IDLE : バトルが終了した待機状態
-	//BATTLE : 戦闘
 	enum class BattleState {
-		IDLE,
-		BATTLE,
+		IDLE,	//バトルが終了した待機状態
+		BATTLE, //戦闘
 	};
 
 	//バトルの状態をセットする
@@ -118,7 +113,6 @@ private:
 	//レアドロップ
 	const float RareDrop = 10;
 
-
 //------------------------------------------------------------------------------------------------------------------------
 //それぞれのフラグ
 
@@ -128,17 +122,8 @@ private:
 	//逃げる時のフラグ
 	bool flee_flag = false;
 
-	//通常攻撃をした時のフラグ
-	bool Nomal_Attack_Flag = false;
-
 	//プレイヤーのターンを示すフラグ
 	bool PlayerTurn = false;
-
-	//敵を倒した時のフラグ
-	bool DeadEnemy_flag = false;
-
-	//スキルを使用した時のフラグ
-	bool SkillUseFlag = false;
 
 	//スキルを使用した時のフラグ(攻撃系)
 	bool Skill_Attack_Flag = false;
@@ -190,9 +175,9 @@ private:
 	//敵
 	Shared<Enemy>enemy = nullptr;
 	//行動を選択するウィンドウ
-	Shared<MenuWindow>Select_Action_Menu = nullptr;
+	Shared<MenuWindow>select_comand_menu = nullptr;
 	//バトルログを流すウィンドウ
-	Shared<Menu>BattleLogMenu = nullptr;
+	Shared<Menu>battle_log_window = nullptr;
 	//ステータスを表示するウィンドウ
 	Shared<Menu>playerStatus_window = nullptr;
 	//バトルログ
@@ -202,7 +187,7 @@ private:
 	//アイテムを表示するウィンドウ
 	Shared<Menu>item_window = nullptr;
 	//アイテムを使うウィンドウ
-	Shared<MenuWindow>select_use_window = nullptr;
+	Shared<MenuWindow>select_itemuse_window = nullptr;
 	//スキルを表示するウィンドウ
 	Shared<Menu>skill_menu_window = nullptr;
 	//通常攻撃
@@ -293,6 +278,11 @@ private:
 	//スキルべージ
 	int SkillCurentPage = 0;
 
+	//武器のタイプ(通常攻撃のエフェクトの切り替えの為)
+	int weapon_type = 0;
+
+public:
+
 	//バトルシーン用のスキル表示
 	void InventorySkillDraw();
 
@@ -302,11 +292,9 @@ private:
 	//スキルを使用した際の処理
 	void SkillUseProcess(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_);
 
-	//武器のタイプ(通常攻撃のエフェクトの切り替えの為)
-	int weapon_type = 0;
-
 
 //---------------------------------------------------
+private:
 
 	//全滅した時に流すSEの音
 	const float annihilation_Time = 3.5f;

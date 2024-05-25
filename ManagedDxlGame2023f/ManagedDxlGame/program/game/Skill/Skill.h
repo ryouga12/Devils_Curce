@@ -7,12 +7,15 @@
 #include"../../game/Manager/animation.h"
 #include"../Manager/SoundManager.h"
 
+class BattleLog;
+
 //攻撃系
 static const int AttackType = 0;
 //バフ系
 static const int BuffType = 1;
 //アイテム系
 static const int ItemType = 2;
+
 
 class Skill : public BaseSkill {
 public:
@@ -23,29 +26,29 @@ public:
 	virtual~Skill(){}
 
 	//攻撃スキルを使った時のダメージ計算
-	virtual int SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_) { return 0; }
+	virtual void SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_, Shared<BattleLog>& battle_log) {}
 
 	//バフスキルを使った時の処理
-	virtual int SkillUse(Player::PlayerStatus& playerStatus) { return 0; };
+	virtual void SkillUse(Player::PlayerStatus& playerStatus, Shared<BattleLog>& battle_log) {};
 
 	//アイテム系を使った時の処理
-	virtual int SkillUse(Enemy::EnemyStatus& enemyStatus_) { return 0; };
+	virtual void SkillUse(Enemy::EnemyStatus& enemyStatus_, Shared<BattleLog>& battle_log) {};
 
 
 	//スキルを使った際のアニメーションの再生
-	virtual void SkillUseAnimation() {}
+	virtual void SkillUseAnimation();
 
 	//スキルを使った際のアニメーションを止める
-	virtual void SkillAnimationStop() {};
+	virtual void SkillAnimationStop();
 
 	//スキルを使った際のアニメーションの描画
-	virtual void SkillAnimationDraw() {};
+	virtual void SkillAnimationDraw();
 
 	//スキルを使った際のアニメーションの更新処理
-	virtual void SkillAnimationUpdate(float delta_time) {}
+	virtual void SkillAnimationUpdate(float delta_time);
 
 	//スキルを使った時のMp処理
-	virtual void SkillMpConsume(Player::PlayerStatus& playerStatus) {}
+	virtual void SkillMpConsume(Player::PlayerStatus& playerStatus);
 	
 	//Idを取得する
 	int getId() const { return Id; }
@@ -76,19 +79,7 @@ public:
 	~Nomal_Attack() override;
 
 	//通常攻撃を行った時の処理
-	int SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_)override;
-
-	//通常攻撃を行った時のアニメーション
-	void SkillUseAnimation()override;
-
-	//スキルを使った際のアニメーションを止める
-	void SkillAnimationStop()override;
-
-	//スキルを使った際のアニメーションの描画
-	void SkillAnimationDraw()override;
-
-	//スキルを使った際のアニメーションの更新処理
-	void SkillAnimationUpdate(float delta_time)override;
+	void SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_ , Shared<BattleLog>& battle_log)override;
 
 private:
 
@@ -112,22 +103,7 @@ public:
 	~FlameSlash()override{}
 
 	//火炎斬りを使った時の処理
-	int SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_)override;
-
-	//火炎斬りを行った時のアニメーション
-	void SkillUseAnimation()override;
-
-	//火炎斬りを使った際のアニメーションを止める
-	void SkillAnimationStop()override;
-
-	//火炎斬りを使った際のアニメーションの描画
-	void SkillAnimationDraw()override;
-
-	//火炎斬りを使った際のアニメーションの更新処理
-	void SkillAnimationUpdate(float delta_time)override;
-
-	//火炎斬りを使った時のMp処理
-	void SkillMpConsume(Player::PlayerStatus& playerStatus)override;
+	void SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_ , Shared<BattleLog>& battle_log)override;
 
 };
 
@@ -139,22 +115,7 @@ public:
 	~IceBlast()override {}
 
 	//アイスブラスト使った時の処理
-	int SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_)override;
-
-	//アイスブラスト行った時のアニメーション
-	void SkillUseAnimation()override;
-
-	//アイスブラスト使った際のアニメーションを止める
-	void SkillAnimationStop()override;
-
-	//アイスブラスト使った際のアニメーションの描画
-	void SkillAnimationDraw()override;
-
-	//アイスブラスト使った際のアニメーションの更新処理
-	void SkillAnimationUpdate(float delta_time)override;
-
-	//アイスブラスト使った時のMp処理
-	void SkillMpConsume(Player::PlayerStatus& playerStatus)override;
+	void SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_, Shared<BattleLog>& battle_log)override;
 
 };
 
@@ -166,22 +127,7 @@ public:
 	~ThunderBolt()override {}
 
 	//サンダーボルト使った時の処理
-	int SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_)override;
-
-	//サンダーボルト行った時のアニメーション
-	void SkillUseAnimation()override;
-
-	//サンダーボルト使った際のアニメーションを止める
-	void SkillAnimationStop()override;
-
-	//サンダーボルト使った際のアニメーションの描画
-	void SkillAnimationDraw()override;
-
-	//サンダーボルト使った際のアニメーションの更新処理
-	void SkillAnimationUpdate(float delta_time)override;
-
-	//サンダーボルト使った時のMp処理
-	void SkillMpConsume(Player::PlayerStatus& playerStatus)override;
+	void SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_ , Shared<BattleLog>& battle_log)override;
 
 };
 
@@ -194,11 +140,7 @@ public:
 	~Heal()override {}
 
 	//ヒールを使った時の処理
-	int SkillUse(Player::PlayerStatus& playerStatus)override;
-
-	//ヒール使った時のMp処理
-	void SkillMpConsume(Player::PlayerStatus& playerStatus)override;
-
+	void SkillUse(Player::PlayerStatus& playerStatus , Shared<BattleLog>& battle_log)override;
 };
 
 
@@ -214,19 +156,8 @@ public:
 	~SlimBell()override {};
 
 	//スライムの鈴を使った時の処理
-	int SkillUse(Enemy::EnemyStatus& enemyStatus_)override;
-	
-	//スライムの鈴を使った時のアニメーション
-	void SkillUseAnimation()override;
+	void SkillUse(Enemy::EnemyStatus& enemyStatus_ , Shared<BattleLog>& battle_log)override;
 
-	//スライムの使った際のアニメーションを止める
-	void SkillAnimationStop()override;
-
-	//スライムの使った際のアニメーションの描画
-	void SkillAnimationDraw()override;
-
-	//スライムの使った際のアニメーションの更新処理
-	void SkillAnimationUpdate(float delta_time)override;
 };
 
 //スネークの鈴[
@@ -237,18 +168,6 @@ public:
 	~SnakeBell()override {}
 
 	//スネークの鈴を使った時の処理
-	int SkillUse(Enemy::EnemyStatus& enemyStatus_)override;
-
-	//スネークの鈴を使った時のアニメーション
-	void SkillUseAnimation()override;
-
-	//スネークの使った際のアニメーションを止める
-	void SkillAnimationStop()override;
-
-	//スネークの使った際のアニメーションの描画
-	void SkillAnimationDraw()override;
-
-	//スネークの使った際のアニメーションの更新処理
-	void SkillAnimationUpdate(float delta_time)override;
+	void SkillUse(Enemy::EnemyStatus& enemyStatus_ ,Shared<BattleLog>& battle_log)override;
 
 };

@@ -1,5 +1,39 @@
 #include "Skill.h"
+#include"../Menu/BattleLog.h"
 
+void Skill::SkillUseAnimation()
+{
+	Effect_Animation->play_animation();
+}
+
+void Skill::SkillAnimationStop()
+{
+	Effect_Animation->stop_animation();
+}
+
+void Skill::SkillAnimationDraw()
+{
+	Effect_Animation->draw();
+}
+
+void Skill::SkillAnimationUpdate(float delta_time)
+{
+	Effect_Animation->update(delta_time);
+}
+
+void Skill::SkillMpConsume(Player::PlayerStatus& playerStatus)
+{
+	//Mp‚ğæ“¾‚·‚é
+	auto CurentMp = playerStatus.getCurentMp();
+
+	//Œ»İ‚ÌMp‚©‚çÁ”ïMp‚ğŒ¸‚ç‚·
+	auto consumeMp = CurentMp - ConsumeMp;
+
+	//Mp‚ğÁ”ï‚³‚¹‚é
+	playerStatus.SetPlayerCurentMp(consumeMp);
+}
+
+//---------------------------------------------------------------------------------------------------------
 
 //’ÊíUŒ‚
 Nomal_Attack::Nomal_Attack(int weapon_type): Skill(0, "UŒ‚", 1, "’ÊíUŒ‚",0 , AttackType)
@@ -63,7 +97,7 @@ Nomal_Attack::~Nomal_Attack()
 }
 
 //’ÊíUŒ‚‚ğs‚Á‚½‚Ìˆ—(ƒhƒ‰ƒNƒG®ŒvZ®(ƒCƒ“ƒtƒŒ‚É‚à‘Î‰‚Å‚«‚é))
-int Nomal_Attack::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_)
+void Nomal_Attack::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_ ,Shared<BattleLog>& battle_log)
 {
 	auto PlayerAttack = playerStatus.getAttack();
 	auto EnemyDefance = enemyStatus_.getEnemyDefance();
@@ -76,37 +110,11 @@ int Nomal_Attack::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatu
 		damage = 1;
 	}
 
-	return damage;
-}
+	// “G‚ÌHP‚ğŒ¸‚ç‚·
+	enemyStatus_.SetEnemyHp(enemyStatus_.getEnemyHp() - damage);
 
-//’ÊíUŒ‚‚ğs‚Á‚½‚ÌƒAƒjƒ[ƒVƒ‡ƒ“
-void Nomal_Attack::SkillUseAnimation()
-{
-	//ƒAƒjƒ[ƒVƒ‡ƒ“‚Ì—¬‚·
-	Effect_Animation->play_animation();
-
-	//‰¹‚ğ–Â‚ç‚·
-	PlaySoundMem(Sound, DX_PLAYTYPE_BACK);
-
-}
-
-//’ÊíUŒ‚‚ÌƒAƒjƒ[ƒVƒ‡ƒ“‚ğ~‚ß‚é
-void Nomal_Attack::SkillAnimationStop()
-{
-	//’ÊíUŒ‚‚ÌƒAƒjƒ[ƒVƒ‡ƒ“‚ğ~‚ß‚é
-	Effect_Animation->stop_animation();
-}
-
-//’ÊíUŒ‚‚ÌƒAƒjƒ[ƒVƒ‡ƒ“‚Ì•`‰æ
-void Nomal_Attack::SkillAnimationDraw()
-{
-	Effect_Animation->draw();
-}
-
-//’ÊíUŒ‚‚ğ‚µ‚½Û‚ÌƒAƒjƒ[ƒVƒ‡ƒ“‚ÌXVˆ—
-void Nomal_Attack::SkillAnimationUpdate(float delta_time)
-{
-	Effect_Animation->update(delta_time);
+	// í“¬ƒƒO‚Éƒ_ƒ[ƒWŒ‹‰Ê‚ğo—Í
+	battle_log->addDamageLog("Player", "Enemy", damage);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------
@@ -119,11 +127,14 @@ FlameSlash::FlameSlash() : Skill(1, "‰Î‰Ša‚è", 1.5f, "‰Š‚Ì—Í‚ğ‚Ü‚Æ‚Á‚½UŒ‚",2 ,
 }
 
 //‰Î‰Ša‚è‚ğg‚Á‚½‚Ìˆ—
-int FlameSlash::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_)
+void FlameSlash::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_ , Shared<BattleLog>& battle_log)
 {
 	auto PlayerAttack = playerStatus.getAttack();
 	auto EnemyDefance = enemyStatus_.getEnemyDefance();
 	auto EnemyFireResist = enemyStatus_.getFireResist();
+
+	//“G‚ª€‚ñ‚Å‹‚½‚çˆ—‚ğ‚Æ‚Î‚·
+	if (enemyStatus_.getEnemyHp() <= 0)return;
 
 	// UŒ‚—Í‚©‚ç–hŒä—Í‚ğˆø‚¢‚ÄŠî–{ƒ_ƒ[ƒW‚ğŒvZ
 	float baseDamage = (PlayerAttack * Power) - EnemyDefance;
@@ -141,49 +152,18 @@ int FlameSlash::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus&
 		damage = 1;
 	}
 
-	return static_cast<int>(damage);
-}
+	//“G‚ÌHp‚ğŒ¸‚ç‚·
+	enemyStatus_.SetEnemyHp(enemyStatus_.getEnemyHp() - damage);
 
-//‰Î‰Ša‚è‚ğg‚Á‚½Û‚ÌƒAƒjƒ[ƒVƒ‡ƒ“ˆ—
-void FlameSlash::SkillUseAnimation()
-{
-	Effect_Animation->play_animation();
+	//ƒoƒgƒ‹ƒƒO‚ğ—¬‚·
+	battle_log->addSkillUseLog("Player", SkillName, "Enemy", damage);
 
-	//ƒTƒEƒ“ƒh
+	//SE‚ğ—¬‚·
 	SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/FlameSlash.mp3", DX_PLAYTYPE_BACK);
-	//‰¹—Ê‚ğ•Ï‚¦‚é(‰¹—Ê , ghpath)
-	SoundManager::getSoundManager()->ChangeSoundVolume(100, "sound/SoundEffect/FlameSlash.mp3");
-}
 
-//‰Î‰Ša‚è‚ÌƒAƒjƒ[ƒVƒ‡ƒ“‚ğ~‚ß‚é
-void FlameSlash::SkillAnimationStop()
-{
-	Effect_Animation->stop_animation();
-}
+	//ƒ{ƒŠƒ…[ƒ€‚ğ•Ï‚¦‚é
+	SoundManager::getSoundManager()->ChangeSoundVolume(70, "sound/SoundEffect/FlameSlash.mp3");
 
-//‰Î‰Ša‚èg‚Á‚½Û‚ÌƒAƒjƒ[ƒVƒ‡ƒ“‚Ì•`‰æ
-void FlameSlash::SkillAnimationDraw()
-{
-	Effect_Animation->draw();
-}
-
-//‰Î‰Ša‚è‚ğg‚Á‚½Û‚ÌƒAƒjƒ[ƒVƒ‡ƒ“‚ÌXVˆ—
-void FlameSlash::SkillAnimationUpdate(float delta_time)
-{
-	Effect_Animation->update(delta_time);
-}
-
-//‰Î‰Ša‚è‚ğg‚Á‚½‚ÌMpˆ—
-void FlameSlash::SkillMpConsume(Player::PlayerStatus& playerStatus)
-{
-	//Mp‚ğæ“¾‚·‚é
-	auto CurentMp = playerStatus.getCurentMp();
-
-	//Œ»İ‚ÌMp‚©‚çÁ”ïMp‚ğŒ¸‚ç‚·
-	auto consumeMp = CurentMp - ConsumeMp;
-
-	//Mp‚ğÁ”ï‚³‚¹‚é
-	playerStatus.SetPlayerCurentMp(consumeMp);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------
@@ -195,11 +175,14 @@ IceBlast::IceBlast():Skill(2, "ƒAƒCƒXƒuƒ‰ƒXƒg", 2.0f, "•X‘®«‚Ì”š”­–‚–@", 3 , At
 }
 
 //ƒAƒCƒXƒuƒ‰ƒXƒg‚ğg‚Á‚½‚ÌŒvZˆ—
-int IceBlast::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_)
+void IceBlast::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_, Shared<BattleLog>& battle_log)
 {
 	auto PlayerMagicPower = playerStatus.getMagicPower();
 	auto EnemyDefance = enemyStatus_.getEnemyDefance();
 	auto EnemyIceResist = enemyStatus_.getIceResist();
+
+	//“G‚ª€‚ñ‚Å‹‚½‚çˆ—‚ğ‚Æ‚Î‚·
+	if (enemyStatus_.getEnemyHp() <= 0)return;
 
 	// UŒ‚—Í‚©‚ç–hŒä—Í‚ğˆø‚¢‚ÄŠî–{ƒ_ƒ[ƒW‚ğŒvZ
 	float baseDamage = (PlayerMagicPower * Power) - EnemyDefance;
@@ -217,44 +200,18 @@ int IceBlast::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& e
 		damage = 1;
 	}
 
-	return static_cast<int>(damage);
+	//“G‚ÌHp‚ğŒ¸‚ç‚·
+	enemyStatus_.SetEnemyHp(enemyStatus_.getEnemyHp() - damage);
+
+	//ƒoƒgƒ‹ƒƒO‚ğ—¬‚·
+	battle_log->addSkillUseLog("Player", SkillName, "Enemy", damage);
+
+	//SE‚ğ—¬‚·
+	SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/ice_blast.mp3", DX_PLAYTYPE_BACK);
+
+	//ƒ{ƒŠƒ…[ƒ€‚ğ•Ï‚¦‚é
+	SoundManager::getSoundManager()->ChangeSoundVolume(70, "sound/SoundEffect/ice_blast.mp3");
 	
-}
-
-//ƒAƒCƒXƒuƒ‰ƒXƒgg‚Á‚½Û‚ÌƒAƒjƒ[ƒVƒ‡ƒ“ˆ—
-void IceBlast::SkillUseAnimation()
-{
-	Effect_Animation->play_animation();
-}
-
-void IceBlast::SkillAnimationStop()
-{
-	Effect_Animation->stop_animation();
-}
-
-//ƒAƒCƒXƒuƒ‰ƒXƒgƒAƒjƒ[ƒVƒ‡ƒ“‚ğ~‚ß‚é
-void IceBlast::SkillAnimationDraw()
-{
-	Effect_Animation->draw();
-}
-
-//ƒAƒCƒXƒuƒ‰ƒXƒgg‚Á‚½Û‚ÌƒAƒjƒ[ƒVƒ‡ƒ“‚ÌXVˆ—
-void IceBlast::SkillAnimationUpdate(float delta_time)
-{
-	Effect_Animation->update(delta_time);
-}
-
-//ƒAƒCƒXƒuƒ‰ƒXƒgg‚Á‚½‚ÌMpˆ—
-void IceBlast::SkillMpConsume(Player::PlayerStatus& playerStatus)
-{
-	//Mp‚ğæ“¾‚·‚é
-	auto CurentMp = playerStatus.getCurentMp();
-
-	//Œ»İ‚ÌMp‚©‚çÁ”ïMp‚ğŒ¸‚ç‚·
-	auto consumeMp = CurentMp - ConsumeMp;
-
-	//Mp‚ğÁ”ï‚³‚¹‚é
-	playerStatus.SetPlayerCurentMp(consumeMp);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------
@@ -267,11 +224,14 @@ ThunderBolt::ThunderBolt():Skill(3, "ƒTƒ“ƒ_[ƒ{ƒ‹ƒg", 2.5f, "—‹‘®«‚Ì”š”­–‚–@", 
 }
 
 //ƒTƒ“ƒ_[ƒ{ƒ‹ƒgg‚Á‚½‚Ìˆ—
-int ThunderBolt::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_)
+void ThunderBolt::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_, Shared<BattleLog>& battle_log)
 {
 	auto PlayerMagicPower = playerStatus.getMagicPower();
 	auto EnemyDefance = enemyStatus_.getEnemyDefance();
 	auto EnemyThunderResist = enemyStatus_.getThunderResist();
+
+	//“G‚ª€‚ñ‚Å‹‚½‚çˆ—‚ğ‚Æ‚Î‚·
+	if (enemyStatus_.getEnemyHp() <= 0)return;
 
 	// UŒ‚—Í‚©‚ç–hŒä—Í‚ğˆø‚¢‚ÄŠî–{ƒ_ƒ[ƒW‚ğŒvZ
 	float baseDamage = (PlayerMagicPower * Power) - EnemyDefance;
@@ -289,49 +249,18 @@ int ThunderBolt::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus
 		damage = 1;
 	}
 
-	return static_cast<int>(damage);
-}
+	//“G‚ÌHp‚ğŒ¸‚ç‚·
+	enemyStatus_.SetEnemyHp(enemyStatus_.getEnemyHp() - damage);
 
-//ƒTƒ“ƒ_[ƒ{ƒ‹ƒgs‚Á‚½‚ÌƒAƒjƒ[ƒVƒ‡ƒ“
-void ThunderBolt::SkillUseAnimation()
-{
-	Effect_Animation->play_animation();
+	//ƒoƒgƒ‹ƒƒO‚ğ—¬‚·
+	battle_log->addSkillUseLog("Player", SkillName, "Enemy", damage);
 
-	//ƒTƒEƒ“ƒh
-	SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/dengeki.mp3", DX_PLAYTYPE_BACK);
-	//‰¹—Ê‚ğ•Ï‚¦‚é(‰¹—Ê , ghpath)
-	SoundManager::getSoundManager()->ChangeSoundVolume(50, "sound/SoundEffect/dengeki.mp3");
-}
+	//SE‚ğ—¬‚·
+	SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/ThunderBolt.mp3", DX_PLAYTYPE_BACK);
 
-//ƒTƒ“ƒ_[ƒ{ƒ‹ƒgg‚Á‚½Û‚ÌƒAƒjƒ[ƒVƒ‡ƒ“‚ğ~‚ß‚é
-void ThunderBolt::SkillAnimationStop()
-{
-	Effect_Animation->stop_animation();
-}
+	//ƒ{ƒŠƒ…[ƒ€‚ğ•Ï‚¦‚é
+	SoundManager::getSoundManager()->ChangeSoundVolume(70, "sound/SoundEffect/ThunderBolt.mp3");
 
-//ƒTƒ“ƒ_[ƒ{ƒ‹ƒgg‚Á‚½Û‚ÌƒAƒjƒ[ƒVƒ‡ƒ“‚Ì•`‰æ
-void ThunderBolt::SkillAnimationDraw()
-{
-	Effect_Animation->draw();
-}
-
-//ƒTƒ“ƒ_[ƒ{ƒ‹ƒgg‚Á‚½Û‚ÌƒAƒjƒ[ƒVƒ‡ƒ“‚ÌXVˆ—
-void ThunderBolt::SkillAnimationUpdate(float delta_time)
-{
-	Effect_Animation->update(delta_time);
-}
-
-//ƒTƒ“ƒ_[ƒ{ƒ‹ƒgg‚Á‚½‚ÌMpˆ—
-void ThunderBolt::SkillMpConsume(Player::PlayerStatus& playerStatus)
-{
-	//Mp‚ğæ“¾‚·‚é
-	auto CurentMp = playerStatus.getCurentMp();
-
-	//Œ»İ‚ÌMp‚©‚çÁ”ïMp‚ğŒ¸‚ç‚·
-	auto consumeMp = CurentMp - ConsumeMp;
-
-	//Mp‚ğÁ”ï‚³‚¹‚é
-	playerStatus.SetPlayerCurentMp(consumeMp);
 }
 
 //‰ñ•œô•¶
@@ -340,7 +269,7 @@ Heal::Heal(): Skill(4, "ƒq[ƒ‹", 0, "Hp‚ğ‰ñ•œ‚·‚é", 2, BuffType)
 }
 
 //ƒq[ƒ‹‚ğg‚Á‚½Û‚Ìˆ—
-int Heal::SkillUse(Player::PlayerStatus& playerStatus)
+void Heal::SkillUse(Player::PlayerStatus& playerStatus, Shared<BattleLog>& battle_log)
 {
 	auto max_hp =  playerStatus.getMaxHp();
 
@@ -358,24 +287,13 @@ int Heal::SkillUse(Player::PlayerStatus& playerStatus)
 			playerStatus.SetPlayerCurentHp(max_hp);
 		}
 
-		return healAmount;
+		//‰ñ•œ‰¹‚ğ–Â‚ç‚·
+		SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/kaihuku.mp3", DX_PLAYTYPE_BACK);
+
+		//ƒoƒgƒ‹ƒƒO‚ğ—¬‚·
+		battle_log->addRecoveryLog("Player", SkillName, healAmount);
 	}
 	
-	//‰º‰ñ‚Á‚Ä‚È‚©‚Á‚½‚çg—p‚Å‚«‚È‚¢
-	return 0;
-}
-
-//ƒq[ƒ‹‚ğg‚Á‚½‚ÌMpˆ—
-void Heal::SkillMpConsume(Player::PlayerStatus& playerStatus)
-{
-	//Mp‚ğæ“¾‚·‚é
-	auto CurentMp = playerStatus.getCurentMp();
-
-	//Œ»İ‚ÌMp‚©‚çÁ”ïMp‚ğŒ¸‚ç‚·
-	auto consumeMp = CurentMp - ConsumeMp;
-
-	//Mp‚ğÁ”ï‚³‚¹‚é
-	playerStatus.SetPlayerCurentMp(consumeMp);
 }
 
 //---------------------------------------------------------------------------------------------------------
@@ -389,8 +307,11 @@ SlimBell::SlimBell() : Skill(20 , "ƒXƒ‰ƒCƒ€‚ğŒÄ‚Ô",5, "ƒXƒ‰ƒCƒ€‚Ì—Í‚ğØ‚è‚ÄUŒ‚‚
 }
 
 //ƒXƒ‰ƒCƒ€‚ÌUŒ‚ŒvZ
-int SlimBell::SkillUse(Enemy::EnemyStatus& enemyStatus_)
+void SlimBell::SkillUse(Enemy::EnemyStatus& enemyStatus_, Shared<BattleLog>& battle_log)
 {
+	//“G‚ª€‚ñ‚Å‹‚½‚çˆ—‚ğ‚Æ‚Î‚·
+	if (enemyStatus_.getEnemyHp() <= 0)return;
+
 	//ƒ_ƒ[ƒW‚ğŒvZ‚·‚é
 	auto damage = (Power  - enemyStatus_.getEnemyDefance() / 2);
 
@@ -398,33 +319,21 @@ int SlimBell::SkillUse(Enemy::EnemyStatus& enemyStatus_)
 		damage = 1;
 	}
 
-	return static_cast<int>(damage);
+	//“G‚ÌHp‚ğŒ¸‚ç‚·
+	enemyStatus_.SetEnemyHp(enemyStatus_.getEnemyHp() - damage);
+
+	//ƒoƒgƒ‹ƒƒO‚ğ—¬‚·
+	battle_log->addSkillUseLog("Player", SkillName, "Enemy", damage);
+
+	//SE‚ğ—¬‚·
+	SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/dageki_2.mp3", DX_PLAYTYPE_BACK);
+
+	//ƒ{ƒŠƒ…[ƒ€‚ğ•Ï‚¦‚é
+	SoundManager::getSoundManager()->ChangeSoundVolume(70, "sound/SoundEffect/dageki_2.mp3");
+
 }
 
-//ƒXƒ‰ƒCƒ€‚Ì—é‚ğg‚Á‚½‚ÌƒAƒjƒ[ƒVƒ‡ƒ“
-void SlimBell::SkillUseAnimation()
-{
-	Effect_Animation->play_animation();
-}
-
-//ƒXƒ‰ƒCƒ€‚Ì—ég‚Á‚½Û‚ÌƒAƒjƒ[ƒVƒ‡ƒ“‚ğ~‚ß‚é
-void SlimBell::SkillAnimationStop()
-{
-	Effect_Animation->stop_animation();
-}
-
-//ƒXƒ‰ƒCƒ€‚Ìg‚Á‚½Û‚ÌƒAƒjƒ[ƒVƒ‡ƒ“‚Ì•`‰æ
-void SlimBell::SkillAnimationDraw()
-{
-	Effect_Animation->draw();
-}
-
-//ƒXƒ‰ƒCƒ€‚Ìg‚Á‚½Û‚ÌƒAƒjƒ[ƒVƒ‡ƒ“‚ÌXVˆ—
-void SlimBell::SkillAnimationUpdate(float delta_time)
-{
-	Effect_Animation->update(delta_time);
-}
-
+//ƒXƒl[ƒN‚Ì—é‚ğg‚Á‚½‚Ìˆ—
 SnakeBell::SnakeBell(): Skill(21 , "ƒXƒl[ƒN‚ğŒÄ‚Ô" , 10 , "ƒXƒl[ƒN‚Ì—Í‚ğØ‚è‚ÄUŒ‚‚·‚é", 0 , ItemType)
 {
 	//ƒAƒjƒ[ƒVƒ‡ƒ“‚ğì¬‚·‚é
@@ -432,8 +341,11 @@ SnakeBell::SnakeBell(): Skill(21 , "ƒXƒl[ƒN‚ğŒÄ‚Ô" , 10 , "ƒXƒl[ƒN‚Ì—Í‚ğØ‚è‚Ä
 }
 
 //ƒXƒl[ƒN‚Ì—é‚ğg‚Á‚½‚Ìˆ—
-int SnakeBell::SkillUse(Enemy::EnemyStatus& enemyStatus_)
+void SnakeBell::SkillUse(Enemy::EnemyStatus& enemyStatus_, Shared<BattleLog>& battle_log)
 {
+	//“G‚ª€‚ñ‚Å‹‚½‚çˆ—‚ğ‚Æ‚Î‚·
+	if (enemyStatus_.getEnemyHp() <= 0)return;
+
 	//ƒ_ƒ[ƒW‚ğŒvZ‚·‚é
 	auto damage = (Power  - enemyStatus_.getEnemyDefance() / 2);
 
@@ -441,29 +353,10 @@ int SnakeBell::SkillUse(Enemy::EnemyStatus& enemyStatus_)
 		damage = 1;
 	}
 
-	return static_cast<int>(damage);
-}
+	//“G‚ÌHp‚ğŒ¸‚ç‚·
+	enemyStatus_.SetEnemyHp(enemyStatus_.getEnemyHp() - damage);
 
-//ƒXƒl[ƒN‚Ì—é‚ğg‚Á‚½‚ÌƒAƒjƒ[ƒVƒ‡ƒ“
-void SnakeBell::SkillUseAnimation()
-{
-	Effect_Animation->play_animation();
-}
+	//ƒoƒgƒ‹ƒƒO‚ğ—¬‚·
+	battle_log->addSkillUseLog("Player", SkillName, "Enemy", damage);
 
-//ƒXƒl[ƒN‚Ìg‚Á‚½Û‚ÌƒAƒjƒ[ƒVƒ‡ƒ“‚ğ~‚ß‚é
-void SnakeBell::SkillAnimationStop()
-{
-	Effect_Animation->stop_animation();
-}
-
-//ƒXƒl[ƒN‚Ìg‚Á‚½Û‚ÌƒAƒjƒ[ƒVƒ‡ƒ“‚Ì•`‰æ
-void SnakeBell::SkillAnimationDraw()
-{
-	Effect_Animation->draw();
-}
-
-//ƒXƒl[ƒN‚Ìg‚Á‚½Û‚ÌƒAƒjƒ[ƒVƒ‡ƒ“‚ÌXVˆ—
-void SnakeBell::SkillAnimationUpdate(float delta_time)
-{
-	Effect_Animation->update(delta_time);
 }

@@ -140,17 +140,14 @@ void Player::PlayerMoveProcess(float delta_time , Shared<BattleLog>& basttle_log
 		//通常攻撃時の処理
 		PlayerAttackProcess(enemy->GetEnemyArray()[enemy->GetEnemy_Index()], basttle_log , nomal_attack);
 
-		//// エネミーの体力が0以下になったら、死亡演出 + レベルアップ判定
-		//enemy->DeadEnemy();
-
 		break;
 
 
 	//特技の攻撃時
-	case Player::PlayerState::SKILLATTACK:
+	case Player::PlayerState::SKILL:
 
 		//特技使用時の処理
-		battleScene->SkillSelectProcess();
+		battleScene->SkillUseProcess(plyerstatusSave , enemy->GetEnemyArray()[enemy->GetEnemy_Index()]);
 
 		break;
 
@@ -281,14 +278,9 @@ void Player::PlayerAttackProcess(Enemy::EnemyStatus& enemy_status, Shared<Battle
 	//決定音を鳴らす
 	SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
 
-	// ダメージを計算し、ダメージが 0 以下ならば、1にする ( 最低でも1ダメージは与える)
-	int damage = nomal_attack->SkillUse(plyerstatusSave, enemy_status);
+	//敵にダメージを与える
+	nomal_attack->SkillUse(plyerstatusSave, enemy_status ,battle_log);
 
-	// 敵のHPを減らす
-	enemy_status.SetEnemyHp(enemy_status.getEnemyHp() - damage);
-
-	// 戦闘ログにダメージ結果を出力
-	battle_log->addDamageLog("Player", "Enemy", damage);
 }
 
 //void Player::PlyerSave()
