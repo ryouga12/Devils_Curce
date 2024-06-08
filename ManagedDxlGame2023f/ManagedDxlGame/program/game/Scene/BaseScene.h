@@ -14,14 +14,14 @@ public:
 
 protected:
 
-   /* Shared<Inventory>inventory = nullptr;
-    Shared<Player>player = nullptr;
-    Shared<KonCamera>camera = nullptr;
-    Shared<Skill>skill = nullptr;*/
-
     //Actorリスト
     std::list<Shared<Actor>>actor_list;
     
+    ////黒色
+    //const int COLOR_BLACK = 0;
+    ////白色
+    //const int COLOR_WHITE = -1;
+
 };
 
 

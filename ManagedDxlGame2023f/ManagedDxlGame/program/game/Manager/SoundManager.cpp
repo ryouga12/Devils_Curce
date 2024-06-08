@@ -18,18 +18,19 @@ SoundManager::SoundManager()
 
 SoundManager::~SoundManager()
 {
-	
+	//中の要素を消去する
+	sound_map.clear();
 }
 
 int SoundManager::LoadSoundBGM(const std::string& bgmFile)
 {
-	auto it = soundMap.find(bgmFile);
-	if (it != soundMap.end()) {
-		return soundMap[bgmFile];
+	auto it = sound_map.find(bgmFile);
+	if (it != sound_map.end()) {
+		return sound_map[bgmFile];
 	}
 	else {
 		int bgmHandle = LoadSoundMem(bgmFile.c_str());
-		soundMap.insert(std::make_pair(bgmFile, bgmHandle));
+		sound_map.insert(std::make_pair(bgmFile, bgmHandle));
 		return bgmHandle;
 	}
 }
@@ -37,9 +38,9 @@ int SoundManager::LoadSoundBGM(const std::string& bgmFile)
 bool SoundManager::daleteSound(const std::string& filepath)
 {
 	// soundが入っているか確認
-	if (auto it = soundMap.find(filepath); it != soundMap.end()) {
+	if (auto it = sound_map.find(filepath); it != sound_map.end()) {
 		if (DeleteSoundMem(it->second) != -1) {
-			soundMap.erase(filepath);
+			sound_map.erase(filepath);
 			return true;
 		}
 		else {
@@ -57,9 +58,13 @@ bool SoundManager::daleteSound(const std::string& filepath)
 
 void SoundManager::StopSound(const std::string& filepath)
 {
+	//デバックトレース
+	/*tnl::DebugTrace("----------------------------------------------------------\n");
+	auto c = tnl::BeginClock();*/
 	int handle = LoadSoundBGM(filepath);
 	StopSoundMem(handle);
-
+	/*float time = tnl::EndClock(c);
+	tnl::DebugTrace("sound_time %f\n", time);*/
 }
 
 

@@ -11,7 +11,7 @@
 
 class Actor;
 
-class Weapon : public ItemBase , Actor{
+class Weapon : public ItemBase{
 public:
 
 	Weapon();
@@ -32,8 +32,8 @@ public:
 	}
 
 	//武器リストの数を取得する
-	int GetWeaponListCount(){
-		return weponList.size();
+	std::vector<ItemBase>& GetWeaponList() {
+		return weponList;
 	}
 
 	//武器の値をセットする関数

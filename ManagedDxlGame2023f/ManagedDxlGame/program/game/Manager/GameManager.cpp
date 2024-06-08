@@ -14,7 +14,26 @@ GameManager* GameManager::getGameManager()
 
 GameManager::GameManager()
 {
+	
+}
+
+GameManager::~GameManager()
+{
+	
+
+}
+
+void GameManager::draw()
+{
+
+	
+}
+
+//それぞれのポインターを生成する
+void GameManager::PoiterCreate()
+{
 	//インベントリのポインタ
+
 	if (inventory == nullptr) {
 		inventory = std::make_shared<Inventory>();
 	}
@@ -44,19 +63,34 @@ GameManager::GameManager()
 	}
 }
 
-GameManager::~GameManager()
+//ポインタをリセットする
+void GameManager::Reset()
 {
-	
-
+	if (inventory != nullptr) {
+		inventory.reset();
+	}
+	else {
+		tnl::DebugTrace("ポインタは存在しません");
+	}
+	if (player != nullptr) {
+		player.reset();
+	}
+	else {
+		tnl::DebugTrace("ポインタは存在しません");
+	}
+	if (camera != nullptr) {
+		camera.reset();
+	}
+	else {
+		tnl::DebugTrace("ポインタは存在しません");
+	}
+	if (skill != nullptr) {
+		skill.reset();
+	}
+	else {
+		tnl::DebugTrace("ポインタは存在しません");
+	}
 }
-
-void GameManager::draw()
-{
-
-	
-}
-
-
 
 int GameManager::GetRandEx(int a, int b)
 {
@@ -86,18 +120,14 @@ void GameManager::displayDialogue()
 bool GameManager::TimeCount(float delta_time, float Time)
 {
 	//指定した時間までプラスする
-	while (count_Time < Time) {
-		count_Time += delta_time;
-		//指定時間が過ぎたらTrueにする
-		if (count_Time > Time) {
-			count_Time = 0;
-			return true;
-		}
-		else {
-			return false;
-		}
+	count_time += delta_time;
+
+	//指定時間が過ぎたらTrueにする
+	if (count_time > Time) {
+		count_time = 0;
+		return true;
 	}
-		
+	return false;
 }
 
 

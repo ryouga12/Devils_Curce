@@ -1,4 +1,6 @@
 #include "EventManager.h"
+#include"../Manager/UiManager.h"
+
 
 EventManager* EventManager::getEventManager()
 {
@@ -24,136 +26,49 @@ void EventManager::InitMenu()
 
 
 	//メニューの選択ウィンドウ
-	menuSelectWindow = std::make_shared<Menu>(50, 50, 250, 200, "graphics/WindowBase_01.png");
+	menu_window = UIManager::getUIManager()->getMenu("menu_window");
 
-	//コメント表示の際のメニューウィンドウ
-	menuComentWindiow = std::make_shared<Menu>(50, 500, 700, 200, "graphics/WindowBase_01.png");
 }
 
 EventManager::~EventManager()
 {
-	ResourceManager::getResourceManager()->deleteGraphEx("graphics/Npc/Armsdealer_icon.png");
-	ResourceManager::getResourceManager()->deleteGraphEx("graphics/Npc/herdman_icon.png");
-	ResourceManager::getResourceManager()->deleteGraphEx("graphics/Npc/Priest_icon.png");
-	ResourceManager::getResourceManager()->deleteGraphEx("graphics/Player/Player_Icon.png");
-}
-
-bool EventManager::isNpcMenuOpen()
-{
-	switch (select_menu_num)
-	{
-	case EventManager::MenuOpenNum::WeaponShop:
-		
-		return select_menu_num == MenuOpenNum::WeaponShop;
-
-		break;
-
-	case EventManager::MenuOpenNum::Herdman:
-
-		return select_menu_num == MenuOpenNum::Herdman;
-
-		break;
-
-	case EventManager::MenuOpenNum::Priest:
-
-		return select_menu_num == MenuOpenNum::Priest;
-
-		break;
-	case EventManager::MenuOpenNum::Object:
-
-		return select_menu_num == MenuOpenNum::Object;
-
-		break;
-
-	default:
-		break;
-	}
-	
-	
-
-}
-
-//メニューウィンドウの切り替え
-EventManager::MenuOpenNum EventManager::SetMenuNpc(int npcType)
-{
-	switch (npcType)
-	{
-	case 0:
-		select_menu_num = MenuOpenNum::Herdman;
-		return select_menu_num;
-		break;
-
-	case 1:
-		select_menu_num = MenuOpenNum::Priest;
-		return select_menu_num;
-		break;
-
-	case 2:
-		select_menu_num = MenuOpenNum::WeaponShop;
-		return select_menu_num;
-		break;
-
-	case 3:
-		select_menu_num = MenuOpenNum::Object;
-		return select_menu_num;
-		break;
-
-
-	default:
-
-		return MenuOpenNum();
-
-		break;
-	}
-	
 }
 
 //Npcのコメントの切り替え
 void EventManager::NpcSwitchComent()
 {
+	//コメント用
+	auto menuComentWindiow = menu_window.lock();
+
+	//プレイヤーへの選択させる時のウィンドウ
+	auto menuSelectWindow = menu_window.lock();
+
 	switch (npcMove)
 	{
-	case EventManager::NpcMove::Empty:
+	case EventManager::NpcMove::EMPTY:
 
 		break;
 
-	case EventManager::NpcMove::Herdman:
+	//村長
+	case EventManager::NpcMove::HERDMAN:
 
-		menuComentWindiow->Menu_draw();
+		menuComentWindiow->Menu_draw(50, 500, 700, 200);
 
 		//アイコンを表示する
-		DrawRotaGraph(herdman_icon_pos.x, herdman_icon_pos.y, herdman_scale, 0, herdman_icon_hdl, true);
+		DrawRotaGraph(HERDMAN_ICON_POS.x, HERDMAN_ICON_POS.y, HERDMAN_SCALE, 0, herdman_icon_hdl, true);
 
-		if (herdman_first_coment) {
+		//コメントを表示する
+		UIManager::getUIManager()->ComentDraw(HERDMAN_COMENT_POS, 7);
 
-			////一度コメントを消して
-			//Npc_coment_Array.clear();
-
-			//コメントを表示する
-			NpcComent(herdman_coment_pos.x, herdman_coment_pos.y, 3, herdman_coment);
-
-			//次のコメントを表示できるようにする
-			herdman_first_coment = false;
-			herdman_second_coment = true;
-
-		}
-		//Enterキーを押したらコメントを切り替える
-		if (herdman_second_coment) {
-			if (tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
-				Npc_coment_Array.clear();
-				NpcComent(herdman_coment_pos.x, herdman_coment_pos.y, 2, herdman_coment_2);
-				herdman_first_coment = true;
-				herdman_second_coment = false;
-			}
-		}
 	
 		break;
 
-	case EventManager::NpcMove::Priest:
+	//神官
+	case EventManager::NpcMove::PRIEST:
 
 		//メニューのウィンドウを表示する
-		menuComentWindiow->Menu_draw();
-		menuSelectWindow->Menu_draw();
+		menuComentWindiow->Menu_draw(50, 500, 700, 200);
+		menuSelectWindow->Menu_draw(50, 50, 250, 200);
 
 		//アイコンを表示する
 		DrawRotaGraph(110, 600, 1.5f, 0, Priest_icon_hdl, true);
@@ -163,152 +78,105 @@ void EventManager::NpcSwitchComent()
 
 		break;
 
-	default:
+	//ボスモンスター
+	case EventManager::NpcMove::BOSS:
 
-		break;
-	}
-}
+		//メニューのウィンドウを表示する
+		menuComentWindiow->Menu_draw(50, 500, 700, 200);
 
-//Npcのコメントをセットする
-EventManager::NpcMove EventManager::SetNpcComent(int npcType)
-{
-	switch (npcType)
-	{
-	case 0:
-		npcMove = NpcMove::Empty;
-		return npcMove;
-		break;
+		//フォントの大きさを変える
+		SetFontSize(20);
 
-	case 1:
-		npcMove = NpcMove::Herdman;
-		return npcMove;
-		break;
+		//コメントを表示する
+		if (ComentBattleChange(BOSS_COMENT_POS, BOSS_COMENT_MAX_NUM) && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
 
-	case 2:
-		npcMove = NpcMove::Priest;
-		return npcMove;
-		break;
+			//BGMを止める
+			SoundManager::getSoundManager()->StopSound("sound/BGM/maou_bgm_castle.mp3");
+			//バトル用のBGMを流す
+			SoundManager::getSoundManager()->sound_Play("sound/BGM/maou_sentou_bgm.mp3", DX_PLAYTYPE_LOOP);
 
-	default:
-		return NpcMove();
-		break;
-	}
-	
-}
-
-//明日はここから : 文字列を一行かそれとも複数行かで判別し、描画する
-//コメントをアニメーションで表示する
-void EventManager::NpcComent(int x, int y, int max_coment_num ,std::string npc_coment[])
-{
-	int LINE_HEIGHT = 50;
-	int index = 0;
-
-	for (int i = 0; i < max_coment_num; i++) {
-		ComentLoad(npc_coment[i]);
-	}
-
-	if (!Npc_coment_Array.empty()) {
-		// コメントの数だけコメントを表示する
-		for (int i = 0; index < max_coment_num; i++, index++) {
-			DrawStringEx(x, y + i * LINE_HEIGHT, -1, "%s", Npc_coment_Array[i].c_str());
+			auto mgr = SceneManager::GetInstance();
+			//シーンを遷移させる(プレイヤーの座標を渡す,敵のID,敵のポインタを渡す)
+			mgr->changeScene(new BattleScene(GameManager::getGameManager()->getPlayer()->getPlayerPos(), boss_background_hdl, std::make_shared<BossMonster>()));
 		}
+
+		//フォントの大きさを戻す
+		SetFontSize(16);
+
+		break;
+
+	default:
+
+		break;
+	}
+}
+
+//コメントを流し切ってからEnterキーでシーンを遷移させる
+bool EventManager::ComentBattleChange(const tnl::Vector2i& coment_pos , const int count_max)
+{
+	//コメントを表示する
+	UIManager::getUIManager()->ComentDraw(coment_pos, count_max);
+
+	if (UIManager::getUIManager()->GetCount() >= count_max) {
+		return true;
 	}
 
+	return false;
 }
 
-//コメントを読み込む
-void EventManager::ComentLoad(const std::string& newComent)
+//Npcのメニュー選択画面
+void EventManager::EventMenuWindow()
 {
-	Npc_coment_Array.push_back(newComent);
-}
+	//コメント用
+	auto menuComentWindiow = menu_window.lock();
 
+	//プレイヤーへの選択させる時のウィンドウ
+	auto menuSelectWindow = menu_window.lock();
 
-void EventManager::NpcComentDraw()
-{
-	switch (select_menu_num)
+	switch (select_menu)
 	{
+
 		//武器屋の際の描画
-	case EventManager::MenuOpenNum::WeaponShop:
+	case EventManager::MenuOpen::WEAPONSHOP:
 
 		//ウィンドウの表示
-		menuSelectWindow->Menu_draw();
+		menuSelectWindow->Menu_draw(50, 50, 250, 200);
 
 		//メニューのバックグラウンドを描画する
-		menuComentWindiow->Menu_draw();
+		menuComentWindiow->Menu_draw(50, 500, 700, 200);
 
 		//武器商人のアイコンを表示する
 		DrawRotaGraph(90, 600, 1.5f, 0, Armsdealer_icon_hdl, true);
 
 		//武器商人のコメントを表示する
-		armsdealerComentDraw(armsdealer_speak_coment);
-
-		/*DrawStringEx(menuSelectWindow->menu_x + 50, menuSelectWindow->menu_y + 250, -1, "seqMenuOpen");*/
+		UIManager::getUIManager()->armsdealerComentDraw(ARMSDEALER_SPEAK_COMENT);
 
 		break;
 
-		//村長の時の描画
-	case EventManager::MenuOpenNum::Herdman:
+
+	case EventManager::MenuOpen::BOSS:
 
 		//ウィンドウの表示
-		menuSelectWindow->Menu_draw();
+		menuSelectWindow->Menu_draw(50, 50, 250, 200);
 
 		//話すコマンド
 		GameManager::getGameManager()->displayDialogue();
 
-		break;
-
-		//神官の時の描画
-	case EventManager::MenuOpenNum::Priest:
-
-		//ウィンドウの表示
-		menuSelectWindow->Menu_draw();
-
-		//話すコマンド
-		GameManager::getGameManager()->displayDialogue();
-
-		break;
-
-		//オブジェクトの際の描画
-	case EventManager::MenuOpenNum::Object:
-
-		//ウィンドウを表示する
-		menuComentWindiow->Menu_draw();
-
-		//プレイヤーのアイコンを表示する
-		DrawRotaGraph(100, 590, 1.5f, 0, Player_icon_hdl, true);
-
-		//オブジェクトのコメントを表示する
-		objectComentDraw();
+		//ボスシーンでの背景をロードする
+		boss_background_hdl = ResourceManager::getResourceManager()->LoadGraphEX("graphics/haikei/pipo-battlebg010b.jpg");
 
 		break;
 
 	default:
+
+		//ウィンドウの表示
+		menuSelectWindow->Menu_draw(50, 50, 250, 200);
+
+		//話すコマンド
+		GameManager::getGameManager()->displayDialogue();
+
 		break;
 	}
 
-
-}
-
-void EventManager::armsdealerComentDraw(int type)
-{
-	//武器屋に最初に話かけたときのコメント
-	if (type == armsdealer_first_comet) {
-		DrawString(weaponShop.x, weaponShop.y, "武器屋", Color_White);
-		DrawStringEx(armsdealerComent.x, armsdealerComent.y, Color_White, "「 いらっしゃい！」");
-		DrawStringEx(WeaponShop_buy.x, WeaponShop_buy.y, Color_White, "(1 : 武器を購入する)");
-		DrawStringEx(menu_close.x, menu_close.y, Color_White, "(0 : メニューを閉じる)");
-	}
-
-	//なにか買うときのコメント
-	else {
-		DrawStringEx(armsdealerComent.x, armsdealerComent.y, Color_White, "「 何を買うんだい 」");
-	}
-}
-
-void EventManager::objectComentDraw()
-{
-	//メニューのバックグラウンドを描画する
-	DrawStringEx(object_coment.x, object_coment.y, Color_White, "「 今は使われていない檻みたいだ\n   錆びている                 」");
-	DrawStringEx(object_menu_close.x, object_menu_close.y, Color_White, "(0 : メニューを閉じる)");
 
 }

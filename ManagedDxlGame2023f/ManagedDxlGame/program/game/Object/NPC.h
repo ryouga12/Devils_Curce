@@ -3,38 +3,56 @@
 ///NPCクラス
 ///
 
+//NPCのアニメーション
 enum  {
+	//下
 	NPC_DIR_DOWN,
+	//上,
 	NPC_DIR_UP,
+	//左
 	NPC_DIR_LEFT,
+	//右
 	NPC_DIR_RIGHT,
+	//総数
 	NPC_DIR_MAX
 };
 
 
 #include "../../dxlib_ext/dxlib_ext.h"
 #include"../Manager/Camera.h"
+#include"Actor.h"
 
-class Npc {
+class Npc  : public Actor{
 public:
 
-	//Npcのコンストラクタ : 引数 : ( 名前 , 座標 , ハンドルのPass , 画像の大きさ , どのアニメーションから始めるか, ハンドルの数 )
-	Npc(const std::string& name, const tnl::Vector3& pos , std::string ghdl_pass[], float scale , int animation_namber , int ghdl_num);
+	//Npcのコンストラクタ : 引数 : ( 名前 , 座標 , キャラのサイズ ,ハンドルのPass , 画像の大きさ , どのアニメーションから始めるか, ハンドルの数 )
+	Npc(const std::string& name, const tnl::Vector3& pos ,const int CHARASIZE, std::string ghdl_pass[], float scale , int animation_namber , int ghdl_num);
 	~Npc();
 
 	void ChengeAnimation();
 
 	//更新処理
-	void Update(float delta_time);
+	void Update(float delta_time)override;
 
 	//描画
-	void Draw(const KonCamera& camera);
+	void Draw(const KonCamera& camera)override;
 
 	//Npcのキャラチップの幅と高さを取得する
-	int getNpcSize(int type);
+	int GetNpcSizeWidth()const {
+		return npc_chara_chip_width;
+	}
+
+	int GetNpcSizeHegiht()const {
+		return npc_chara_chip_height;
+	}
 
 	//Npcの座標を取得する
-	tnl::Vector3 getNpcPos() { return npc_pos_; }
+	tnl::Vector3 GetNpcPos() { return npc_pos_; }
+
+	//Npcの名前を取得する
+	const std::string& GetNpcName()const {
+		return npc_name_;
+	}
 
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -57,10 +75,16 @@ private:
 	//アニメーションの配列
 	int anim_hdls[NPC_DIR_MAX][5];		
 
+	//アニメーションを切り替える秒数
+	const float CHANGEANIMATIONTIME = 0.1f;
+	//フレーム
+	const int ANIMATIONFLAME = 3;
+
+
 public:
 
 	//アニメーションセレクトを取得する
-	inline int getAnimationSelect() { return animation_select; }
+	inline int GetAnimationSelect() { return animation_select; }
 
 	//アニメーションをリセットする
 	void NpcAnimationReset() { animation_select = 0; }
@@ -79,9 +103,6 @@ private:
 
 	//武器屋の文字の座標
 	tnl::Vector2i weaponShop = { 60 , 520 };
-
-	//白色
-	int Color_White = -1;
 
 	//武器商人のコメントの座標
 	tnl::Vector2i armsdealerComent = { 150, 550 };
@@ -102,10 +123,10 @@ private:
 	std::string npc_name_;
 
 	//Npcのキャラチップの幅
-	int NpcCharaChipWidth = 48;
+	int npc_chara_chip_width = 0;
 
 	//Npcのキャラチップの高さ
-	int NpcCharaChipHeight = 48;
+	int npc_chara_chip_height = 0;
 
 	//それぞれの画像で使う大きさを決める
 	float scale_ = 0;
@@ -116,7 +137,5 @@ private:
 	//npcの座標
 	tnl::Vector3 npc_pos_ = {};
 
-	//npcのサイズを取得する為のタイプ
-	int Width = 1; int Height = 2;
 
 };

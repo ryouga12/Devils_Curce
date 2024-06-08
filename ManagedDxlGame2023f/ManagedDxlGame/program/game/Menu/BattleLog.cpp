@@ -4,7 +4,9 @@ void BattleLog::addLog(const std::string& log)
 {
 	// ログ数が8個を超えている場合、最初のログを削除する
 	if (logs.size() >= 8) {
-		logs.erase(logs.begin());
+		auto erase_log = logs.begin();
+		//最初のログはターン表記なので2個目の要素を消去する
+		logs.erase(erase_log++);
 	}
 	logs.push_back(log);
 }

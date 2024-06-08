@@ -22,7 +22,7 @@ public:
 
 	Skill() {}
 	//(ID , 名前 , 攻撃力 , 特技の説明、特技の消費Mp、スキルのタイプ) を初期化する
-	Skill(int _id , const std::string _name ,float _power , const std::string& _description, int consumeMp , int skilltype) :BaseSkill(_id ,_name, _power,_description ,consumeMp, skilltype) {}
+	Skill(int _id, const std::string _name, float _power, const std::string& _description, int consumeMp, int skilltype) :BaseSkill(_id, _name, _power, _description, consumeMp , skilltype) {}
 	virtual~Skill(){}
 
 	//攻撃スキルを使った時のダメージ計算
@@ -48,7 +48,7 @@ public:
 	virtual void SkillAnimationUpdate(float delta_time);
 
 	//スキルを使った時のMp処理
-	virtual void SkillMpConsume(Player::PlayerStatus& playerStatus);
+	virtual void SkillMpConsume(Player::PlayerStatus& playerStatus) {};
 	
 	//Idを取得する
 	int getId() const { return Id; }
@@ -91,7 +91,7 @@ private:
 		SPEAR
 	};
 
-	int Sound = 0;
+	std::string SoundText;
 
 };
 
@@ -105,6 +105,9 @@ public:
 	//火炎斬りを使った時の処理
 	void SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_ , Shared<BattleLog>& battle_log)override;
 
+	//火炎斬りを使った時のMP処理
+	void SkillMpConsume(Player::PlayerStatus& playerStatus)override;
+
 };
 
 //アイスブラスト
@@ -117,6 +120,8 @@ public:
 	//アイスブラスト使った時の処理
 	void SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_, Shared<BattleLog>& battle_log)override;
 
+	//アイスブラスト使った時のMP処理
+	void SkillMpConsume(Player::PlayerStatus& playerStatus)override;
 };
 
 //サンダーボルト
@@ -129,6 +134,8 @@ public:
 	//サンダーボルト使った時の処理
 	void SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_ , Shared<BattleLog>& battle_log)override;
 
+	//サンダーボルト使った時のMP処理
+	void SkillMpConsume(Player::PlayerStatus& playerStatus)override;
 };
 
 //回復呪文
@@ -141,6 +148,9 @@ public:
 
 	//ヒールを使った時の処理
 	void SkillUse(Player::PlayerStatus& playerStatus , Shared<BattleLog>& battle_log)override;
+
+	//ヒールを使った時のMP処理
+	void SkillMpConsume(Player::PlayerStatus& playerStatus)override;
 };
 
 
@@ -169,5 +179,46 @@ public:
 
 	//スネークの鈴を使った時の処理
 	void SkillUse(Enemy::EnemyStatus& enemyStatus_ ,Shared<BattleLog>& battle_log)override;
+
+};
+
+//---------------------------------------------------------------------------------------------------------
+//敵のスキル
+
+//カオスフレア
+//強力な火属性魔法
+class ChaosFlare : public Skill {
+public:
+
+	ChaosFlare();
+	~ChaosFlare()override {};
+
+	//カオスフレアを使った時の処理
+	void SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_, Shared<BattleLog>& battle_log)override;
+
+};
+
+//デスサイズウィンド
+//強力な風
+class DeathScytheWind : public Skill {
+public:
+
+	DeathScytheWind();
+	~DeathScytheWind()override {};
+
+	//デスサイズウィンドを使った時の処理
+	void SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_, Shared<BattleLog>& battle_log)override;
+
+};
+
+//ダーククロウ
+class DrakClaw : public Skill {
+public:
+
+	DrakClaw();
+	~DrakClaw()override {};
+
+	//ダーククロウ使った時の処理
+	void SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_, Shared<BattleLog>& battle_log)override;
 
 };

@@ -6,12 +6,13 @@
 #include	<unordered_set>
 #include "../../dxlib_ext/dxlib_ext.h"
 #include"../Manager/ResourceManager.h"
-#include"../Scene/village.h"
+#include"../Scene/InMapScene.h"
 #include"../Manager/GameManager.h"
 
 class BaseScene;
 class Enemy;
 class MapChip;
+class CsvManager;
 
 class MapScene : public BaseScene {
 public:
@@ -27,26 +28,29 @@ private:
 
 	tnl::Vector3 pos = { 0 , 0 , 0 };
 
-	//一個目の村に入った時の座標
-	tnl::Vector3 village_Pos = { 860 , 900 , 0 };
+	//村に入った時の座標
+	const tnl::Vector3 village_pos = { 860 , 900 , 0 };
 
-	//時間経過で切り替えるフラグ
-	bool TimeFlag = false;
-	
-	//プレイヤーのサイズを取得する為のタイプ
-	int PlyerWidth = 1; int PlyerHeight = 2;
+	//ボスの城に入った時の処理
+	const tnl::Vector3 boss_castle_pos = { 805 , 895 , 0};
+
+	//村に入るときのフラグ(trueになったら遷移させる)
+	bool viilage_flag = false;
+
+	//ボスの城に入るときのフラグ
+	bool boss_castle_flag = false;
 
 	//遅延させる秒数
-	float Time = 0.5f;
+	const float time = 0.5f;
 
 	//遅延させるSEの秒数
-	float TimeSE = 0.8f;
+	const float time_se = 0.8f;
 
 	//プレイヤーのサイズ
-	int PlayerSize = 1;
+	const float player_size = 1;
 
 	//プレイヤーの速度
-	float PlayerVelocity = 2.5f;
+	float player_velocity = 2.5f;
 	
 	//プレイヤーのアニメーション
 	int Animation_default = 0;
@@ -57,7 +61,7 @@ private:
 	tnl::Sequence<MapScene> sequence_ = tnl::Sequence<MapScene>(this, &MapScene::seqIdle);
 	bool seqIdle(float delta_time);
 	//シーンを変える為のシーケンス
-	bool seqChangeScene(float delta_time) { return true; }
+	bool seqChangeScene(float delta_time);
 	
 		
 //------------------------------------------------------------------------------------------------------------------------
@@ -69,7 +73,6 @@ private:
 private:
 
 	Shared<MapChip>mapchip = nullptr;
-	Shared<Enemy>enemy = nullptr;
 
 //--------------------------------------------------------------------------------------------------------------------------
 //mapchip関連
@@ -77,19 +80,13 @@ private:
 private:
 
 	std::string map_chip_ghdl_pass;
-	//平原のcsvのdataのpass
-	std::string map_chip_csv_pass;
 	//建物や木などのオブジェクト用のcsvのdatapass
 	std::string map_chip_csv_object_pass;
 
-
-	//csvのmapchipを格納する配列
-	std::vector<std::vector<int>>world_map_csv;
-
-	std::vector<std::vector<int>>world_object_csv;
-
+	//オブジェクト用のマップチップ
 	std::list<Shared<MapChip>>MapChips_object;
 
+	//平原用のマップチップ
 	std::list<Shared<MapChip>>MapChip_continent;
 
 	// マップチップの幅
@@ -121,8 +118,12 @@ private:
 	std::unordered_set<int>encount_kind = { 0 , 1 , 2 , 4 , 5 };
 
 	//村のマップチップ
-	int mapChip_village = 2035;
+	const int map_chip_village = 2035;
 
+	//ボスの城のマップチップ
+	const int map_chip_boss_castle = 2090;
+
+	//当たり判定
 	void WorldMapCollision();
 
 
@@ -153,6 +154,7 @@ private:
 
 	//敵の配列のID
 	int enemy_id = 0;
+
 //------------------------------------------------------------------------------------------------------------------------
 //インベントリ関係
 private:

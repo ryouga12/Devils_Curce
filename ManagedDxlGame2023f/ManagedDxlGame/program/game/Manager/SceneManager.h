@@ -11,6 +11,7 @@
 #include "../../dxlib_ext/dxlib_ext.h"
 
 class GameManager;
+class SoundManager;
 
 
 class SceneManager {

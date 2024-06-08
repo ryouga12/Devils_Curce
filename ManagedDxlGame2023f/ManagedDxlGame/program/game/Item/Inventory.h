@@ -5,9 +5,12 @@
 #include"../Menu/MenuWindow.h"
 #include"../Manager/SoundManager.h"
 #include"../Skill/Skill.h"
-#include"../Menu/BattleLog.h"
+
 
 class ItemBase;
+class GameManager;
+class UIManager;
+
 
 class Inventory
 {
@@ -21,10 +24,10 @@ public:
 	void draw();
 
 	//内部にItemを20個持つlist
-	std::vector<ItemBase>InventoryList;
+	std::vector<ItemBase>inventory_list;
 
 	//インベントリの最大数
-	int InventoryMaxSize = 20;
+	int inventory_max_size_ = 20;
 
 	//アイテムを追加する関数
 	void AddInventory(int id);
@@ -34,26 +37,11 @@ public:
 
 	//アイテムの詳細などの処理
 	void ItemDetail();
-
-	//アイテムをの番号によって処理をする
-	void InventoryItemUse(int itemid );
-
-
-	//インベントリ内のアイテムの数を取得する関数
-	inline int GetItemCount() {
-		return InventoryList.size();
-	}
 	
 	//インベントリのリストを他のクラスで使う
 	std::vector<ItemBase>& GetInventoryList() {
-		return InventoryList;
+		return inventory_list;
 	}
-
-	//Playerのポインタをセットする
-	void SetPlayer(std::shared_ptr<Player>player) { plyer = player; }
-
-	//バトルログのポインタをセットする
-	void SetBattleLog(Shared<BattleLog>battle_log) { battleLog = battle_log; }
 
 	//アイテムのカーソルの移動処理の際のインデックスの操作
 	void ItemCurourIndex(int ItemPerPage);
@@ -63,68 +51,65 @@ public:
 
 	//インデックスを0にする
 	void SelectedIndexClear() {
-		selectedIndex = 0;
+		selected_index = 0;
 	}
 
 	//アイテムのインデックスを取得する
 	int GetSelectedIndex()const {
-		return selectedIndex;
+		return selected_index;
 	}
 
 	//取得したアイテムのidを取得する
 	int GetSelectedItemId()const {
-		return selectedItemId;
+		return selected_item_id;
 	}
 
 	//スキルのインデックスを取得する
 	int GetSkillSelectedIndex()const {
-		return selectedSkillIndex;
+		return skill_selected_index;
 	}
 	//スキル
 
-private:
-
 	//インベントリの切り替えの為のクラス
 	enum class MenuWindow_I {
-		Empty,
-		First_Menu,
-		ItemMenu,
-		StatusMenu,
-		ItemUseMenu,
-		ItemDetailMenu,
-		SkillMenu,
-		SkillDatailMenu
+		EMPTY,
+		FIRSTMENU,
+		ITEMMENU,
+		STATUSMENU,
+		ITEMUSEMENU,
+		ITEMDETAILMENU,
+		SKILLMENU,
+		SKILLDATAILMENU
 	};
 
-	MenuWindow_I select_menu = MenuWindow_I::Empty;
+	//インベントリのメニューをセットする
+	void InventoryMenuChange(MenuWindow_I new_window) {
+		select_menu = new_window;
+	}
 
-	int max_hp = 0;
+private:
 
-	//ポーションを使った時の回復量
-	/*int recovery = 30;*/
-	int healAmount = 0;
+	//どのメニューにいるか
+	MenuWindow_I select_menu = MenuWindow_I::EMPTY;
 
 	//攻撃力を一時的に保存する
-	int Attack = 0;
+	int attack = 0;
 	//防御力を一時的に保存する
-	int Defance = 0;
+	int defance = 0;
 
-	//プレイヤーのコントロールを制御する
-	int PlyControlTrue = 0; int PlyControlFalse = 1;
 
 public:
 
 	//アイテムのメニュー
-	void ItemMenu(const tnl::Vector2i& itemDrawPos, tnl::Vector2i& curentPageText, int CousourX ,int itemParPage);
-
-	//インベントリをセットする
-	void SetSelect_num(int select_menu);
+	void ItemMenu(const tnl::Vector2i& itemDrawPos, const tnl::Vector2i& curentPageText, int CousourX ,int itemParPage);
 
 	//インベントリをを取得する
-	MenuWindow_I getSelect_menu_num() { return select_menu; }
+	MenuWindow_I GetSelectMenuNum() { return select_menu; }
 
-	//recoveryを取得する
-	int getRecovery() { return healAmount; }
+	//アイテムの数を減らす
+	void DelateItemNum() {
+		item_num--;
+	}
 
 //------------------------------------------------------------------------------------------------------------------------
 //---関数---//
@@ -135,9 +120,7 @@ public:
 	//カーソルを一番上に戻す関数
 	void CursorReset();
 	//ページのリセット
-	void CurentPageReset() { currentPage = 0; }
-	//使用時Hp回復系
-	void ItemHpHeal(float percentage , int itemid);
+	void CurentPageReset() { curent_page = 0; }
 	
 //------------------------------------------------------------------------------------------------------------------------
 //---メニュー---//
@@ -145,6 +128,8 @@ private:
 
 	//メニューを初期化する
 	void InitMenuWinodow();
+	//インベントリを閉じている時プレイヤーが動いている時のメニュー表示
+	void Game_Menu();
 	//最初のメニュー
 	void First_Menu();
 	//プレイヤーのステータスを表示するメニュー
@@ -152,14 +137,14 @@ private:
 	//武器の中の詳細や使うための描画
 	void ItemUseMenu();
 	//今どのページにいるか
-	int currentPage = 0;
+	int curent_page = 0;
 	//1ページあたりのアイテム数
-	int item_per_page = 5;
+	const int ITEMPERPAGE = 5;
 	//ユーザーが選択した要素のインデックス
 	//最初は一番上なので0に設定する
-	int selectedIndex = 0;
+	int selected_index = 0;
 	//取得したアイテムのIDを一時的に保持するための変数
-	int selectedItemId = 0;
+	int selected_item_id = 0;
 
 //アイテムの描画で使うインデックス
 //  
@@ -170,6 +155,7 @@ private:
 	
 private:
 
+	//武器の種類
 	enum  {
 		EMPTY,
 		WEAPON,
@@ -177,93 +163,174 @@ private:
 	};
 
 	//インベントリ内のアイテム数
-	int itemNum = 0;
+	int item_num = 0;
 
 	//選択中のカーソルの位置
-	int selectCursor = 0;
+	int select_cursor = 0;
 
 	//武器を装備する
-	std::list<ItemBase> equippedWeapon;
-	std::list<ItemBase> equippedArmor;
-
-	//playerのステータス
-	/*Player::PlyerStatus plyerstatus;*/
-
-	//plyerStatusのid番号
-	int PlyerStatus_Id;
+	std::list<ItemBase> equipped_weapon;
+	std::list<ItemBase> equipped_armor;
 
 	//武器の装備が可能か
-	bool equipWeapon = false;
-	bool equipArmor = false;
+	bool equip_weapon = false;
+	bool equip_armor = false;
 
 	//武器を装備した際の[E]を表示する座標
-	tnl::Vector2i equipText = { 80 , 100 };
+	const tnl::Vector2i EQUIPTEXT = { 80 , 100 };
 
 	//現在のページを表示座標
-	tnl::Vector2i CurentPageText = { 100 , 280 };
+	const tnl::Vector2i CURENTPAGETEXT = { 100 , 280 };
 
 	//白色
-	const int Color_White = -1;
+	const int COLORWHITE = -1;
 
 	//カーソルのサイズ
-	const float cursorSize = 0.3f;
-
-	//ItemのComentを切り替える為のクラス
-	enum class ItemComent {
-		Empty,
-		No,
-		Use,
-	};
-
-	ItemComent item_coment = ItemComent::Empty;
-
+	const float CURSORSIZE = 0.3f;
 	
 	//Playerが武器を装備した時に一時的に値を保存しておくための変数
-	int equipAttack = 0;
-	int equipDefance = 0;
+	int equip_attack = 0;
+	int equip_defance = 0;
 
 	//それぞれのシーケンスでの処理
 	void swichInventoryUpdate(float deltatime);
 
 	//アイテムやスキルを表示する座標
-	tnl::Vector2i DrawPos = { 110 , 100 };
+	const tnl::Vector2i DRAWPOS = { 110 , 100 };
 
 	//カーソルのx座標
-	int cursorX = 70;
+	const int CURSORX = 70;
 
 	//アイテムのコメント表示座標
-	tnl::Vector2i ItemComentPos = { 630 , 100 };
+	const tnl::Vector2i ITEMCOMENTPOS = { 630 , 100 };
 
 	//一時的にアイテムであげる為の攻撃力
-	int AttackAmount = 0;
+	int attack_amount = 0;
 
-	//バトルシーンのみで使う為のフラグ
-	bool BattleFlag = false;
+	//使用できるアイテムかできないアイテムかのフラグ(主にコメントで使用)
+	bool can_used_item = true;
+
+	//袋の最大ページ数
+	const int ITEM_MAX_PAGE = 4;
+
+	//---ウィンドウの座標関連---//
+
+	//---メニューウィンドウの座標とサイズ---//
+
+	//メニューウィンドウの座標
+	const tnl::Vector2i MENU_WINDOW_POS = { 50, 50, };
+	//メニューウィンドウの幅
+	const int MENU_WINDOW_WIDTH = 300;
+	//メニューウィンドウの高さ
+	const int MENU_WINDOW_HEIGHT = 270;
+
+	//最初のESCを押したときに出る最初のメニューウィンドウの座標
+	
+	//道具
+	const tnl::Vector2i MENU_TOOL_POS = { 100 , 100 };
+	//特技
+	const tnl::Vector2i MENU_SKILL_POS = { 100 , 150 };
+	//強さ
+	const tnl::Vector2i MENU_STATUS_POS = { 100 , 200 };
+	//閉じる
+	const tnl::Vector2i MENU_CLOSE_POS = { 100 , 250 };
+
+	//アイテムウィンドウ内で選択するメニュー
+	
+	//使う
+	const tnl::Vector2i MENU_ITEM_USE_POS = { 400 , 90 };
+	//詳細
+	const tnl::Vector2i MENU_ITEM_DETAIL_POS = { 400, 140 };
+	//装備する
+	const tnl::Vector2i MENU_ITEM_EQUIP_POS = { 400 , 190 };
+	//捨てる
+	const tnl::Vector2i MENU_ITEM_DISPOSE_POS = { 400 , 240 };
+	//閉じる
+	const tnl::Vector2i MENU_ITEM_CLOSE_POS = { 400 , 290 };
+
+	
+	//---アイテム説明関連の座標とサイズ---//
+	
+	//アイテムウィンドウの座標
+	const tnl::Vector2i ITEM_DETAIL_WINDOW_POS = { 600, 50, };
+	//アイテム説明ウィンドウの幅
+	const int ITEM_DETAIL_WINDOW_WIDTH = 400;
+	//アイテム説明ウィンドウの高さ
+	const int ITEM_DETAIL_WINDOW_HEIGHT = 250;
+	//アイテムの説明を移す座標
+	const tnl::Vector2i ITEM_DETAIL_POS = { 630 , 100 };
+
+	//---ゴールドを表示する為のウィンドウの座標とサイズ---//
+
+	//ゴールドを表示する為のウィンドウの座標
+	const tnl::Vector2i GOLD_DISPLAY_WINDOW_POS = { 1000 , 50 };
+	//ゴールドを表示する為のウィンドウの幅
+	const int GOLD_DISPLAY_WINDOW_WIDTH = 150;
+	//ゴールドを表示する為のウィンドウの高さ
+	const int GOLD_DISPLAY_WINDOW_HEIGHT = 50;
+
+	//---プレイヤーのステータスウィンドウのサイズ---//
+
+	//ゴールドを表示する為のウィンドウの幅
+	const int PLAYER_STATUS_WINDOW_WIDTH = 300;
+	//ゴールドを表示する為のウィンドウの高さ
+	const int PLAYER_STATUS_WINDOW_HEIGHT = 400;
+
+	//プレイヤーのステータスを表示する座標
+	const int PLAYER_STATUS_X = 70;
+	const int PLAYER_STATUS_Y = 100;
+
+	//---スキル説明を表示する為のウィンドウの座標とサイズ---//
+
+	//スキル説明を表示する為のウィンドウの座標
+	const tnl::Vector2i SKILL_DETAIL_WINDOW_POS = { 350 , 50 };
+	//スキル説明を表示する為のウィンドウの幅
+	const int SKILL_DETAIL_WINDOW_WIDTH = 300;
+	//スキル説明を表示する為のウィンドウの高さ
+	const int SKILL_DETAIL_WINDOW_HEIGHT = 250;
+
+	//---選択ウィンドウの定数---//
+
+	//最初の選択ウィンドウ
+	enum ConstFirstMenu {
+		//道具
+		TOOL,
+		//特技
+		SKILL,
+		//強さ
+		STATUS,
+		//閉じる
+		CLOSE,
+	};
+
+	//アイテム使用メニュー
+	enum ConstItemUseMenu {
+		//使う
+		USE,
+		//詳細
+		DETAILE,
+		//装備
+		EQUIP,
+		//捨てる
+		DISPOSE,
+		//閉じる
+		ITEMCLOSE
+	};
 
 public:
 
 	//Playerが武器を装備した時に一時的に値を保存しておくための変数を取得する
-	int getEquipStatus(int type);
+	int GetEquipAttack()const {
+		return equip_attack;
+	}
+	int GetEquipDefance()const {
+		return equip_defance;
+	}
+
 
 	//武器配列を取得する
 	std::list<ItemBase>& getEquipArray() {
-		return equippedWeapon;
-	}
-
-	//上がったAttack量の値を取得する
-	int getAttackAmount()const {
-		return AttackAmount;
-	}
-
-	//フラグを切り替える
-	//0 が true で 1 が false
-	void BattleFlagSwitch(int id) {
-		if (id == 0) {
-			BattleFlag = true;
-		}
-		else {
-			BattleFlag = false;
-		}
+		return equipped_weapon;
 	}
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -271,28 +338,19 @@ public:
 private :
 
 	//特技用のカーソル
-	int SkillCousour = 0;
-
-	//特技の数
-	int SkillNum = 0;
+	int skill_cousour = 0;
 	
 	//スキルのページでどこのページにいるか
-	int SkillCurentPage = 0;
+	int skill_curent_page = 0;
 
 	//スキルの要素番号
-	int selectedSkillIndex = 0;
-
-	//特技用のインベントリ
-	std::vector<Shared<Skill>> SkillList;
+	int skill_selected_index = 0;
 
 
 public:
 
-	//特技を追加する
-	void AddSkill(Shared<Skill>skill);
-
 	//特技の描画
-	void InventorySkill();
+	void InventorySkill(const tnl::Vector2i& SKILLDRAWPOS, const tnl::Vector2i& CURENTPAGETEXT, const int& COUSOURX, const int& ITEMPARPAGE);
 
 	//特技を使用した時の描画
 	void SkillDetailDraw(int skill_index);
@@ -300,38 +358,14 @@ public:
 	//特技のカーソル
 	void SkillCousorMove();
 
-	//スキルをセットする
-	void SkillSet();
-
-	//スキルを追加する系のアイテム
-	template <class T>
-	void AddSkillItem(int itemid , Shared<T>skill);
-
-	//スキルの配列を取得する
-	std::vector<Shared<Skill>>& getSkillList() {
-		return SkillList;
-	}
-
-	//スキルの個数を取得する
-	int getSkillNum() {
-		return SkillNum;
-	}
-
 //------------------------------------------------------------------------------------------------------------------------
 //ポインタ
 private:
 
 	Shared<Item>item = nullptr;
-	Shared<Player>plyer = nullptr;
 	Shared<MenuWindow>first_menu = nullptr;
 	Shared<MenuWindow>select_action_menu = nullptr;
 	Shared<MenuWindow>select_detail_window = nullptr;
-	Shared<Menu>menu_window = nullptr;
-	Shared<Menu>item_coment_window = nullptr;
-	Shared<Menu>plyer_status_window = nullptr;
-	Shared<Menu>SkillInventoryWindow = nullptr;
-	Shared<Menu>SkilldetailWinodow = nullptr;
-	Shared<Menu>ItemDetailWindow = nullptr;
+	Weak<Menu>menu_window;
 	Shared<BattleLog>battleLog = nullptr;
-
 };

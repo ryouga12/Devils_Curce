@@ -1,12 +1,11 @@
 #include "WeaponShop.h"
+#include"../Manager/UiManager.h"
+#include"../Manager/GameManager.h"
 
 WeaponShop::WeaponShop()
 {
 	weapon_ = std::make_shared<Weapon>();
-	// inventory = std::make_shared<Inventory>();
-	myplayer = std::make_shared<Player>();
-	/*sound = std::make_shared<SoundManager>();*/
-	menuWindow = std::make_shared<Menu>(50, 50, 350, 400, "graphics/WindowBase_01.png");
+	menuWindow = UIManager::getUIManager()->getMenu("menu_window");
 
 }
 
@@ -24,7 +23,7 @@ void WeaponShop::Update(float delta_time)
 void WeaponShop::Draw()
 {
 	//メニューの表示
-	menuWindow->Menu_draw();
+	menuWindow.lock()->Menu_draw(50, 50, 350, 400);
 
 	//武器屋関連の表示
 	DrawString(60, 520, "武器屋", -1);
@@ -37,15 +36,15 @@ void WeaponShop::Draw()
 	DrawString(85, 380, "購入したい武器の番号を\n選択してください(0: 終了)", -1);
 
 
-	if (buyWeapon == B_Weapon::buy) {
+	if (buyWeapon == Buy_Weapon::BUY) {
 		DrawString(150, 620, "「毎度あり!ありがとね！」", -1);
 	}
-	else if (buyWeapon == B_Weapon::no) {
+	else if (buyWeapon == Buy_Weapon::NO) {
 		DrawString(150, 620, "「お金が足りないよ!出直してきな!」", -1);
 	}
 
-	ResourceManager::getResourceManager()->DrawRotaGraphEx("graphics/cur_sannkaku2.png", 70, 140 + SelectCousor * 40, 0.3f, 0, true);
-	DrawStringEx(100, 700, -1, "%d", weapon_->GetWeaponListCount());
+	ResourceManager::getResourceManager()->DrawRotaGraphEx("graphics/cur_sannkaku2.png", 70, 140 + select_cousor * 40, 0.3f, 0, true);
+	DrawStringEx(100, 700, -1, "%d", weapon_->GetWeaponList().size());
 
 
 }
@@ -54,88 +53,91 @@ void WeaponShop::Draw()
 void WeaponShop::WeaponShopCursorMove()
 {
 	if (tnl::Input::IsKeyDownTrigger(eKeys::KB_UP)) {
-		WeaponNum = weapon_->GetWeaponListCount();
+		weapon_num = static_cast<int>(weapon_->GetWeaponList().size());
 		SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/cousour_bgm.mp3" , DX_PLAYTYPE_BACK);
-		SelectCousor = (SelectCousor + (WeaponNum - 1)) % WeaponNum;
+		select_cousor = (select_cousor + (weapon_num - 1)) % weapon_num;
 	}
 	else if (tnl::Input::IsKeyDownTrigger(eKeys::KB_DOWN)) {
-		WeaponNum = weapon_->GetWeaponListCount();
+		weapon_num = static_cast<int>(weapon_->GetWeaponList().size());
 		SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/cousour_bgm.mp3", DX_PLAYTYPE_BACK);
-		SelectCousor = (SelectCousor + 1) % WeaponNum;
+		select_cousor = (select_cousor + 1) % weapon_num;
 	}
 
 	
 
 }
 
-void WeaponShop::BuyWeapon(const std::shared_ptr<Player>& player)
+void WeaponShop::BuyWeapon(const Shared<Player>& player)
 {
-	if (SelectCousor == 0 && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
+	//インベントリを取得する
+	auto& inventory = GameManager::getGameManager()->getInventory();
+
+	if (select_cousor == 0 && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
 		if (inventory->GetInventoryList().size() == 20) return;
 		//決定音を鳴らす
 		SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
 		if (player->getPlayerMoney() >= weapon_->GetWeaponValue()[0].getItemPrice()) {
 			player->ReducePlayerMoney(weapon_->GetWeaponValue()[0].getItemPrice());
 			inventory->AddInventory(weapon_->GetWeaponValue()[0].getItemId());
-			buyWeapon = B_Weapon::buy;
+			buyWeapon = Buy_Weapon::BUY;
 		}
 		else
 		{
-			buyWeapon = B_Weapon::no;
+			buyWeapon = Buy_Weapon::NO;
 		}
 
 	}
-	if (SelectCousor == 1 && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
+	if (select_cousor == 1 && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
 		if (inventory->GetInventoryList().size() == 20) return;
 		//決定音を鳴らす
 		SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
 		if (player->getPlayerMoney() >= weapon_->GetWeaponValue()[1].getItemPrice()) {
 			player->ReducePlayerMoney(weapon_->GetWeaponValue()[1].getItemPrice());
 			inventory->AddInventory(weapon_->GetWeaponValue()[1].getItemId());
-			buyWeapon = B_Weapon::buy;
+			buyWeapon = Buy_Weapon::BUY;
 		}
 		else {
-			buyWeapon = B_Weapon::no;
+			buyWeapon = Buy_Weapon::NO;
 		}
 
 	}
-	if (SelectCousor == 2 && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
+	if (select_cousor == 2 && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
 		if (inventory->GetInventoryList().size() == 20) return;
 		//決定音を鳴らす
 		SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
 		if (player->getPlayerMoney() >= weapon_->GetWeaponValue()[2].getItemPrice()) {
 			player->ReducePlayerMoney(weapon_->GetWeaponValue()[2].getItemPrice());
 			inventory->AddInventory(weapon_->GetWeaponValue()[2].getItemId());
-			buyWeapon = B_Weapon::buy;
+			buyWeapon = Buy_Weapon::BUY;
 		}
 		else {
-			buyWeapon = B_Weapon::no;
+			buyWeapon = Buy_Weapon::NO;
 		}
 	}
-	if (SelectCousor == 3 && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
+	if (select_cousor == 3 && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
 		if (inventory->GetInventoryList().size() == 20) return;
 		//決定音を鳴らす
 		SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
 		if (player->getPlayerMoney() >= weapon_->GetWeaponValue()[3].getItemPrice()) {
 			player->ReducePlayerMoney(weapon_->GetWeaponValue()[3].getItemPrice());
 			inventory->AddInventory(weapon_->GetWeaponValue()[3].getItemId());
-			buyWeapon = B_Weapon::buy;
+			buyWeapon = Buy_Weapon::BUY;
 		}
 		else {
-			buyWeapon = B_Weapon::no;
+			buyWeapon = Buy_Weapon::NO;
 		}
 	}
-	if (SelectCousor == 4 && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
+	if (select_cousor == 4 && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
 		if (inventory->GetInventoryList().size() == 20) return;
 		//決定音を鳴らす
 		SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
 		if (player->getPlayerMoney() >= weapon_->GetWeaponValue()[4].getItemPrice()) {
 			player->ReducePlayerMoney(weapon_->GetWeaponValue()[4].getItemPrice());
 			inventory->AddInventory(weapon_->GetWeaponValue()[4].getItemId());
-			buyWeapon = B_Weapon::buy;
+			buyWeapon = Buy_Weapon::BUY;
 		}
 		else {
-			buyWeapon = B_Weapon::no;
+			buyWeapon = Buy_Weapon::NO;
 		}
 	}
 }

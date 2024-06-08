@@ -5,9 +5,11 @@
 
 #include "../../dxlib_ext/dxlib_ext.h"
 #include"../Manager/SceneManager.h"
-#include"village.h"
+#include"InMapScene.h"
 #include"../Manager/GameManager.h"
 #include"../Manager/SoundManager.h"
+
+class UIManager;;
 
 
 class TittleScene : public BaseScene  {
@@ -19,16 +21,27 @@ public:
 	void Update(float delta_time) override;
 	void Draw()override;
 
+	//タイトル内で使う処理全般を分ける
+	enum class TittleState {
+		//最初の選択画面
+		TITTLE,
+		//冒険を始めた時のキャラメイク
+		CHARAMIKE,
+	};
+
 	
 
 
 private:
-	tnl::Sequence<TittleScene> sequence_ = tnl::Sequence<TittleScene>(this, &TittleScene::seqIdle);
-	bool seqIdle(float delta_time);
+	tnl::Sequence<TittleScene> sequence_ = tnl::Sequence<TittleScene>(this, &TittleScene::seqTittle);
+	bool seqTittle(float delta_time);
 
 
 	//背景画像
 	int tittle_ghdl = 0;
+
+	//エンターキーの画像
+	int enter_key_hdl = 0;
 
 	//カラー（黒）
 	int String_Color_Black = 0;
@@ -45,12 +58,8 @@ private:
 //------------------------------------------------------------------------------------------------------------------------	
 //ポインタ
 
-	Shared<Menu> tittle_Menu = nullptr;
-	Shared<Inventory>inventory_ = nullptr;
-	Shared<Player>myplayer = nullptr;
-	Shared<Skill>skill = nullptr;
-	/*Shared<Enemy>enemy = nullptr;*/
-	
+	Shared<Menu> menu_window = nullptr;
+	Shared<Menu>menu_window_white = nullptr;
 
 	//シーンを切り替える
 	bool SceneChange = false;

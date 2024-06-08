@@ -8,6 +8,7 @@ class BattleLog;
 class GameManager;
 class SoundManager;
 class SceneManager;
+class CsvManager;
 class Player;
 
 class Enemy : public Actor{
@@ -24,58 +25,66 @@ public:
 	public:
 
 		//nameを返すゲッター
-		std::string getEnemyString() const {
+		std::string GetEnemyString() const {
 			return name;
 		}
 		//IDを返すゲッター
-		int getEnemyId() const {
+		int GetEnemyId() const {
 			return id;
 		}
 		//Hpを返すゲッター
-		int getEnemyHp() const{
+		int GetEnemyHp() const{
 			return hp;
 		}
 		//Attackを返すゲッター
-		int getEnemyAttack() const {
+		int GetEnemyAttack() const {
 			return Attack;
 		}
 		//Defanceを返すゲッター
-		int getEnemyDefance() const {
+		int GetEnemyDefance() const {
 			return Defance;
 		}
 		//Speedを返すゲッター
-		int getEnemySpeed() const {
+		int GetEnemySpeed() const {
 			return Speed;
 		}
 		//経験値を返すゲッター
-		int getEnemyExpoint() const {
+		int GetEnemyExpoint() const {
 			return ex_point;
 		}
 		//moneyを返すゲッター
-		int getEnemyMoney() const {
+		int GetEnemyMoney() const {
 			return money;
 		}
 		//ghdlを返すゲッター
-		const std::string& getEnemyGhdl()const {
+		const std::string& GetEnemyGhdl()const {
 			return gh;
 		}
 		//それぞれの耐性を返すゲッター
-		float getFireResist() const {
+		float GetFireResist() const {
 			return FireResist;
 		}
-		float getIceResist() const {
+		float GetIceResist() const {
 			return IceResist;
 		}
-		float getThunderResist() const {
+		float GetThunderResist() const {
 			return ThunderResist;
 		}
 		//通常ドロップのアイテムのIDを返す
-		int getNomalDrop()const {
+		int GetNomalDrop()const {
 			return Nomal_Drop;
 		}
 		//レアドロップのアイテムIDを返す
-		int getRareDrop()const {
+		int GetRareDrop()const {
 			return RareDrop;
+		}
+		//seのサウンドを返す
+		std::string GetSeAttack()const {
+			return attack_se;
+		}
+		//魔法力を返す
+		int GetMagicPower()const {
+			return magic_power;
 		}
 
 		//---セッター---//
@@ -134,24 +143,33 @@ public:
 		void SetRareDoropID(int newID) {
 			RareDrop = newID;
 		}
+		//攻撃時のSEをセットする
+		void SetAttackSe(const std::string& new_se) {
+			attack_se = new_se;
+		}
+		//魔法力をセットする
+		void SetMagicPower(int new_magic_power) {
+			magic_power = new_magic_power;
+		}
 
 	private:
 
 		std::string name;
-		int id;
-		int hp;
-		int Attack;
-		int Defance;
-		int Speed;
-		int ex_point;
-		int money;
+		int id = 0;
+		int hp = 0;
+		int Attack = 0;
+		int Defance = 0;
+		int Speed = 0;
+		int ex_point = 0;
+		int money = 0;
 		std::string gh;
-		float FireResist;
-		float IceResist;
-		float ThunderResist;
-		int Nomal_Drop;
-		int RareDrop;
-
+		float FireResist = 0;
+		float IceResist = 0;
+		float ThunderResist = 0;
+		int Nomal_Drop = 0;
+		int RareDrop = 0;
+		std::string attack_se;
+		int magic_power = 0;
 	};
 
 	//Enemyのステータスを読み込む為の関数
@@ -165,11 +183,11 @@ public:
 	
 	//敵の配列を受け取る為のゲッター
 	std::vector<EnemyStatus>& GetEnemyArray(){
-		return Enemy_Array;
+		return enemy_array;
 
 		//敵の配列を取得できなかったらエラー用の配列を返す
-		if (Enemy_Array.size() == 0) {
-			return Null_Array;
+		if (enemy_array.size() == 0) {
+			return null_array;
 		}
 	}
 
@@ -178,7 +196,7 @@ public:
 
 	//敵が所持しているアイテムの配列を取得する
 	std::vector<ItemBase>& getItemDropArray() {
-		return Enemy_Drop_Item;
+		return enemy_drop_item;
 	}
 
 	//敵の情報を配列に格納する
@@ -200,14 +218,12 @@ public:
 		dead_enemy_flag = true;
 	}
 
-
-	//敵のポインタを初期化する
-	void InitEnemyPointer(Shared<Enemy>&enemy_pointer , int enemy_id);
-
 	//敵の種類
 	enum class Enemytype {
 		NONE,
+		//雑魚敵
 		MOB,
+		//ボス敵
 		BOSS
 	};
 
@@ -216,9 +232,12 @@ public:
 		enemy_type = enemyType;
 	}
 
-private:
+	//敵のタイプを取得する
+	Enemytype GetEnemyType()const {
+		return enemy_type;
+	}
 
-	Enemytype enemy_type = Enemytype::NONE;
+private:
 
 	//Enemyのステータスを入れておく変数
 	EnemyStatus Enemy_Status_Type;
@@ -230,25 +249,35 @@ private:
 	std::vector<EnemyStatus>Enemy_Type_Array;
 
 	//csvを入れておく配列
-	std::vector<std::vector<std::string>>Enemy_Csv_Array;
+	std::vector<std::vector<std::string>>enemy_csv_array;
 
 	//---敵を入れておく配列---//
 protected:
+
 	//エラー時に返す用の配列
-	std::vector<EnemyStatus>Null_Array;
+	std::vector<EnemyStatus>null_array;
 	//敵を入れておく配列
-	std::vector<EnemyStatus>Enemy_Array;
+	std::vector<EnemyStatus>enemy_array;
 
 private:
+
+	//敵のサイズ
+	const float ENEMY_SIZE = 0.8f;
+
+	//---座標系---//
+	const tnl::Vector2i ENEMY_POS = { 600 , 320 };
+
+
+
 	//---敵のドロップアイテムを格納しおく配列---//
 
-	std::vector<ItemBase>Enemy_Drop_Item;
+	std::vector<ItemBase>enemy_drop_item;
 
 	//アイテムのポインタ
 	Shared<Item>item = nullptr;
 
 	//敵の数
-	int Enemy_num = 5;
+	const int ENEMY_NUM = 5;
 
 	//死んだ判定のフラグ(主にfalseの場合敵の画像を表示する)
 	bool dead_enemy_flag = false;
@@ -261,6 +290,8 @@ protected:
 	//敵のインデックス
 	int enemy_index = 0;
 
+	Enemytype enemy_type = Enemytype::NONE;
+
 };
 
 //------------------------------------------------------------------------------------------------------------
@@ -272,6 +303,7 @@ protected:
 class MobMonster : public Enemy {
 public:
 
+	MobMonster() {};
 	MobMonster(int enemy_id);
 	~MobMonster()override {};
 
@@ -292,13 +324,31 @@ class BossMonster : public Enemy {
 
 public:
 
-	/*BossMonster() {};
-	~BossMonster()override {};*/
+	BossMonster();
+	~BossMonster()override {};
 
 	//敵の攻撃処理
-	/*void EnemyAction(Player::PlayerStatus& player, Shared<BattleLog>battle_log)override;*/
+	void EnemyAction(Shared<BattleLog>battle_log)override;
+
+	//敵のスキル配列を取得する
+	std::vector <Shared<Skill>>& GetEnemySkillList() {
+		return enemy_skill_;
+	}
+
+	//敵のスキル用のインデックスを取得する
+	int GetEnemySkillIndex()const {
+		return enmey_skill_index;
+	}
 
 private:
 
+	//敵のスキル
+	std::vector<Shared<Skill>>enemy_skill_;
+
+	//敵のスキルの数
+	const int ENEMY_SKILL_MAX_NUM = 3;
+
+	//敵のスキル用のインデックス
+	int enmey_skill_index = 0;
 
 };

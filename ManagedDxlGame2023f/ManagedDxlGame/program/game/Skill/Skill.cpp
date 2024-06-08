@@ -21,18 +21,6 @@ void Skill::SkillAnimationUpdate(float delta_time)
 	Effect_Animation->update(delta_time);
 }
 
-void Skill::SkillMpConsume(Player::PlayerStatus& playerStatus)
-{
-	//Mp‚ğæ“¾‚·‚é
-	auto CurentMp = playerStatus.getCurentMp();
-
-	//Œ»İ‚ÌMp‚©‚çÁ”ïMp‚ğŒ¸‚ç‚·
-	auto consumeMp = CurentMp - ConsumeMp;
-
-	//Mp‚ğÁ”ï‚³‚¹‚é
-	playerStatus.SetPlayerCurentMp(consumeMp);
-}
-
 //---------------------------------------------------------------------------------------------------------
 
 //’ÊíUŒ‚
@@ -48,7 +36,7 @@ Nomal_Attack::Nomal_Attack(int weapon_type): Skill(0, "UŒ‚", 1, "’ÊíUŒ‚",0 , 
 		Effect_Animation = std::make_shared<Animation>("graphics/Effect/NomalAttackQEmpty.png", 600, 350, 5, 2, 120, 120, 6, 8);
 
 		//SeƒTƒEƒ“ƒh
-		Sound = SoundManager::getSoundManager()->LoadSoundBGM("sound/SoundEffect/dageki_3.mp3");
+		SoundText = "sound/SoundEffect/dageki_3.mp3";
 
 		break;
 
@@ -58,7 +46,7 @@ Nomal_Attack::Nomal_Attack(int weapon_type): Skill(0, "UŒ‚", 1, "’ÊíUŒ‚",0 , 
 		Effect_Animation = std::make_shared<Animation>("graphics/Effect/NomalAttack_Sword.png", 630, 350, 5, 1, 120, 120, 5, 8);
 
 		//SeƒTƒEƒ“ƒh
-		Sound = SoundManager::getSoundManager()->LoadSoundBGM("sound/SoundEffect/zanngeki_2.mp3");
+		SoundText = "sound/SoundEffect/zanngeki_2.mp3";
 
 		break;
 
@@ -68,7 +56,7 @@ Nomal_Attack::Nomal_Attack(int weapon_type): Skill(0, "UŒ‚", 1, "’ÊíUŒ‚",0 , 
 		Effect_Animation = std::make_shared<Animation>("graphics/Effect/NomalAttack_Hammer.png", 600, 350, 7, 1, 120, 120, 7, 8);
 
 		//SeƒTƒEƒ“ƒh
-		Sound = SoundManager::getSoundManager()->LoadSoundBGM("sound/SoundEffect/dageki.mp3");
+		SoundText = "sound/SoundEffect/dageki.mp3";
 
 		break;
 
@@ -99,11 +87,11 @@ Nomal_Attack::~Nomal_Attack()
 //’ÊíUŒ‚‚ğs‚Á‚½‚Ìˆ—(ƒhƒ‰ƒNƒG®ŒvZ®(ƒCƒ“ƒtƒŒ‚É‚à‘Î‰‚Å‚«‚é))
 void Nomal_Attack::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_ ,Shared<BattleLog>& battle_log)
 {
-	auto PlayerAttack = playerStatus.getAttack();
-	auto EnemyDefance = enemyStatus_.getEnemyDefance();
+	auto PlayerAttack = playerStatus.GetAttack();
+	auto EnemyDefance = enemyStatus_.GetEnemyDefance();
 
 	//ƒ_ƒ[ƒW‚ğŒvZ‚·‚é
-	int damage = (PlayerAttack / 2 - EnemyDefance / 4) * Power;
+	int damage = static_cast<int>((PlayerAttack / 2 - EnemyDefance / 4) * Power);
 
 	//ƒ_ƒ[ƒW‚ª0‚ğ‰º‰ñ‚Á‚½‚ç1‚É‚·‚é
 	if (damage <= 0) {
@@ -111,10 +99,17 @@ void Nomal_Attack::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStat
 	}
 
 	// “G‚ÌHP‚ğŒ¸‚ç‚·
-	enemyStatus_.SetEnemyHp(enemyStatus_.getEnemyHp() - damage);
+	enemyStatus_.SetEnemyHp(enemyStatus_.GetEnemyHp() - damage);
 
 	// í“¬ƒƒO‚Éƒ_ƒ[ƒWŒ‹‰Ê‚ğo—Í
 	battle_log->addDamageLog("Player", "Enemy", damage);
+
+	//SE‚ğ—¬‚·
+	SoundManager::getSoundManager()->sound_Play(SoundText.c_str(), DX_PLAYTYPE_BACK);
+
+	//ƒ{ƒŠƒ…[ƒ€‚ğ•Ï‚¦‚é
+	SoundManager::getSoundManager()->ChangeSoundVolume(70, SoundText.c_str());
+
 }
 
 //------------------------------------------------------------------------------------------------------------------------------
@@ -129,12 +124,12 @@ FlameSlash::FlameSlash() : Skill(1, "‰Î‰Ša‚è", 1.5f, "‰Š‚Ì—Í‚ğ‚Ü‚Æ‚Á‚½UŒ‚",2 ,
 //‰Î‰Ša‚è‚ğg‚Á‚½‚Ìˆ—
 void FlameSlash::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_ , Shared<BattleLog>& battle_log)
 {
-	auto PlayerAttack = playerStatus.getAttack();
-	auto EnemyDefance = enemyStatus_.getEnemyDefance();
-	auto EnemyFireResist = enemyStatus_.getFireResist();
+	auto PlayerAttack = playerStatus.GetAttack();
+	auto EnemyDefance = enemyStatus_.GetEnemyDefance();
+	auto EnemyFireResist = enemyStatus_.GetFireResist();
 
 	//“G‚ª€‚ñ‚Å‹‚½‚çˆ—‚ğ‚Æ‚Î‚·
-	if (enemyStatus_.getEnemyHp() <= 0)return;
+	if (enemyStatus_.GetEnemyHp() <= 0)return;
 
 	// UŒ‚—Í‚©‚ç–hŒä—Í‚ğˆø‚¢‚ÄŠî–{ƒ_ƒ[ƒW‚ğŒvZ
 	float baseDamage = (PlayerAttack * Power) - EnemyDefance;
@@ -153,10 +148,10 @@ void FlameSlash::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus
 	}
 
 	//“G‚ÌHp‚ğŒ¸‚ç‚·
-	enemyStatus_.SetEnemyHp(enemyStatus_.getEnemyHp() - damage);
+	enemyStatus_.SetEnemyHp(static_cast<int>(enemyStatus_.GetEnemyHp() - damage));
 
 	//ƒoƒgƒ‹ƒƒO‚ğ—¬‚·
-	battle_log->addSkillUseLog("Player", SkillName, "Enemy", damage);
+	battle_log->addSkillUseLog("Player", SkillName, "Enemy", static_cast<int>(damage));
 
 	//SE‚ğ—¬‚·
 	SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/FlameSlash.mp3", DX_PLAYTYPE_BACK);
@@ -164,6 +159,19 @@ void FlameSlash::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus
 	//ƒ{ƒŠƒ…[ƒ€‚ğ•Ï‚¦‚é
 	SoundManager::getSoundManager()->ChangeSoundVolume(70, "sound/SoundEffect/FlameSlash.mp3");
 
+}
+
+//‰Î‰Ša‚è‚ğg‚Á‚½‚ÌMPˆ—
+void FlameSlash::SkillMpConsume(Player::PlayerStatus& playerStatus) {
+
+	//Mp‚ğæ“¾‚·‚é
+	auto CurentMp = playerStatus.GetCurentMp();
+
+	//Œ»İ‚ÌMp‚©‚çÁ”ïMp‚ğŒ¸‚ç‚·
+	auto consumeMp = CurentMp - ConsumeMp;
+
+	//Mp‚ğÁ”ï‚³‚¹‚é
+	playerStatus.SetPlayerCurentMp(consumeMp);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------
@@ -177,12 +185,12 @@ IceBlast::IceBlast():Skill(2, "ƒAƒCƒXƒuƒ‰ƒXƒg", 2.0f, "•X‘®«‚Ì”š”­–‚–@", 3 , At
 //ƒAƒCƒXƒuƒ‰ƒXƒg‚ğg‚Á‚½‚ÌŒvZˆ—
 void IceBlast::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_, Shared<BattleLog>& battle_log)
 {
-	auto PlayerMagicPower = playerStatus.getMagicPower();
-	auto EnemyDefance = enemyStatus_.getEnemyDefance();
-	auto EnemyIceResist = enemyStatus_.getIceResist();
+	auto PlayerMagicPower = playerStatus.GetMagicPower();
+	auto EnemyDefance = enemyStatus_.GetEnemyDefance();
+	auto EnemyIceResist = enemyStatus_.GetIceResist();
 
 	//“G‚ª€‚ñ‚Å‹‚½‚çˆ—‚ğ‚Æ‚Î‚·
-	if (enemyStatus_.getEnemyHp() <= 0)return;
+	if (enemyStatus_.GetEnemyHp() <= 0)return;
 
 	// UŒ‚—Í‚©‚ç–hŒä—Í‚ğˆø‚¢‚ÄŠî–{ƒ_ƒ[ƒW‚ğŒvZ
 	float baseDamage = (PlayerMagicPower * Power) - EnemyDefance;
@@ -201,10 +209,10 @@ void IceBlast::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& 
 	}
 
 	//“G‚ÌHp‚ğŒ¸‚ç‚·
-	enemyStatus_.SetEnemyHp(enemyStatus_.getEnemyHp() - damage);
+	enemyStatus_.SetEnemyHp(static_cast<int>(enemyStatus_.GetEnemyHp() - damage));
 
 	//ƒoƒgƒ‹ƒƒO‚ğ—¬‚·
-	battle_log->addSkillUseLog("Player", SkillName, "Enemy", damage);
+	battle_log->addSkillUseLog("Player", SkillName, "Enemy", static_cast<int>(damage));
 
 	//SE‚ğ—¬‚·
 	SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/ice_blast.mp3", DX_PLAYTYPE_BACK);
@@ -212,6 +220,19 @@ void IceBlast::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& 
 	//ƒ{ƒŠƒ…[ƒ€‚ğ•Ï‚¦‚é
 	SoundManager::getSoundManager()->ChangeSoundVolume(70, "sound/SoundEffect/ice_blast.mp3");
 	
+}
+
+//ƒAƒCƒXƒuƒ‰ƒXƒgg‚Á‚½‚ÌMPˆ—
+void IceBlast::SkillMpConsume(Player::PlayerStatus& playerStatus)
+{
+	//Mp‚ğæ“¾‚·‚é
+	auto CurentMp = playerStatus.GetCurentMp();
+
+	//Œ»İ‚ÌMp‚©‚çÁ”ïMp‚ğŒ¸‚ç‚·
+	auto consumeMp = CurentMp - ConsumeMp;
+
+	//Mp‚ğÁ”ï‚³‚¹‚é
+	playerStatus.SetPlayerCurentMp(consumeMp);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------
@@ -226,12 +247,12 @@ ThunderBolt::ThunderBolt():Skill(3, "ƒTƒ“ƒ_[ƒ{ƒ‹ƒg", 2.5f, "—‹‘®«‚Ì”š”­–‚–@", 
 //ƒTƒ“ƒ_[ƒ{ƒ‹ƒgg‚Á‚½‚Ìˆ—
 void ThunderBolt::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_, Shared<BattleLog>& battle_log)
 {
-	auto PlayerMagicPower = playerStatus.getMagicPower();
-	auto EnemyDefance = enemyStatus_.getEnemyDefance();
-	auto EnemyThunderResist = enemyStatus_.getThunderResist();
+	auto PlayerMagicPower = playerStatus.GetMagicPower();
+	auto EnemyDefance = enemyStatus_.GetEnemyDefance();
+	auto EnemyThunderResist = enemyStatus_.GetThunderResist();
 
 	//“G‚ª€‚ñ‚Å‹‚½‚çˆ—‚ğ‚Æ‚Î‚·
-	if (enemyStatus_.getEnemyHp() <= 0)return;
+	if (enemyStatus_.GetEnemyHp() <= 0)return;
 
 	// UŒ‚—Í‚©‚ç–hŒä—Í‚ğˆø‚¢‚ÄŠî–{ƒ_ƒ[ƒW‚ğŒvZ
 	float baseDamage = (PlayerMagicPower * Power) - EnemyDefance;
@@ -250,10 +271,10 @@ void ThunderBolt::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatu
 	}
 
 	//“G‚ÌHp‚ğŒ¸‚ç‚·
-	enemyStatus_.SetEnemyHp(enemyStatus_.getEnemyHp() - damage);
+	enemyStatus_.SetEnemyHp(static_cast<int>(enemyStatus_.GetEnemyHp() - damage));
 
 	//ƒoƒgƒ‹ƒƒO‚ğ—¬‚·
-	battle_log->addSkillUseLog("Player", SkillName, "Enemy", damage);
+	battle_log->addSkillUseLog("Player", SkillName, "Enemy", static_cast<int>(damage));
 
 	//SE‚ğ—¬‚·
 	SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/ThunderBolt.mp3", DX_PLAYTYPE_BACK);
@@ -263,37 +284,68 @@ void ThunderBolt::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatu
 
 }
 
+//ƒTƒ“ƒ_[ƒ{ƒ‹ƒgg‚Á‚½‚ÌMPˆ—
+void ThunderBolt::SkillMpConsume(Player::PlayerStatus& playerStatus)
+{
+	//Mp‚ğæ“¾‚·‚é
+	auto CurentMp = playerStatus.GetCurentMp();
+
+	//Œ»İ‚ÌMp‚©‚çÁ”ïMp‚ğŒ¸‚ç‚·
+	auto consumeMp = CurentMp - ConsumeMp;
+
+	//Mp‚ğÁ”ï‚³‚¹‚é
+	playerStatus.SetPlayerCurentMp(consumeMp);
+}
+
 //‰ñ•œô•¶
 Heal::Heal(): Skill(4, "ƒq[ƒ‹", 0, "Hp‚ğ‰ñ•œ‚·‚é", 2, BuffType)
 {
+	Effect_Animation = std::make_shared<Animation>("graphics/Effect/Heal.png", 160, 160, 5, 2, 192, 192, 10, 8);
 }
 
 //ƒq[ƒ‹‚ğg‚Á‚½Û‚Ìˆ—
 void Heal::SkillUse(Player::PlayerStatus& playerStatus, Shared<BattleLog>& battle_log)
 {
-	auto max_hp =  playerStatus.getMaxHp();
+	auto max_hp =  playerStatus.GetMaxHp();
 
 	//Hp‚ªmaxhp‚æ‚è‚à‰º‰ñ‚Á‚Ä‚¢‚½ê‡g—p‚Å‚«‚é
-	if (playerStatus.getcurentHp()< max_hp) {
+	if (playerStatus.GetcurentHp()< max_hp) {
 		// HP‚ğÅ‘åHp‚Ì30“‰ñ•œ‚³‚¹‚é
 		float percentage = 0.3;
 		int healAmount = static_cast<int>(max_hp * percentage);
 
 		//Hp‚ğ‰ñ•œ‚·‚é
-		playerStatus.SetPlayerCurentHp(playerStatus.getcurentHp() + healAmount);
+		playerStatus.SetPlayerCurentHp(playerStatus.GetcurentHp() + healAmount);
 
 		// HP‚ªMAX_HP‚ğ’´‚¦‚éê‡‚ÍMAX_HP‚ÉƒNƒŠƒbƒv‚·‚é
-		if (playerStatus.getcurentHp() > max_hp) {
+		if (playerStatus.GetcurentHp() > max_hp) {
 			playerStatus.SetPlayerCurentHp(max_hp);
 		}
 
 		//‰ñ•œ‰¹‚ğ–Â‚ç‚·
 		SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/kaihuku.mp3", DX_PLAYTYPE_BACK);
 
+		//ƒ{ƒŠƒ…[ƒ€‚ğ•Ï‚¦‚é
+		SoundManager::getSoundManager()->ChangeSoundVolume(70, "sound/SoundEffect/ThunderBolt.mp3");
+
+
 		//ƒoƒgƒ‹ƒƒO‚ğ—¬‚·
 		battle_log->addRecoveryLog("Player", SkillName, healAmount);
 	}
-	
+
+}
+
+//ƒq[ƒ‹‚ğg‚Á‚½‚ÌMPˆ—
+void Heal::SkillMpConsume(Player::PlayerStatus& playerStatus) {
+
+	//Mp‚ğæ“¾‚·‚é
+	auto CurentMp = playerStatus.GetCurentMp();
+
+	//Œ»İ‚ÌMp‚©‚çÁ”ïMp‚ğŒ¸‚ç‚·
+	auto consumeMp = CurentMp - ConsumeMp;
+
+	//Mp‚ğÁ”ï‚³‚¹‚é
+	playerStatus.SetPlayerCurentMp(consumeMp);
 }
 
 //---------------------------------------------------------------------------------------------------------
@@ -310,20 +362,20 @@ SlimBell::SlimBell() : Skill(20 , "ƒXƒ‰ƒCƒ€‚ğŒÄ‚Ô",5, "ƒXƒ‰ƒCƒ€‚Ì—Í‚ğØ‚è‚ÄUŒ‚‚
 void SlimBell::SkillUse(Enemy::EnemyStatus& enemyStatus_, Shared<BattleLog>& battle_log)
 {
 	//“G‚ª€‚ñ‚Å‹‚½‚çˆ—‚ğ‚Æ‚Î‚·
-	if (enemyStatus_.getEnemyHp() <= 0)return;
+	if (enemyStatus_.GetEnemyHp() <= 0)return;
 
 	//ƒ_ƒ[ƒW‚ğŒvZ‚·‚é
-	auto damage = (Power  - enemyStatus_.getEnemyDefance() / 2);
+	auto damage = (Power  - enemyStatus_.GetEnemyDefance() / 2);
 
 	if (damage <= 0) {
 		damage = 1;
 	}
 
 	//“G‚ÌHp‚ğŒ¸‚ç‚·
-	enemyStatus_.SetEnemyHp(enemyStatus_.getEnemyHp() - damage);
+	enemyStatus_.SetEnemyHp(static_cast<int>(enemyStatus_.GetEnemyHp() - damage));
 
 	//ƒoƒgƒ‹ƒƒO‚ğ—¬‚·
-	battle_log->addSkillUseLog("Player", SkillName, "Enemy", damage);
+	battle_log->addSkillUseLog("Player", SkillName, "Enemy", static_cast<int>(damage));
 
 	//SE‚ğ—¬‚·
 	SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/dageki_2.mp3", DX_PLAYTYPE_BACK);
@@ -344,19 +396,133 @@ SnakeBell::SnakeBell(): Skill(21 , "ƒXƒl[ƒN‚ğŒÄ‚Ô" , 10 , "ƒXƒl[ƒN‚Ì—Í‚ğØ‚è‚Ä
 void SnakeBell::SkillUse(Enemy::EnemyStatus& enemyStatus_, Shared<BattleLog>& battle_log)
 {
 	//“G‚ª€‚ñ‚Å‹‚½‚çˆ—‚ğ‚Æ‚Î‚·
-	if (enemyStatus_.getEnemyHp() <= 0)return;
+	if (enemyStatus_.GetEnemyHp() <= 0)return;
 
 	//ƒ_ƒ[ƒW‚ğŒvZ‚·‚é
-	auto damage = (Power  - enemyStatus_.getEnemyDefance() / 2);
+	auto damage = (Power  - enemyStatus_.GetEnemyDefance() / 2);
 
 	if (damage <= 0) {
 		damage = 1;
 	}
 
 	//“G‚ÌHp‚ğŒ¸‚ç‚·
-	enemyStatus_.SetEnemyHp(enemyStatus_.getEnemyHp() - damage);
+	enemyStatus_.SetEnemyHp(static_cast<int>(enemyStatus_.GetEnemyHp() - damage));
 
 	//ƒoƒgƒ‹ƒƒO‚ğ—¬‚·
-	battle_log->addSkillUseLog("Player", SkillName, "Enemy", damage);
+	battle_log->addSkillUseLog("Player", SkillName, "Enemy", static_cast<int>(damage));
 
+}
+
+//---------------------------------------------------------------------------------------------------------
+//“G‚ÌƒXƒLƒ‹
+
+//ƒJƒIƒXƒtƒŒƒA
+ChaosFlare::ChaosFlare():Skill(5 , "ƒJƒIƒXƒtƒŒƒA", 3.5f , "ˆê“_W’†‚Ì‰Î‚Ì‹Ê‚ğ•ú‚¿A–½’†‚µ‚½“G‚É‘åƒ_ƒ[ƒW‚ğ—^‚¦‚é",0 , AttackType)
+{
+	//ƒAƒjƒ[ƒVƒ‡ƒ“‚ğì¬‚·‚é
+	Effect_Animation = std::make_shared<Animation>("graphics/Effect/chaos_flare.png", 600, 350, 5, 4, 192, 192, 20, 3);
+}
+
+//ƒJƒIƒXƒtƒŒƒAg‚Á‚½‚Ìˆ—
+void ChaosFlare::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_, Shared<BattleLog>& battle_log)
+{
+	auto EnemyMagicPower = enemyStatus_.GetMagicPower();
+	auto PlayerDefance = playerStatus.GetDefance();
+
+	//ƒvƒŒƒCƒ„[‚ª€‚ñ‚Å‹‚½‚çˆ—‚ğ‚Æ‚Î‚·
+	if (playerStatus.GetcurentHp() <= 0)return;
+
+	// UŒ‚—Í‚©‚ç–hŒä—Í‚ğˆø‚¢‚ÄŠî–{ƒ_ƒ[ƒW‚ğŒvZ
+	float damage = (EnemyMagicPower * Power) - PlayerDefance;
+
+	// ƒ_ƒ[ƒW‚ª•‰‚Ì’l‚É‚È‚ç‚È‚¢‚æ‚¤‚É‚·‚é
+	if (damage <= 0) {
+		damage = 1;
+	}
+
+	//“G‚ÌHp‚ğŒ¸‚ç‚·
+	playerStatus.SetPlayerCurentHp(playerStatus.GetcurentHp() - damage);
+
+	//ƒoƒgƒ‹ƒƒO‚ğ—¬‚·
+	battle_log->addSkillUseLog("Enemy", SkillName, "Player", static_cast<int>(damage));
+
+	//SE‚ğ—¬‚·
+	SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/enemy_chaos_flare.mp3", DX_PLAYTYPE_BACK);
+
+	//ƒ{ƒŠƒ…[ƒ€‚ğ•Ï‚¦‚é
+	SoundManager::getSoundManager()->ChangeSoundVolume(70, "sound/SoundEffect/enemy_chaos_flare.mp3");
+}
+
+//ƒfƒXƒEƒBƒ“ƒh
+DeathScytheWind::DeathScytheWind() :Skill(6, "ƒfƒXƒEƒBƒ“ƒh", 3.5f, "‹­—Í‚È•—‘®«‚Ì–‚–@‚ğ•ú‚Â", 0, AttackType)
+{
+	//ƒAƒjƒ[ƒVƒ‡ƒ“‚ğì¬‚·‚é
+	Effect_Animation = std::make_shared<Animation>("graphics/Effect/DeathScytheWind.png", 600, 350, 5, 4, 192, 192, 20, 8);
+}
+
+//ƒfƒXƒTƒCƒYƒEƒBƒ“ƒhg‚Á‚½‚Ìˆ—
+void DeathScytheWind::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_, Shared<BattleLog>& battle_log)
+{
+	auto EnemyMagicPower = enemyStatus_.GetMagicPower();
+	auto PlayerDefance = playerStatus.GetDefance();
+
+	//ƒvƒŒƒCƒ„[‚ª€‚ñ‚Å‹‚½‚çˆ—‚ğ‚Æ‚Î‚·
+	if (playerStatus.GetcurentHp() <= 0)return;
+
+	// UŒ‚—Í‚©‚ç–hŒä—Í‚ğˆø‚¢‚ÄŠî–{ƒ_ƒ[ƒW‚ğŒvZ
+	float damage = (EnemyMagicPower * Power) - PlayerDefance;
+
+	// ƒ_ƒ[ƒW‚ª•‰‚Ì’l‚É‚È‚ç‚È‚¢‚æ‚¤‚É‚·‚é
+	if (damage <= 0) {
+		damage = 1;
+	}
+
+	//“G‚ÌHp‚ğŒ¸‚ç‚·
+	playerStatus.SetPlayerCurentHp(playerStatus.GetcurentHp() - damage);
+
+	//ƒoƒgƒ‹ƒƒO‚ğ—¬‚·
+	battle_log->addSkillUseLog("Enemy", SkillName, "Player", static_cast<int>(damage));
+
+	//SE‚ğ—¬‚·
+	SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/enemy_death_scythe_wind.mp3", DX_PLAYTYPE_BACK);
+
+	//ƒ{ƒŠƒ…[ƒ€‚ğ•Ï‚¦‚é
+	SoundManager::getSoundManager()->ChangeSoundVolume(70, "sound/SoundEffect/enemy_death_scythe_wind.mp3");
+}
+
+//ƒ_[ƒNƒNƒƒE
+DrakClaw::DrakClaw() : Skill(7 , "ƒ_[ƒNƒNƒƒE" , 3 , "ˆÅ‚Ì’Ü‚ÌUŒ‚",0 ,AttackType)
+{
+	//ƒAƒjƒ[ƒVƒ‡ƒ“‚ğì¬‚·‚é
+	Effect_Animation = std::make_shared<Animation>("graphics/Effect/DrakClaw.png", 600, 350, 5, 5, 192, 192, 25, 8);
+}
+
+//ƒ_[ƒNƒNƒƒEg‚Á‚½‚Ìˆ—
+void DrakClaw::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_, Shared<BattleLog>& battle_log)
+{
+	auto EnemyAttack = enemyStatus_.GetEnemyAttack();
+	auto PlayerDefance = playerStatus.GetDefance();
+
+	//“G‚ª€‚ñ‚Å‹‚½‚çˆ—‚ğ‚Æ‚Î‚·
+	if (playerStatus.GetcurentHp() <= 0)return;
+
+	// UŒ‚—Í‚©‚ç–hŒä—Í‚ğˆø‚¢‚Äƒ_ƒ[ƒW‚ğŒvZ
+	float damage = (EnemyAttack / 2 * Power) - PlayerDefance / 4;
+
+	// ƒ_ƒ[ƒW‚ª•‰‚Ì’l‚É‚È‚ç‚È‚¢‚æ‚¤‚É‚·‚é
+	if (damage <= 0) {
+		damage = 1;
+	}
+
+	//ƒvƒŒƒCƒ„[‚ÌHp‚ğŒ¸‚ç‚·
+	playerStatus.SetPlayerCurentHp(playerStatus.GetcurentHp() - damage);
+
+	//ƒoƒgƒ‹ƒƒO‚ğ—¬‚·
+	battle_log->addSkillUseLog("Enemy", SkillName, "Player", static_cast<int>(damage));
+
+	//SE‚ğ—¬‚·
+	SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/enemy_drak_claw.mp3", DX_PLAYTYPE_BACK);
+
+	//ƒ{ƒŠƒ…[ƒ€‚ğ•Ï‚¦‚é
+	SoundManager::getSoundManager()->ChangeSoundVolume(70, "sound/SoundEffect/enemy_drak_claw.mp3");
 }

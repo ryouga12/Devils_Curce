@@ -1,6 +1,7 @@
 #include"SceneManager.h"
 #include"GameManager.h"
 #include"../Scene/BaseScene.h"
+#include"../Manager/SoundManager.h"
 
 SceneManager::SceneManager(BaseScene* start_scene) : now_scene_(start_scene) {
 	tansition_graph_hdl_ = LoadGraph("graphics/black.bmp");
@@ -38,7 +39,7 @@ void SceneManager::update(float delta_time) {
 
 bool SceneManager::seqTransOut(const float delta_time) 
 {
-	int alpha = (sequence_.getProgressTime() / transout_time_ * 255.0f);
+	int alpha = static_cast<int>((sequence_.getProgressTime() / transout_time_ * 255.0f));
 	if (alpha >= 255) {
 		sequence_.change(&SceneManager::seqTransIn);
 		delete now_scene_;
@@ -51,17 +52,14 @@ bool SceneManager::seqTransOut(const float delta_time)
 	return true;
 }
 
-bool SceneManager::seqTransIn(const float delta_time) {
-
+bool SceneManager::seqTransIn(const float delta_time)
+{
 	if (sequence_.isStart()) {
-
-		auto target_pos = GameManager::getGameManager()->getPlayer()->getPlayerPos();
-
-		GameManager::getGameManager()->getCamera()->SetTargetPos(target_pos);
-
+		//ƒJƒƒ‰‚ÌÀ•W‚ð‡‚í‚¹‚é
+		GameManager::getGameManager()->getCamera()->SetTargetPos();
 	}
 
-	int alpha = 255 - (sequence_.getProgressTime() / transin_time_ * 255.0f);
+	int alpha = static_cast<int>(255 - (sequence_.getProgressTime() / transin_time_ * 255.0f));
 	if (alpha <= 0) {
 		sequence_.change(&SceneManager::seqRunScene);
 	}
@@ -73,5 +71,6 @@ bool SceneManager::seqTransIn(const float delta_time) {
 
 
 bool SceneManager::seqRunScene(const float delta_time) {
+
 	return true;
 }

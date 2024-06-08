@@ -2,6 +2,7 @@
 #include"../Manager/SceneManager.h"
 #include"resultScene.h"
 #include"../Object/Player.h"
+#include"../Manager/CsvManager.h"
 
 //------------------------------------------------------------------------------------------------------------------------
 //初期化　&  解放
@@ -9,10 +10,6 @@
 MapScene::MapScene(){
 
 	mapchip = std::make_shared<MapChip>();
-	enemy = std::make_shared<Enemy>();
-	
-	//Actorリストに敵を追加する
-	actor_list.emplace_back(enemy);
 
 	//MapChipの読み込み
 	worldMapLoad();
@@ -26,15 +23,15 @@ MapScene::MapScene(){
 
 MapScene::~MapScene()
 {
-	//サウンドをdeleteする
-	SoundManager::getSoundManager()->daleteSound("sound/SoundEffect/idou.mp3");
-	SoundManager::getSoundManager()->daleteSound("sound/BGM/sfc-harukanaru-daichi.mp3");
-
 	//マップチップの解放(2096 = マップチップの総数)
 	for (int i = 0; i < 2096; i++) {
 		DeleteGraph(gpc_map_chip_hdls_[i]);
 		tnl::DebugTrace("Deleted  MapChipimage at [%d]. Pointer value: %p\n", i, gpc_map_chip_hdls_[i]);
 	}
+
+	//BGMを止める
+	SoundManager::getSoundManager()->StopSound("sound/BGM/sfc-harukanaru-daichi.mp3");
+
 }
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -46,7 +43,7 @@ void MapScene::Update(float delta_time)
 	sequence_.update(delta_time);
 
 	//プレイヤーの更新処理
-	GameManager::getGameManager()->getPlayer()->player_Move(delta_time, PlayerVelocity);
+	GameManager::getGameManager()->getPlayer()->player_Move(delta_time, player_velocity);
 
 	//カメラの更新処理
 	GameManager::getGameManager()->getCamera()->update(GameManager::getGameManager()->getPlayer()->getPlayerPos(), MAP_WIDTH, MAP_HEIGHT);
@@ -60,12 +57,11 @@ void MapScene::Update(float delta_time)
 		SoundManager::getSoundManager()->sound_Play("sound/BGM/sentou.mp3", DX_PLAYTYPE_LOOP);
 
 		//0.5秒経過したらシーンを遷移させる
-		if (GameManager::getGameManager()->TimeCount(delta_time, Time)) {
-			//敵のタイプをセットする
-			enemy->SetEnemyType(Enemy::Enemytype::MOB);
+		if (GameManager::getGameManager()->TimeCount(delta_time, time)) {
+
 			auto mgr = SceneManager::GetInstance();
 			//シーンを遷移させる(プレイヤーの座標を渡す,敵のID,敵のポインタを渡す)
-			mgr->changeScene(new BattleScene(GameManager::getGameManager()->getPlayer()->getPlayerPos(), background_hdl , enemy_id ,enemy));
+			mgr->changeScene(new BattleScene(GameManager::getGameManager()->getPlayer()->getPlayerPos(), background_hdl, std::make_shared<MobMonster>(enemy_id)));
 			//歩数を0にする
 			GameManager::getGameManager()->getPlayer()->StepReset();
 		}
@@ -85,16 +81,16 @@ void MapScene::Update(float delta_time)
 void MapScene::Draw()
 {
 	//MapChipの描画
-	for (auto world_map : MapChip_continent) {
+	for (auto& world_map : MapChip_continent) {
 		world_map->Draw(*GameManager::getGameManager()->getCamera());
 	}
 
-	for (auto world_object : MapChips_object) {
+	for (auto& world_object : MapChips_object) {
 		world_object->Draw(*GameManager::getGameManager()->getCamera());
 	}
 
 	//プレイヤーの描画
-	GameManager::getGameManager()->getPlayer()->player_draw(*GameManager::getGameManager()->getCamera(), PlayerSize);
+	GameManager::getGameManager()->getPlayer()->player_draw(*GameManager::getGameManager()->getCamera(), player_size);
 
 	//インベントリの描画
 	GameManager::getGameManager()->getInventory()->draw();
@@ -118,23 +114,24 @@ bool MapScene::seqIdle(float delta_time)
 		mgr->changeScene(new ResultScene());
 	}
 
-	//SEを流してから移行する
-	if (TimeFlag) {
-		if (GameManager::getGameManager()->TimeCount(delta_time, TimeSE)) {
-			//村シーンに切り替える
-			auto mgr = SceneManager::GetInstance();
-			mgr->changeScene(new VillageScene(village_Pos),0.3f, 3.0f);
-			sequence_.change(&MapScene::seqChangeScene);
-			TimeFlag = false;
-		}
+	//ESCを押したら、インベントリを表示する
+	if (GameManager::getGameManager()->getInventory()->GetSelectMenuNum() == Inventory::MenuWindow_I::EMPTY && tnl::Input::IsKeyDownTrigger(eKeys::KB_ESCAPE)) {
+			
+			//SEを流す
+			SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
+			//インベントリを表示する
+			GameManager::getGameManager()->getInventory()->InventoryMenuChange(Inventory::MenuWindow_I::FIRSTMENU);
+			//plyerを動けないようにする
+			GameManager::getGameManager()->getPlayer()->setPlayerControl();
 	}
 
-	//ESCを押したら、インベントリを表示する
-	if (tnl::Input::IsKeyDownTrigger(eKeys::KB_ESCAPE)) {
-		SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
-		//インベントリを表示する
-		GameManager::getGameManager()->getInventory()->SetSelect_num(first_menu);
-	}
+	return false;
+}
+
+bool MapScene::seqChangeScene(float delta_time)
+{
+	//カメラを保管座標に入れる
+	GameManager::getGameManager()->getCamera()->SavePosition(GameManager::getGameManager()->getPlayer()->getPlayerPos());
 
 	return true;
 }
@@ -144,38 +141,61 @@ bool MapScene::seqIdle(float delta_time)
 
 void MapScene::WorldMapCollision()
 {
+	//ワールドマップのcsv
+	auto world_map_csv = CsvManager::getCsvManager()->GetWorldMapCsv();
+
+	//ワールドマップにあるオブジェクトのcsv
+	auto world_object_csv = CsvManager::getCsvManager()->GetWorldMapObjectCsv();
+
 	//オブジェクトの当たり判定
-	for (auto MapChip : MapChips_object) {
-		int mapChipValue = world_object_csv[MapChip->MapChipPos().y / MapChip->getChipSize()][MapChip->MapChipPos().x / MapChip->getChipSize()];
+	for (auto& MapChip : MapChips_object) {
+		int mapChipValue = static_cast<int>(world_object_csv[static_cast<unsigned>(MapChip->MapChipPos().y / MapChip->GetChipSize())][static_cast<unsigned>(MapChip->MapChipPos().x / MapChip->GetChipSize())]);
 		if (colisionObjectValues.count(mapChipValue) > 0)
 		{
-			int collision = ResourceManager::getResourceManager()->IsIntersectRectToCorrectPosition(GameManager::getGameManager()->getPlayer()->getPlayerPos(), GameManager::getGameManager()->getPlayer()->getPlayerPrevPos(), GameManager::getGameManager()->getPlayer()->getPlayerSize(PlyerWidth), GameManager::getGameManager()->getPlayer()->getPlayerSize(PlyerHeight), MapChip->MapChipPos(), map_chip_width_, map_chip_height_);
-
+			ResourceManager::getResourceManager()->IsIntersectRectToCorrectPosition(GameManager::getGameManager()->getPlayer()->getPlayerPos(), GameManager::getGameManager()->getPlayer()->getPlayerPrevPos(), GameManager::getGameManager()->getPlayer()->GetPlayerWidth(), GameManager::getGameManager()->getPlayer()->GetPlayerHight(), MapChip->MapChipPos(), map_chip_width_, map_chip_height_);
 		}
 		if (villageValues.count(mapChipValue) > 0) {
-			int villageCollision = tnl::IsIntersectRect(GameManager::getGameManager()->getPlayer()->getPlayerPos(), GameManager::getGameManager()->getPlayer()->getPlayerSize(PlyerWidth), GameManager::getGameManager()->getPlayer()->getPlayerSize(PlyerHeight), MapChip->MapChipPos(), map_chip_width_, map_chip_height_);
-			if (villageCollision) {
-				//村のだった場合
-				if (mapChipValue == mapChip_village) {
+			int Collision = tnl::IsIntersectRect(GameManager::getGameManager()->getPlayer()->getPlayerPos(), GameManager::getGameManager()->getPlayer()->GetPlayerWidth(), GameManager::getGameManager()->getPlayer()->GetPlayerHight(), MapChip->MapChipPos(), map_chip_width_, map_chip_height_);
+			if (Collision) {
+
+				//オブジェクトに当たった状態でEnterキーを押したら遷移させる
+				//主に村や町、城、ボスの城などに遷移させる
+				if (mapChipValue == map_chip_village) {
 					if (tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
 						SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/idou.mp3", DX_PLAYTYPE_BACK);
-						/*SoundManager::getSoundManager()->StopSound("sound/BGM/sfc-harukanaru-daichi.mp3");*/
-						TimeFlag = true;
+						//村シーンに切り替える
+						auto mgr = SceneManager::GetInstance();
+						mgr->changeScene(new InMapScene(village_pos, InMapScene::InMapState::VILLAGE), 0.1);
+						GameManager::getGameManager()->getPlayer()->SetPlayerPosition(village_pos);
+						sequence_.change(&MapScene::seqChangeScene);
 					}
 				}
+				//ボスの城だったら
+				else if (mapChipValue == map_chip_boss_castle) {
+					if (tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
+						SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/idou.mp3", DX_PLAYTYPE_BACK);
+						//ダンジョンシーンに切り替える
+						auto mgr = SceneManager::GetInstance();
+						mgr->changeScene(new InMapScene(boss_castle_pos, InMapScene::InMapState::BOSSCASTLE), 0.1 ,0.8);
+						//座標をボスの場所にセットする
+						GameManager::getGameManager()->getPlayer()->SetPlayerPosition(boss_castle_pos);
+						sequence_.change(&MapScene::seqChangeScene);
+					}
+				}
+
 			}
 		}
 
 	}
 	//地形の当たり判定
-	for (auto worldMap_C : MapChip_continent) {
-		int mapChipValue = world_map_csv[worldMap_C->MapChipPos().y / worldMap_C->getChipSize()][worldMap_C->MapChipPos().x / worldMap_C->getChipSize()];
+	for (auto& worldMap_C : MapChip_continent) {
+		int mapChipValue = world_map_csv[static_cast<unsigned>(worldMap_C->MapChipPos().y / worldMap_C->GetChipSize())][static_cast<unsigned>(worldMap_C->MapChipPos().x / worldMap_C->GetChipSize())];
 		if (worldCollisionValues.count(mapChipValue)) {
-			int collison = ResourceManager::getResourceManager()->IsIntersectRectToCorrectPosition(GameManager::getGameManager()->getPlayer()->getPlayerPos(), GameManager::getGameManager()->getPlayer()->getPlayerPrevPos(), GameManager::getGameManager()->getPlayer()->getPlayerSize(PlyerWidth), GameManager::getGameManager()->getPlayer()->getPlayerSize(PlyerHeight), worldMap_C->MapChipPos(), map_chip_width_, map_chip_height_);
+			int collison = ResourceManager::getResourceManager()->IsIntersectRectToCorrectPosition(GameManager::getGameManager()->getPlayer()->getPlayerPos(), GameManager::getGameManager()->getPlayer()->getPlayerPrevPos(), GameManager::getGameManager()->getPlayer()->GetPlayerWidth(), GameManager::getGameManager()->getPlayer()->GetPlayerHight(), worldMap_C->MapChipPos(), map_chip_width_, map_chip_height_);
 		}
 		//エンカウント用の当たり判定
 		if (encount_kind.count(mapChipValue)) {
-			int encount = tnl::IsIntersectRect(GameManager::getGameManager()->getPlayer()->getPlayerPos(), GameManager::getGameManager()->getPlayer()->getPlayerSize(PlyerWidth), GameManager::getGameManager()->getPlayer()->getPlayerSize(PlyerHeight), worldMap_C->MapChipPos(), map_chip_width_, map_chip_height_);
+			int encount = tnl::IsIntersectRect(GameManager::getGameManager()->getPlayer()->getPlayerPos(), GameManager::getGameManager()->getPlayer()->GetPlayerWidth(), GameManager::getGameManager()->getPlayer()->GetPlayerHight(), worldMap_C->MapChipPos(), map_chip_width_, map_chip_height_);
 
 				//map上のどこに居るかによって敵を変える
 			if (encount) {
@@ -233,6 +253,12 @@ bool MapScene::ChackEncount(int step)
 //マップチップのロード
 void MapScene::worldMapLoad()
 {
+	//ワールドマップのcsv
+	auto world_map_csv = CsvManager::getCsvManager()->GetWorldMapCsv();
+
+	//ワールドマップにあるオブジェクトのcsv
+	auto world_object_csv = CsvManager::getCsvManager()->GetWorldMapObjectCsv();
+
 	// マップチップの画像のロード
 	map_chip_ghdl_pass = "graphics/image_(2024_0115_0231).png";
 
@@ -250,22 +276,14 @@ void MapScene::worldMapLoad()
 		map_chip_height_,
 		gpc_map_chip_hdls_);
 
-	//平原マップデータのロード
-	map_chip_csv_pass = "csv/world_map_plain.csv";
-	world_map_csv = tnl::LoadCsv<int>(map_chip_csv_pass);
-
-	//オブジェクトデータのロード
-	map_chip_csv_object_pass = "csv/world_map_object.csv";
-	world_object_csv = tnl::LoadCsv<int>(map_chip_csv_object_pass);
-
 	//平原のマップチップの読み込み
 	for (int i = 0; i < world_map_csv.size(); ++i) {
 		for (int k = 0; k < world_map_csv[i].size(); ++k) {
 			if (-1 == world_map_csv[i][k])continue;
 			tnl::Vector3 pos;
 			int gpc_hdl;
-			pos.x = { mapchip->getChipSize() / 2 + k * mapchip->getChipSize()};
-			pos.y = { i * mapchip->getChipSize() };
+			pos.x = { mapchip->GetChipSize() / 2 + k * mapchip->GetChipSize()};
+			pos.y = { i * mapchip->GetChipSize() };
 			gpc_hdl = gpc_map_chip_hdls_[world_map_csv[i][k]];
 			MapChip_continent.emplace_back(std::make_shared<MapChip>(pos, gpc_hdl));
 		}
@@ -277,8 +295,8 @@ void MapScene::worldMapLoad()
 			if (-1 == world_object_csv[i][k])continue;
 			tnl::Vector3 pos;
 			int gpc_hdl;
-			pos.x = { mapchip->getChipSize() / 2 + k * mapchip->getChipSize()};
-			pos.y = { i * mapchip->getChipSize()};
+			pos.x = { mapchip->GetChipSize() / 2 + k * mapchip->GetChipSize()};
+			pos.y = { i * mapchip->GetChipSize()};
 			gpc_hdl = gpc_map_chip_hdls_[world_object_csv[i][k]];
 			MapChips_object.emplace_back(std::make_shared<MapChip>(pos, gpc_hdl));
 		}

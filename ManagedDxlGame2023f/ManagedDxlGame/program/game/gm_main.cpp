@@ -10,13 +10,14 @@
 #include"../game/Manager/ResourceManager.h"
 #include"../game/Manager/SceneManager.h"
 #include"../game/Manager/SoundManager.h"
+#include"../game/Manager/UiManager.h"
 
 
 
 //------------------------------------------------------------------------------------------------------------
 // ƒQ[ƒ€‹N“®‚É‚P“x‚¾‚¯Às‚³‚ê‚Ü‚·
 void gameStart() {
-	srand(time(0));
+	srand(static_cast<unsigned>(time(0)));
 	SetBackgroundColor(32, 32, 32);
 
 	SceneManager::GetInstance(new TittleScene());
@@ -43,4 +44,5 @@ void gameEnd() {
 	ResourceManager::delategetResourceManager();
 	SceneManager::Destroy();
 	SoundManager::delateSoundManager();
+	UIManager::delategetUIManager();
 }

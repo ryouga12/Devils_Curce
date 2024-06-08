@@ -1,21 +1,22 @@
-name,id,hp,Attack,Defance,Speed,ex_point,money,graphics,FlameResistant,IceTolerance,LightningResistance,nomalDrop,RareDrop
-slim,0,3,2,1,1,3,5,graphics/Enemy/slim.png,1,1,1,3,20
-bat,1,5,4,2,2,5,8,graphics/Enemy/Bat.png,1,1,1,3,2
-snake,2,7,5,3,3,8,10,graphics/Enemy/Snake.png,1,1,1,3,21
-armor beetle,3,9,6,6,4,10,20,graphics/Enemy/Armor Beetle.png,1,1,1,4,15
-monsterdog,4,11,7,4,8,12,22,graphics/Enemy/monsterDog.png,1,1,1,14,8
-bloodbat,5,20,16,10,12,20,30,graphics/Enemy/bloodbat.png,1,1,1,14,5
-tyrantworm,6,23,14,15,8,22,34,graphics/Enemy/tyrantworm.png,1.5,0.5,1,14,16
-monsterplant,7,21,16,12,10,24,36,graphics/Enemy/monsterplant.png,1.5,0.5,1,5,17
-goblin,8,22,18,8,10,26,40,graphics/Enemy/goblin.png,1,0.5,0.5,3,22
-ghostmush,9,20,14,12,10,26,42,graphics/Enemy/ghostmush.png,1,1,1,3,17
-salamander,10,25,18,14,12,40,50,graphics/Enemy/salamander.png,1,0.5,1.5,16,19
-mokujin,11,23,16,16,8,38,46,graphics/Enemy/mokujin.png,2,0.5,0.5,4,3
-catknight,12,26,20,14,14,40,52,graphics/Enemy/catknight.png,1,1,1.5,0,10
-pumpkinghost,13,23,16,12,12,38,48,graphics/Enemy/pumpkinghost.png,1.5,0.5,1,23,24
-neoslim,14,23,10,12,12,35,45,graphics/Enemy/neoslim.png,1,1,1,3,8
-Wood Walker,15,40,20,20,10,45,50,graphics/Enemy/Wood Walker.png,1.5,0.5,1,25,17
-Big Goblin,16,50,25,16,10,50,55,graphics/Enemy/Big Goblin.png,1,1,1,18,25
-Gold Reaper,17,35,23,18,16,48,53,graphics/Enemy/Gold Reaper.png,1.5,0.5,0.5,18,27
-Bloodhound,18,32,23,15,20,45,50,graphics/Enemy/Bloodhound.png,1,1,1,8,28
-Little Demon,19,30,22,18,18,45,50,graphics/Enemy/Little Demon.png,1,1.5,0.5,6,29
+name,id,hp,Attack,Defance,Speed,ex_point,money,graphics,FlameResistant,IceTolerance,LightningResistance,nomalDrop,RareDrop,attack_se,MagicPower
+slim,0,3,2,1,1,3,5,graphics/Enemy/slim.png,1,1,1,3,20,sound/SoundEffect/dageki_3.mp3,0
+bat,1,5,4,2,2,5,8,graphics/Enemy/Bat.png,1,1,1,3,2,sound/SoundEffect/monster_chew.mp3,0
+snake,2,7,5,3,3,8,10,graphics/Enemy/Snake.png,1,1,1,3,21,sound/SoundEffect/monster_bite.mp3,0
+armor beetle,3,9,6,6,4,10,20,graphics/Enemy/Armor Beetle.png,1,1,1,4,15,sound/SoundEffect/monster_poke.mp3,0
+monsterdog,4,11,7,4,8,12,22,graphics/Enemy/monsterDog.png,1,1,1,14,8,sound/SoundEffect/monster_bite.mp3,0
+bloodbat,5,20,16,10,12,20,30,graphics/Enemy/bloodbat.png,1,1,1,14,5,sound/SoundEffect/monster_chew.mp3,0
+tyrantworm,6,23,14,15,8,22,34,graphics/Enemy/tyrantworm.png,1.5,0.5,1,14,16,sound/SoundEffect/monster_hit.mp3,0
+monsterplant,7,21,16,12,10,24,36,graphics/Enemy/monsterplant.png,1.5,0.5,1,5,17,sound/SoundEffect/monster_plant.mp3,0
+goblin,8,22,18,8,10,26,40,graphics/Enemy/goblin.png,1,0.5,0.5,3,22,sound/SoundEffect/monster_goblin.mp3,0
+ghostmush,9,20,14,12,10,26,42,graphics/Enemy/ghostmush.png,1,1,1,3,17,sound/SoundEffect/monster_hit.mp3,0
+salamander,10,25,18,14,12,40,50,graphics/Enemy/salamander.png,1,0.5,1.5,16,19,,0
+mokujin,11,23,16,16,8,38,46,graphics/Enemy/mokujin.png,2,0.5,0.5,4,3,,0
+catknight,12,26,20,14,14,40,52,graphics/Enemy/catknight.png,1,1,1.5,0,10,,0
+pumpkinghost,13,23,16,12,12,38,48,graphics/Enemy/pumpkinghost.png,1.5,0.5,1,23,24,,0
+neoslim,14,23,10,12,12,35,45,graphics/Enemy/neoslim.png,1,1,1,3,8,,0
+Wood Walker,15,40,20,20,10,45,50,graphics/Enemy/Wood Walker.png,1.5,0.5,1,25,17,,0
+Big Goblin,16,50,25,16,10,50,55,graphics/Enemy/Big Goblin.png,1,1,1,18,25,,0
+Gold Reaper,17,35,23,18,16,48,53,graphics/Enemy/Gold Reaper.png,1.5,0.5,0.5,18,27,,0
+Bloodhound,18,32,23,15,20,45,50,graphics/Enemy/Bloodhound.png,1,1,1,8,28,sound/SoundEffect/monster_bite.mp3,0
+Little Demon,19,30,22,18,18,45,50,graphics/Enemy/Little Demon.png,1,1.5,0.5,6,29,,0
+Zerahkiel,20,150,35,30,20,70,100,graphics/Enemy/maou.png,0.5,0.5,1.5,31,32,,40

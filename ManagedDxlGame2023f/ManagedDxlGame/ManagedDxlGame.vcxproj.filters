@@ -206,7 +206,7 @@
     <ClCompile Include="program\game\Scene\battleScene.cpp">
       <Filter>program\[003] game\Scene</Filter>
     </ClCompile>
-    <ClCompile Include="program\game\Scene\village.cpp">
+    <ClCompile Include="program\game\Scene\InMapScene.cpp">
       <Filter>program\[003] game\Scene</Filter>
     </ClCompile>
     <ClCompile Include="program\game\Menu\MenuWindow.cpp">
@@ -251,7 +251,10 @@
     <ClCompile Include="program\game\Skill\Skill.cpp">
       <Filter>program\[003] game\Skill</Filter>
     </ClCompile>
-    <ClCompile Include="program\game\Manager\MapManager.cpp">
+    <ClCompile Include="program\game\Manager\UiManager.cpp">
+      <Filter>program\[003] game\Manager</Filter>
+    </ClCompile>
+    <ClCompile Include="program\game\Manager\CsvManager.cpp">
       <Filter>program\[003] game\Manager</Filter>
     </ClCompile>
   </ItemGroup>
@@ -449,7 +452,7 @@
     <ClInclude Include="program\game\Scene\battleScene.h">
       <Filter>program\[003] game\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="program\game\Scene\village.h">
+    <ClInclude Include="program\game\Scene\InMapScene.h">
       <Filter>program\[003] game\Scene</Filter>
     </ClInclude>
     <ClInclude Include="program\game\Menu\MenuWindow.h">
@@ -497,7 +500,10 @@
     <ClInclude Include="program\game\Skill\BaseSkill.h">
       <Filter>program\[003] game\Skill</Filter>
     </ClInclude>
-    <ClInclude Include="program\game\Manager\MapManager.h">
+    <ClInclude Include="program\game\Manager\UiManager.h">
+      <Filter>program\[003] game\Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="program\game\Manager\CsvManager.h">
       <Filter>program\[003] game\Manager</Filter>
     </ClInclude>
   </ItemGroup>

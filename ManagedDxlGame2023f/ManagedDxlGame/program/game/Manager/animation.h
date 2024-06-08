@@ -4,10 +4,6 @@
 #include "../../dxlib_ext/dxlib_ext.h"
 #include"../Manager/ResourceManager.h"
 
-/// <summary>
-/// StsteMachineƒpƒ^[ƒ“
-/// </summary>
-
 enum class AnimationState {
 	PLAYING,//Ä¶
 	PAUSE,//ˆê’â~

@@ -1,19 +1,15 @@
 #include "MenuWindow.h"
 
 
-Menu::Menu(int menu_window_x, int menu_window_y, int menu_window_width, int menu_window_height, std::string gh_path)
+Menu::Menu(const std::string& gh_path)
 {
-	menu_x = menu_window_x;
-	menu_y = menu_window_y;
-	menu_width = menu_window_width;
-	menu_height = menu_window_height;
 	int n = LoadDivGraph(gh_path.c_str(), 9, 3, 3, 16, 16, menu_gh);
 	menu_live = false;
 
 
 }
 
-void Menu::Menu_draw()
+void Menu::Menu_draw(const int&  menu_x , const int&  menu_y ,const int&  menu_width ,const int&  menu_height)
 {
 	DrawGraph(menu_x, menu_y, menu_gh[0], TRUE);
 	DrawExtendGraph(menu_x + 16, menu_y, menu_x + menu_width - 16, menu_y + 16, menu_gh[1], TRUE);
@@ -28,22 +24,20 @@ void Menu::Menu_draw()
 	DrawGraph(menu_x + menu_width - 16, menu_y + menu_height - 16, menu_gh[8], TRUE);
 }
 
-MenuWindow::MenuWindow(int menu_window_x, int menu_window_y, int menu_window_width, int menu_window_height, std::string gh_path, MenuElement_t* elements, int elements_num, double BackWidth)
+MenuWindow::MenuWindow(const std::string& gh_path, MenuElement_t* elements, int elements_num, double BackWidth)
 
-	: Menu(menu_window_x, menu_window_y, menu_window_width, menu_window_height, gh_path)//メニューの大きさを決める(開始座標:左上,横幅,縦幅)
+	: Menu(gh_path)//メニューの大きさを決める(開始座標:左上,横幅,縦幅)
 
 	, Select_Num(0)
 	, m_IsStartOpend(false) // コンストラクタでは、メンバ変数の初期化はこう書くこともできる
-	, read_menu_x(menu_window_x)
-	, read_menu_y(menu_window_y)
 	, read_menu_element_num(elements_num)
 	, MenuElement(elements)
-	, backGhwidth(BackWidth)
+	, back_ghdl_width(BackWidth)
 {
 	
 	MenuElement = elements;
 	elements_num_ = elements_num;
-	string_Color_Black = GetColor(0, 0, 0);
+	string_color_black = GetColor(0, 0, 0);
 	coursorX = MenuElement[0].x - 20;
 
 	/*selectItemBackGh = gManager->LoadGraphEX("graphics/selectItemBack.png");*/
@@ -73,7 +67,7 @@ void MenuWindow::Read()
 		menuInit = true;
 	}
 	if (m_IsStartOpend)return;
-	if (manageSelectFlag) {
+	if (manage_select_flag) {
 		//一つ下にずれる
 		if (tnl::Input::IsKeyDownTrigger(eKeys::KB_DOWN)) {
 			Select_Num = (Select_Num + 1) % read_menu_element_num;			
@@ -103,10 +97,10 @@ void MenuWindow::Read()
 	
 }
 
-void MenuWindow::All()
+void MenuWindow::All(const int& menu_x, const int& menu_y, const int& menu_width, const int& menu_height)
 {
 	if (menu_live) {
-		Menu_draw();
+		Menu_draw(menu_x , menu_y , menu_width , menu_height);
 		Read();
 		m_IsStartOpend = false;
 	}
@@ -117,7 +111,7 @@ void MenuWindow::All()
 void MenuWindow::SetSelectCousourMove()
 {
 	//フラグを反転する
-	manageSelectFlag = !manageSelectFlag;
+	manage_select_flag = !manage_select_flag;
 }
 
 

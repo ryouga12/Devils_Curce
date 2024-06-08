@@ -6,6 +6,8 @@
 #include"../Manager/SoundManager.h"
 #include"../Manager/SceneManager.h"
 #include"../Manager/GameManager.h"
+#include"../Manager/CsvManager.h"
+#include"../Scene/battleScene.h"
 
 
 Player::Player() : money(1000)
@@ -14,28 +16,7 @@ Player::Player() : money(1000)
 	
 	//csvの読み取り
 	PlyerStatus_Csv_Info
-		= tnl::LoadCsv<tnl::CsvCell>("csv/PlyerStatus.csv");
-
-
-	//アニメーションのロード処理
-	std::string files[DIR_MAX] = {
-		"graphics/Player/pipo-charachip_Idle.png",
-		"graphics/Player/pipo-charachip_UP.png",
-		"graphics/Player/pipo-charachip_Left.png",
-		"graphics/Player/pipo-charachip_Right.png"
-		
-	};
-
-	for (int i = 0; i < 4; i++) {
-		LoadDivGraph(
-			files[i].c_str(),				// 画像のパス
-			Total_Frame,					// 総フレーム数
-			Horizontal_frame,				// 横フレーム数
-			Vertical_frame,					// 縦フレーム数
-			Horizontal_oneframe,			// 横方向へ 1フレームあたりの幅
-			Vertical_oneframe,				// 縦方向へ 1フレームあたりの幅
-			anim_hdls[i]);					// 画像ハンドルを格納する配列名);
-	}
+		= CsvManager::getCsvManager()->GetPlayerStatusCsv();
 
 	//plyerのステータスを取得する
 	PlyStatusLoad();
@@ -43,6 +24,8 @@ Player::Player() : money(1000)
 	//ステータスを設定する(Lv1からスタート)
 	SetPlayerStatus(1);
 
+	//始まりは何も装備していない為0からスタート
+	SetPlayerAnimationHdl(0);
 }
 
 Player::~Player()
@@ -81,33 +64,76 @@ void Player::player_Move(float delta_time , const float& velocity)
 	if (plyControl) {
 
 		//プレイヤーの動き
-		if (tnl::Input::IsKeyDown(eKeys::KB_A)) {
+
+		//左上斜め
+		if ((tnl::Input::IsKeyDown(eKeys::KB_A)) && (tnl::Input::IsKeyDown(eKeys::KB_W))) {
+
+			plyer_pos.x += velocity * static_cast<float>(std::sin(CHARA_WIDTH / 2));
+			plyer_pos.y += velocity * static_cast<float>(std::sin(CHARA_HEIGHT / 2));
+			numberStep++;
+
+		}
+		//右上斜め
+		else if ((tnl::Input::IsKeyDown(eKeys::KB_D)) && (tnl::Input::IsKeyDown(eKeys::KB_W))) {
+
+			plyer_pos.x -= velocity * static_cast<float>(std::sin(CHARA_WIDTH / 2));
+			plyer_pos.y += velocity * static_cast<float>(std::sin(CHARA_HEIGHT / 2));
+			numberStep++;
+
+		}
+		//左下斜め
+		else if ((tnl::Input::IsKeyDown(eKeys::KB_A)) && (tnl::Input::IsKeyDown(eKeys::KB_S))) {	
+
+			plyer_pos.x += velocity * static_cast<float>(std::sin(CHARA_WIDTH / 2));
+			plyer_pos.y -= velocity * static_cast<float>(std::sin(CHARA_HEIGHT / 2));
+			numberStep++;
+		}
+		//右下斜め
+		else if ((tnl::Input::IsKeyDown(eKeys::KB_D)) && (tnl::Input::IsKeyDown(eKeys::KB_S))) {
+
+			plyer_pos.x -= velocity * static_cast<float>(std::sin(CHARA_WIDTH / 2));
+			plyer_pos.y -= velocity * static_cast<float>(std::sin(CHARA_HEIGHT / 2));
+			numberStep++;
+		}
+		else if (tnl::Input::IsKeyDown(eKeys::KB_A)) {
 			plyer_pos.x -= velocity;
 			numberStep++;
 			
 		}
-		if (tnl::Input::IsKeyDown(eKeys::KB_D)) {
+		else if (tnl::Input::IsKeyDown(eKeys::KB_D)) {
 			plyer_pos.x += velocity;
 			numberStep++;
 			
 		}
 
-		if (tnl::Input::IsKeyDown(eKeys::KB_W)) {
+		else if (tnl::Input::IsKeyDown(eKeys::KB_W)) {
 			plyer_pos.y -= velocity;
 			numberStep++;
 			
 		}
-		if (tnl::Input::IsKeyDown(eKeys::KB_S)) {
+		else if (tnl::Input::IsKeyDown(eKeys::KB_S)) {
 			plyer_pos.y += velocity;
 			numberStep++;
 		}
 
-
 		//アニメーションの動き
-		if (tnl::Input::IsKeyDown(eKeys::KB_W))    anim_ctrl_dir = DIR_UP;
-		if (tnl::Input::IsKeyDown(eKeys::KB_S))    anim_ctrl_dir = DIR_DOWN;
-		if (tnl::Input::IsKeyDown(eKeys::KB_A))	   anim_ctrl_dir = DIR_LEFT;
-		if (tnl::Input::IsKeyDown(eKeys::KB_D))    anim_ctrl_dir = DIR_RIGHT;
+		
+		//左上斜め
+		if ((tnl::Input::IsKeyDown(eKeys::KB_A)) && (tnl::Input::IsKeyDown(eKeys::KB_W)))	   { anim_ctrl_dir = DIR_DIAGONAL_UPPER_LEFT; }
+		//右上斜め
+		else if ((tnl::Input::IsKeyDown(eKeys::KB_D)) && (tnl::Input::IsKeyDown(eKeys::KB_W))) { anim_ctrl_dir = DIR_DIAGONAL_UPPER_RIGTH; }
+		//左下斜め
+		else if ((tnl::Input::IsKeyDown(eKeys::KB_A)) && (tnl::Input::IsKeyDown(eKeys::KB_S))) { anim_ctrl_dir = DIR_DIAGONAL_DOWN_LEFT; }
+		//右下斜め
+		else if ((tnl::Input::IsKeyDown(eKeys::KB_D)) && (tnl::Input::IsKeyDown(eKeys::KB_S))) { anim_ctrl_dir = DIR_DIAGONA_DOWN_RIGTH; }
+		//上
+		else if (tnl::Input::IsKeyDown(eKeys::KB_W))										   { anim_ctrl_dir = DIR_UP; }
+		//下
+		else if (tnl::Input::IsKeyDown(eKeys::KB_S))										   { anim_ctrl_dir = DIR_DOWN; }
+		//左
+		else if (tnl::Input::IsKeyDown(eKeys::KB_A))										   { anim_ctrl_dir = DIR_LEFT; }
+		//右
+		else if (tnl::Input::IsKeyDown(eKeys::KB_D))										   { anim_ctrl_dir = DIR_RIGHT; }
 
 	}
 }
@@ -116,12 +142,12 @@ void Player::player_Move(float delta_time , const float& velocity)
 void Player::player_draw(const KonCamera& camera ,float scale)
 {
 	tnl::Vector3 draw_pos = plyer_pos - camera.getTargetPos() + tnl::Vector3(DXE_WINDOW_WIDTH >> 1, DXE_WINDOW_HEIGHT >> 1, 0);
-	DrawRotaGraph(draw_pos.x, draw_pos.y, scale, 0, anim_hdls[anim_ctrl_dir][anim_ctrl_frame], true);
+	DrawRotaGraph(static_cast<int>(draw_pos.x), static_cast<int>(draw_pos.y), scale, 0, anim_hdls[anim_ctrl_dir][anim_ctrl_frame], true);
 
 }
 
 //プレイヤーの行動処理
-void Player::PlayerMoveProcess(float delta_time , Shared<BattleLog>& basttle_log , Shared<Enemy>& enemy , Shared<Nomal_Attack>& nomal_attack , const tnl::Vector3& map_pos)
+void Player::PlayerMoveProcess(float delta_time , Shared<BattleLog>& basttle_log , Shared<Enemy>& enemy , Shared<Nomal_Attack>& nomal_attack)
 {
 	switch (player_state)
 	{
@@ -130,7 +156,7 @@ void Player::PlayerMoveProcess(float delta_time , Shared<BattleLog>& basttle_log
 	case Player::PlayerState::IDLE:
 
 		//プレイヤーのコマンド処理
-		battleScene->MenuUpdate(plyerstatusSave, enemy->GetEnemyArray()[enemy->GetEnemy_Index()]);
+		battle_scene_->MenuUpdate(plyerstatusSave, enemy->GetEnemyArray()[enemy->GetEnemy_Index()]);
 
 		break;
 
@@ -147,7 +173,7 @@ void Player::PlayerMoveProcess(float delta_time , Shared<BattleLog>& basttle_log
 	case Player::PlayerState::SKILL:
 
 		//特技使用時の処理
-		battleScene->SkillUseProcess(plyerstatusSave , enemy->GetEnemyArray()[enemy->GetEnemy_Index()]);
+		battle_scene_->SkillUseProcess(plyerstatusSave , enemy->GetEnemyArray()[enemy->GetEnemy_Index()]);
 
 		break;
 
@@ -155,7 +181,7 @@ void Player::PlayerMoveProcess(float delta_time , Shared<BattleLog>& basttle_log
 	case Player::PlayerState::FLEE:
 
 		//逃げる際の処理
-		battleScene->FleeProcess(plyerstatusSave, enemy->GetEnemyArray()[enemy->GetEnemy_Index()], delta_time);
+		battle_scene_->FleeProcess(plyerstatusSave, enemy->GetEnemyArray()[enemy->GetEnemy_Index()], delta_time);
 
 		break;
 
@@ -176,7 +202,7 @@ void Player::PlayerMoveProcess(float delta_time , Shared<BattleLog>& basttle_log
 //csvでステータスを読み込む
 void Player::PlyStatusLoad()
 {
-	int max_num = PlyerStatus_Csv_Info.size();
+	int max_num = static_cast<int>(PlyerStatus_Csv_Info.size());
 
 	Ply_Status_Total_num = max_num;
 
@@ -209,35 +235,41 @@ void Player::PlyStatusLoad()
 
 }
 
-//プレイヤーのコントロールを管理する
-void Player::setPlayerControl(int controlFlag)
+//プレイヤーの画像を読み込む
+//IDによって画像を切り替える
+//ID : 2次元配列の何行目をさしているか
+void Player::SetPlayerAnimationHdl(int ghdl_id)
 {
-	//0の場合trueにする
-	if (controlFlag == 0) {
-		plyControl = true;
-	}
-	//1の場合falseにする
-	else if (controlFlag == 1) {
-		plyControl = false;
-	}
-}
+	//アニメーション画像を格納配列
+	std::vector<std::string> player_image;
 
-//プレイヤーのサイズを取得する
-int Player::getPlayerSize(int type)
-{
-	if (type == Width) {
-		return CHARA_WIDTH;
-	}
-	if (type == Height) {
-		return CHARA_HEIGHT;
+	auto playerAnimationSize = CsvManager::getCsvManager()->GetPlayerAnimationImage().size();
+
+	for (int i = 1; i < playerAnimationSize; i++) {
+		if (ghdl_id == std::stoi(CsvManager::getCsvManager()->GetPlayerAnimationImage()[i][0].c_str())) {
+			for (int k = 1; k < DIR_MAX + 1 ; k++) {
+				player_image.emplace_back(CsvManager::getCsvManager()->GetPlayerAnimationImage()[i][k]);
+			}
+		}
 	}
 
+	for (int i = 0; i < DIR_MAX; i++) {
+
+		LoadDivGraph(
+			player_image[i].c_str(),						// 画像のパス
+			Total_Frame,									// 総フレーム数
+			Horizontal_frame,								// 横フレーム数
+			Vertical_frame,									// 縦フレーム数
+			Horizontal_oneframe,							// 横方向へ 1フレームあたりの幅
+			Vertical_oneframe,								// 縦方向へ 1フレームあたりの幅
+			anim_hdls[i]);									// 画像ハンドルを格納する配列名);
+	}
 }
 
 Player::PlayerStatus Player::GetPlyerStatus(int level) const
 {
 	auto it = std::find_if(Ply_Status_Type.begin(), Ply_Status_Type.end(), [level]
-	(const PlayerStatus& status) {return status.getLevel() == level; });
+	(const PlayerStatus& status) {return status.GetLevel() == level; });
 
 	if (it != Ply_Status_Type.end()) {
 		return *it;
@@ -252,7 +284,7 @@ Player::PlayerStatus Player::GetPlyerStatus(int level) const
 void Player::DeadPlayerProcess(Shared<BattleLog>& battle_log)
 {
 	//プレイヤーのHPが0を下回ったら
-	if (plyerstatusSave.getcurentHp() <= 0) {
+	if (plyerstatusSave.GetcurentHp() <= 0) {
 
 		//ログを流す
 		battle_log->addLog("全滅した");
@@ -265,7 +297,10 @@ void Player::DeadPlayerProcess(Shared<BattleLog>& battle_log)
 		SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/zenmetu.mp3", DX_PLAYTYPE_BACK);
 
 		//バトルを終了させる
-		battleScene->SetBattleState(BattleScene::BattleState::IDLE);
+		battle_scene_->SetBattleState(BattleScene::BattleState::IDLE);
+	}
+	else {
+		return;
 	}
 }
 
@@ -273,7 +308,7 @@ void Player::DeadPlayerProcess(Shared<BattleLog>& battle_log)
 void Player::PlayerAttackProcess(Enemy::EnemyStatus& enemy_status, Shared<BattleLog>& battle_log , Shared<Nomal_Attack>& nomal_attack)
 {
 	//敵が死んで居たら処理をとばす
-	if (enemy_status.getEnemyHp() <= 0)return;
+	if (enemy_status.GetEnemyHp() <= 0)return;
 
 	//決定音を鳴らす
 	SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
@@ -281,6 +316,55 @@ void Player::PlayerAttackProcess(Enemy::EnemyStatus& enemy_status, Shared<Battle
 	//敵にダメージを与える
 	nomal_attack->SkillUse(plyerstatusSave, enemy_status ,battle_log);
 
+}
+
+//スキルをセットする
+void Player::SkillSet(Shared<BattleLog>& battle_log)
+{
+	switch (plyerstatusSave.GetLevel())
+	{
+		//レベル1の時は何も覚えない
+	case 1:
+		break;
+		//レベル2の時に火炎斬りを覚える
+	case 2:
+		AddSkill(std::make_shared<FlameSlash>());
+
+		//ログを流す
+		battle_log->addLog("火炎斬りを覚えた!");
+
+		break;
+		//レベル3の時にヒールを覚える
+	case 3:
+		
+		AddSkill(std::make_shared<Heal>());
+
+		battle_log->addLog("ヒールを覚えた!");
+
+		break;
+		//レベル4の時にアイスブラストを覚える
+	case 4:
+		AddSkill(std::make_shared<IceBlast>());
+
+		battle_log->addLog("アイスブラストを覚えた!");
+
+		break;
+		//レベル5の時にサンダーボルトを覚える
+	case 5:
+		AddSkill(std::make_shared<ThunderBolt>());
+
+		battle_log->addLog("サンダーボルトを覚えた!");
+
+	default:
+		break;
+	}
+}
+
+//スキルを追加する
+void Player::AddSkill(Shared<Skill> skill)
+{
+	SkillList.emplace_back(skill);
+	SkillNum++;
 }
 
 //void Player::PlyerSave()

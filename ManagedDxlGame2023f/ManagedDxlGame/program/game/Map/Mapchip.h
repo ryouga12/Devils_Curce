@@ -15,7 +15,7 @@ public:
 	void Draw(const KonCamera& camera);
 
 	//マップチップサイズの取得
-	const float& getChipSize(){
+	const float& GetChipSize(){
 		return CHIP_SIZE;
 	}
 	//マップチップの座標取得

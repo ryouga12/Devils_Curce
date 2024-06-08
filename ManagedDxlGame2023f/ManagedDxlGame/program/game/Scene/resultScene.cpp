@@ -1,25 +1,28 @@
 #include "resultScene.h"
-
+#include"../Manager/UiManager.h"
 
 //------------------------------------------------------------------------------------------------------------------------
 //初期化　&  解放
 
 ResultScene::ResultScene()
 {
-	risult_menu = std::make_shared<Menu>(525, 500, 250, 80, "graphics/WindowBase_02.png");
+	risult_menu = std::make_shared<Menu>("graphics/WindowBase_02.png");
+
+	//mapを追加する
+	UIManager::getUIManager()->addMenu("risult_window", risult_menu);
+
+	//enterkeyボタン
+	enter_key = ResourceManager::getResourceManager()->LoadGraphEX("graphics/button_Enter.png");
+
 
 	SoundManager::getSoundManager()->sound_Play("sound/BGM/requiem.mp3", DX_PLAYTYPE_LOOP);
 }
 
 ResultScene::~ResultScene()
 {
-	//サウンドを消去する
-	SoundManager::getSoundManager()->daleteSound("sound/BGM/requiem.mp3");
-	//画像を消去する
-	ResourceManager::getResourceManager()->deleteGraphEx("graphics/button_Enter.png");
-	ResourceManager::getResourceManager()->deleteGraphEx("graphics/cur_sannkaku2.png");
-	ResourceManager::getResourceManager()->deleteGraphEx("graphics/WindowBase_02.png");
-
+	//サウンドを止める
+	SoundManager::getSoundManager()->StopSound("sound/BGM/requiem.mp3");
+;
 }
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -41,11 +44,11 @@ void ResultScene::Draw()
 	DrawStringEx(450 , 200, -1, "全滅した");
 	SetFontSize(16);
 
-	risult_menu->Menu_draw();
+	risult_menu->Menu_draw(525, 500, 250, 80);
 
 	//リザルトメニューの要素
-	ResourceManager::getResourceManager()->DrawRotaGraphEx("graphics/button_Enter.png", risult_menu->menu_x + 125, risult_menu->menu_y + 25, 1, 0, true);
-	DrawStringEx(risult_menu->menu_x + 30, risult_menu->menu_y + 50, 0, "Enterを押してください");
+	DrawRotaGraph(650, 525, 1, 0, enter_key, true);
+	DrawStringEx(555, 550, 0, "Enterを押してください");
 }
 
 //------------------------------------------------------------------------------------------------------------------------

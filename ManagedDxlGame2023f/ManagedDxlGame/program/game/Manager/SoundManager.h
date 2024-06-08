@@ -18,7 +18,7 @@ private:
 	~SoundManager();
 
 	//BGM‚ÌƒpƒX‚ğ“ü‚ê‚é”z—ñ
-	std::unordered_map<std::string, int> soundMap;
+	std::unordered_map<std::string, int> sound_map;
 
 //------------------------------------------------------------------------------------------------------------------------
 //ŠÖ”

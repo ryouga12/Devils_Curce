@@ -1,20 +1,24 @@
 #include "battleScene.h"
 #include"../Object/Actor.h"
+#include"../Item/Item.h"
+#include"../Menu/BattleLog.h"
+#include"../Manager/GameManager.h"
+#include"../Manager/UiManager.h"
 
 
 //------------------------------------------------------------------------------------------------------------------------
 //初期化　&  解放
 
-BattleScene::BattleScene(tnl::Vector3 pos, int background, int EnemyID, Shared<Enemy>enemy_pointer) : background_(background), map_pos(pos)
+BattleScene::BattleScene(tnl::Vector3 pos, int background, Shared<Enemy> enemy_pointer) : back_ground_(background), map_pos(pos)
 {
 	//敵のポインタを代入する
 	enemy = enemy_pointer;
 
-	//敵のポインタを生成する
-	enemy->InitEnemyPointer(enemy, EnemyID);
-
 	//バトルログを初期化する
 	battle_log = std::make_shared<BattleLog>();
+
+	//アイテムを初期化する
+	item_ = std::make_shared<Item>();
 
 	//メニューの初期化
 	InitMenuWindow();
@@ -29,52 +33,45 @@ BattleScene::BattleScene(tnl::Vector3 pos, int background, int EnemyID, Shared<E
 	nomal_attack = std::make_shared<Nomal_Attack>(weapon_type);
 
 	//バトルフラグを切り替える(バトルのみでつかるアイテムの為)
-	GameManager::getGameManager()->getInventory()->BattleFlagSwitch(0);
+	item_->BattleFlagSwitch();
 
 	//バトルログをセットする
-	GameManager::getGameManager()->getInventory()->SetBattleLog(battle_log);
+	item_->SetBattleLog(battle_log);
 
 	//インデックスを初期化する
 	GameManager::getGameManager()->getInventory()->SelectedIndexClear();
 
-	//バトルシーンをセットする
 	/*for (auto actor : actor_list) {
 		actor->SetBattleScene(this);
 	}*/
+
+	//バトルシーンをセットする
 	enemy->SetBattleScene(this);
 
-
 	//プレイヤーのバトルシーンをセットする
+	auto& PlayerPtr = GameManager::getGameManager()->getPlayer();
+		
 	GameManager::getGameManager()->getPlayer()->SetBattleScene(this);
 
 	//バトルシーンの状態をバトルに変更する
 	battle_state = BattleState::BATTLE;
+
+	//カメラの保管座標をセットする
+	GameManager::getGameManager()->getCamera()->SavePosition(map_pos);
 
 }
 
 //デストラクタ
 BattleScene::~BattleScene()
 {
-	auto& enemyArray = enemy->GetEnemyArray()[enemy->GetEnemy_Index()];
+	//サウンドを止める
+	if (enemy->GetEnemyType() == Enemy::Enemytype::MOB) {
 
-	//サウンドを消去する
-	SoundManager::getSoundManager()->daleteSound("sound/SoundEffect/decision.mp3");
-	SoundManager::getSoundManager()->daleteSound("sound/SoundEffect/levelup.mp3");
-	SoundManager::getSoundManager()->daleteSound("sound/BGM/sentou.mp3");
-	SoundManager::getSoundManager()->daleteSound("sound/SoundEffect/dageki_2.mp3");
-	SoundManager::getSoundManager()->daleteSound("sound/SoundEffect/nigeru.mp3");
-	SoundManager::getSoundManager()->daleteSound("sound/SoundEffect/syouri.mp3");
-
-	//画像を消去する
-	ResourceManager::getResourceManager()->deleteGraphEx(enemyArray.getEnemyGhdl().c_str());
-	ResourceManager::getResourceManager()->deleteGraphEx("graphics/haikei/battle_field_01.jpg");
-	ResourceManager::getResourceManager()->deleteGraphEx("graphics/haikei/battle_field_02.jpg");
-	ResourceManager::getResourceManager()->deleteGraphEx("graphics/haikei/battle_field_03.jpg");
-	ResourceManager::getResourceManager()->deleteGraphEx("graphics/cur_sannkaku2.png");
-	ResourceManager::getResourceManager()->deleteGraphEx("graphics/mpbar.png");
-	ResourceManager::getResourceManager()->deleteGraphEx("graphics/hpbar.png");
-	ResourceManager::getResourceManager()->deleteGraphEx("graphics/Player/Player_Icon_sentou.png");
-
+		SoundManager::getSoundManager()->StopSound("sound/BGM/sentou.mp3");
+	}
+	else {
+		SoundManager::getSoundManager()->StopSound("sound/BGM/maou_sentou_bgm.mp3");
+	}
 }
 
 //メニューの初期化
@@ -83,13 +80,13 @@ void BattleScene::InitMenuWindow()
 	//最初の行動を決めるwindow
 	select_action_coment = new MenuWindow::MenuElement_t[]
 	{
-		{100 , 550 , "たたかう" , 0},
-		{100 , 600 , "道具" , 1},
-		{100 , 650 , "逃げる" , 2}
+		{MENU_COMENT_POS_FIRST.x ,MENU_COMENT_POS_FIRST.y , "たたかう" , 0},
+		{MENU_COMENT_POS_SECOND.x , MENU_COMENT_POS_SECOND.y , "道具" , 1},
+		{MENU_COMENT_POS_THIRD.x , MENU_COMENT_POS_THIRD.y , "逃げる" , 2}
 
 	};
 
-	select_comand_menu = std::make_shared<MenuWindow>(50, 510, 250, 200, "graphics/WindowBase_01.png", select_action_coment, 3, 1);
+	select_comand_menu = std::make_shared<MenuWindow>("graphics/WindowBase_01.png", select_action_coment, 3, 1);
 	select_comand_menu->Open();
 
 	//攻撃を決めるウィンドウ
@@ -100,7 +97,7 @@ void BattleScene::InitMenuWindow()
 		{100 , 650 ,"戻る" , 2}
 	};
 
-	attack_window = std::make_shared<MenuWindow>(50, 510, 250, 200, "graphics/WindowBase_01.png", select_action_attack, 3, 1);
+	attack_window = std::make_shared<MenuWindow>("graphics/WindowBase_01.png", select_action_attack, 3, 1);
 	attack_window->Open();
 
 	//アイテムを使用のウィンドウ
@@ -109,18 +106,14 @@ void BattleScene::InitMenuWindow()
 		{ 600 , 600 , "閉じる", 1}
 	};
 
-	select_itemuse_window = std::make_shared<MenuWindow>(550, 510, 250, 200, "graphics/WindowBase_01.png", select_detail, 2, 1);
+	select_itemuse_window = std::make_shared<MenuWindow>("graphics/WindowBase_01.png", select_detail, 2, 1);
 	select_itemuse_window->Open();
 
-	//バトルログのウィンドウ
-	battle_log_window = std::make_shared<Menu>(670, 30, 600, 180, "graphics/WindowBase_01.png");
-	//プレイヤーのウィンドウ
-	playerStatus_window = std::make_shared<Menu>(50, 50, 250, 240, "graphics/WindowBase_01.png");
-	//アイテムのウィンドウ
-	item_window = std::make_shared<Menu>(300, 510, 250, 200, "graphics/WindowBase_01.png");
-	//スキルウィンドウ
-	skill_menu_window = std::make_shared<Menu>(300, 510, 250, 200, "graphics/WindowBase_01.png");
+	//mapに格納する
+	UIManager::getUIManager()->addMenu("select_use_window", select_itemuse_window);
 
+	//ウィンドウ
+	window_log = UIManager::getUIManager()->getMenu("menu_window");
 }
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -128,6 +121,7 @@ void BattleScene::InitMenuWindow()
 
 void BattleScene::Update(float delta_time)
 {
+
 	//戦闘を行っている間はシーケンスを動かす
 	if (battle_state == BattleState::BATTLE) {
 		//シーケンスの更新処理
@@ -136,14 +130,14 @@ void BattleScene::Update(float delta_time)
 		//プレイヤーのターンのみ
 		if (PlayerTurn) {
 			//プレイヤーの更新処理
-			GameManager::getGameManager()->getPlayer()->PlayerMoveProcess(delta_time, battle_log, enemy, nomal_attack, map_pos);
+			GameManager::getGameManager()->getPlayer()->PlayerMoveProcess(delta_time, battle_log, enemy, nomal_attack);
 		}
 
 	}
 	//待機状態かつプレイヤーの状態がDEADだった場合、全滅シーンに切り替える
 	else if (battle_state == BattleState::IDLE && GameManager::getGameManager()->getPlayer()->GetPlayerState() == Player::PlayerState::DEAD) {
 		//時間を待ってから遷移させる
-		if (GameManager::getGameManager()->TimeCount(delta_time, annihilation_Time)) {
+		if (GameManager::getGameManager()->TimeCount(delta_time, ANNIHILATION_TIME)) {
 			auto mgr = SceneManager::GetInstance();
 			mgr->changeScene(new ResultScene());
 		}
@@ -151,19 +145,30 @@ void BattleScene::Update(float delta_time)
 	//待機状態の場合はEnterキーのみ受付し、押されたらシーンを遷移させる
 	else if (battle_state == BattleState::IDLE) {
 		if (tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
+
 			auto mgr = SceneManager::GetInstance();
 			mgr->changeScene(new MapScene());
 		}
 	}
 
-	//アニメーションの更新処理
+	//敵のエフェクトの更新処理
+	if (enemy->GetEnemyType() == Enemy::Enemytype::BOSS) {
+
+		//ダウンキャストする
+		auto boss_monster = std::dynamic_pointer_cast<BossMonster>(enemy);
+
+		//エフェクトの描画
+		boss_monster->GetEnemySkillList()[boss_monster->GetEnemySkillIndex()]->SkillAnimationUpdate(delta_time);
+	}
+
+	//エフェクトの更新処理
 	nomal_attack->SkillAnimationUpdate(delta_time);
-	//アニメーション配列が無い時は処理を飛ばす
-	if (GameManager::getGameManager()->getInventory()->getSkillNum() == 0) {
+	//エフェクトの配列が無い時は処理を飛ばす
+	if (GameManager::getGameManager()->getPlayer()->getSkillNum() == 0) {
 		return;
 	}
-	//アニメーションの更新処理
-	GameManager::getGameManager()->getInventory()->getSkillList()[GameManager::getGameManager()->getInventory()->GetSkillSelectedIndex()]->SkillAnimationUpdate(delta_time);
+	//エフェクトの更新処理
+	GameManager::getGameManager()->getPlayer()->getSkillList()[GameManager::getGameManager()->getInventory()->GetSkillSelectedIndex()]->SkillAnimationUpdate(delta_time);
 
 }
 
@@ -172,10 +177,12 @@ void BattleScene::Update(float delta_time)
 void BattleScene::Draw()
 {
 	//背景画像
-	DrawExtendGraph(0, 0, DXE_WINDOW_WIDTH, DXE_WINDOW_HEIGHT, background_, TRUE);
+	DrawExtendGraph(0, 0, DXE_WINDOW_WIDTH, DXE_WINDOW_HEIGHT, back_ground_, TRUE);
 
-	//バトルログのウィンドウの描画
-	battle_log_window->Menu_draw();
+	//バトルログウィンドウの描画
+	if (auto battle_log_window = window_log.lock()) {
+		battle_log_window->Menu_draw(670, 30, 600, 180);
+	}
 
 	//バトルウィンドウの描画
 	BattleDraw();
@@ -186,24 +193,29 @@ void BattleScene::Draw()
 	//プレイヤーのステータスの描画
 	PlayerStatusDraw();
 
-	/*DrawStringEx(10, 10, -1, "バトル画面");*/
-
 	//敵の画像の描画
 	enemy->Draw();
+
+	//敵のエフェクトの更新処理
+	if (enemy->GetEnemyType() == Enemy::Enemytype::BOSS) {
+
+		//ダウンキャストする
+		auto boss_monster = std::dynamic_pointer_cast<BossMonster>(enemy);
+
+		//エフェクトの更新処理
+		boss_monster->GetEnemySkillList()[boss_monster->GetEnemySkillIndex()]->SkillAnimationDraw();
+	}
 	
-	//アニメーションの描画
+	//プレイヤーのエフェクトの描画
 	nomal_attack->SkillAnimationDraw();
 
-	DrawStringEx(300, 250, -1, "プレイヤーの状態 : [%d]" , GameManager::getGameManager()->getPlayer()->GetPlayerState());
-	DrawStringEx(300, 300, -1, "PlayerTurn : [%d]" ,PlayerTurn);
-
-	//アニメーション配列が無い時は処理を飛ばす
-	if (GameManager::getGameManager()->getInventory()->getSkillNum() == 0) {
+	//エフェクトの配列が無い時は処理を飛ばす
+	if (GameManager::getGameManager()->getPlayer()->getSkillList().empty()) {
 		return;
 	}
 	else {
-		//特技のアニメーションの描画
-		GameManager::getGameManager()->getInventory()->getSkillList()[GameManager::getGameManager()->getInventory()->GetSkillSelectedIndex()]->SkillAnimationDraw();
+		//特技のエフェクトの描画
+		GameManager::getGameManager()->getPlayer()->getSkillList()[GameManager::getGameManager()->getInventory()->GetSkillSelectedIndex()]->SkillAnimationDraw();
 	}
 
 }
@@ -213,30 +225,33 @@ void BattleScene::Draw()
 //バトルウィンドウの描画
 void BattleScene::BattleDraw()
 {
+	//アイテムを描画するウィンドウ
+	auto item_window = window_log.lock();
+
+
 	//最初の行動の時のウィンドウ
-	if (select_action_menu == MenuAction::first_action) {
-		select_comand_menu->All();
+	if (select_action_menu == MenuAction::FIRST_ACTION) {
+		select_comand_menu->All(50, 510, 250, 200);
 	}
 	//攻撃ウィンドウ
-	else if (select_action_menu == MenuAction::fight_action) {
-		attack_window->All();
+	else if (select_action_menu == MenuAction::FIGHT_ACTION) {
+		attack_window->All(50, 510, 250, 200);
 	}
 	//アイテム表示のウィンドウ
-	else if (select_action_menu == MenuAction::item_action) {
-		select_comand_menu->All();
-		item_window->Menu_draw();
-		GameManager::getGameManager()->getInventory()->ItemMenu(item_draw_pos, item_curent_page , curourY, itemPerPage);
+	else if (select_action_menu == MenuAction::ITEM_ACTION) {
+		select_comand_menu->All(50, 510, 250, 200);
+		item_window->Menu_draw(300, 510, 250, 200);
+		GameManager::getGameManager()->getInventory()->ItemMenu(ITEM_DRAW_POS, ITEM_CURENT_PAGE , CUROURY, ITEMPERPAGE_);
 	}
 	//アイテムを使う時のウィンドウ
-	else if (select_action_menu == MenuAction::item_use_action) {
-		select_comand_menu->All();
-		item_window->Menu_draw();
-		GameManager::getGameManager()->getInventory()->ItemMenu(item_draw_pos, item_curent_page , curourY, itemPerPage);
-		select_itemuse_window->All();
+	else if (select_action_menu == MenuAction::ITEM_USE_ACTION) {
+		select_comand_menu->All(50, 510, 250, 200);
+		item_window->Menu_draw(300, 510, 250, 200);
+		GameManager::getGameManager()->getInventory()->ItemMenu(ITEM_DRAW_POS, ITEM_CURENT_PAGE , CUROURY, ITEMPERPAGE_);
+		select_itemuse_window->All(550, 510, 250, 200);
 	}
-	else if (select_action_menu == MenuAction::skill_action) {
-		attack_window->All();
-		skill_menu_window->Menu_draw();
+	else if (select_action_menu == MenuAction::SKILL_ACTION) {
+		attack_window->All(50, 510, 250, 200);
 		InventorySkillDraw();
 	}
 }
@@ -249,7 +264,7 @@ void BattleScene::BattleDraw()
 void BattleScene::ItemSelectProcess()
 {
 	//インデックスの操作と取得
-	GameManager::getGameManager()->getInventory()->ItemCurourIndex(itemPerPage);
+	GameManager::getGameManager()->getInventory()->ItemCurourIndex(ITEMPERPAGE_);
 
 	//アイテムのカーソル処理
 	GameManager::getGameManager()->getInventory()->CusorMove();
@@ -258,7 +273,7 @@ void BattleScene::ItemSelectProcess()
 		//効果音を鳴らす
 		SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
 		//行動を移す
-		select_action_menu = MenuAction::first_action;
+		select_action_menu = MenuAction::FIRST_ACTION;
 		//メニューを切り替える
 		select_comand_menu->SetSelectCousourMove();
 	}
@@ -268,22 +283,22 @@ void BattleScene::ItemSelectProcess()
 //アイテムを使った際の処理
 void BattleScene::ItemUseProcess()
 {
-	if (select_itemuse_window->getSelectNum() == ItemUse && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
+	if (select_itemuse_window->getSelectNum() == ITEMUSE_ && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
 		//効果音を鳴らす
 		SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
 		//アイテムを使った時の処理
-		GameManager::getGameManager()->getInventory()->InventoryItemUse(GameManager::getGameManager()->getInventory()->GetSelectedItemId());
+		item_->ItemUse(GameManager::getGameManager()->getInventory()->GetSelectedItemId());
 		//行動を移す
-		select_action_menu = MenuAction::first_action;
+		select_action_menu = MenuAction::FIRST_ACTION;
 		//カーソルを動けるようにする
 		select_comand_menu->SetSelectCousourMove();
 		//シーケンスを切り替える
 		tnl_sequence_.change(&BattleScene::seqChangeTurn);
 	}
 	//閉じるが押されたら
-	else if (select_itemuse_window->getSelectNum() == ItemUseMenuClose && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
+	else if (select_itemuse_window->getSelectNum() == ITEMUSEMENUCLOSE_ && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
 		SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
-		select_action_menu = MenuAction::item_action;
+		select_action_menu = MenuAction::ITEM_ACTION;
 	}
 }
 
@@ -298,13 +313,13 @@ void BattleScene::ItemDropProcess()
 	std::uniform_real_distribution<> dis(0, 100);
 
 	//0から100の一様乱数を生成する
-	int rand_val = dis(gen);
+	int rand_val = static_cast<int>(dis(gen));
 
 	//敵のアイテム配列を取得する
 	auto& EnemyItemDrop = enemy->getItemDropArray();
 
 	//レアドロップ
-	if (rand_val < RareDrop ) {
+	if (rand_val < RAREDROP ) {
 		//敵のアイテムをインベントリに格納する
 		GameManager::getGameManager()->getInventory()->AddInventory(EnemyItemDrop[1].getItemId());
 
@@ -319,7 +334,7 @@ void BattleScene::ItemDropProcess()
 		}
 	}
 	//通常ドロップ
-	else if (rand_val > RareDrop && rand_val < (NomalDrop + RareDrop)) {
+	else if (rand_val > RAREDROP && rand_val < (NOMALDROP + RAREDROP)) {
 		//敵のアイテムをインベントリに格納する
 		GameManager::getGameManager()->getInventory()->AddInventory(EnemyItemDrop[0].getItemId());
 
@@ -339,9 +354,9 @@ void BattleScene::ItemDropProcess()
 void BattleScene::BattleBuffResetProcess()
 {
 	//攻撃力などが上がっていた場合それをリセットする
-	if (GameManager::getGameManager()->getInventory()->getAttackAmount() != 0) {
+	if (item_->getAttackAmount() != 0) {
 
-		int AttackAmoument = GameManager::getGameManager()->getPlayer()->getPlayerStatusSave().getAttack() - GameManager::getGameManager()->getInventory()->getAttackAmount();
+		int AttackAmoument = GameManager::getGameManager()->getPlayer()->getPlayerStatusSave().GetAttack() - item_->getAttackAmount();
 		GameManager::getGameManager()->getPlayer()->getPlayerStatusSave().SetPlayerAttack(AttackAmoument);
 	}
 	//上がって居なければ処理を飛ばす
@@ -372,8 +387,8 @@ void BattleScene::SetWeaponType()
 void BattleScene::FleeProcess(Player::PlayerStatus& playerStatus , Enemy::EnemyStatus& enemyStatus , float delta_time)
 {
 	//プレイヤーと敵の素早さを取得する
-	auto playerSpeed = playerStatus.getSpeed();
-	auto enemySpeed = enemyStatus.getEnemySpeed();
+	auto playerSpeed = playerStatus.GetSpeed();
+	auto enemySpeed = enemyStatus.GetEnemySpeed();
 
 	// プレイヤーの素早さが敵よりも速い場合、逃走成功率を高める
 	if (playerSpeed > enemySpeed) {
@@ -391,8 +406,6 @@ void BattleScene::FleeProcess(Player::PlayerStatus& playerStatus , Enemy::EnemyS
 		// 逃走に成功した場合の処理
 		battle_log->addLog("うまく逃げれた");
 
-		//フラグを立てる
-		flee_flag = true;
 		//戦闘BGMを止める
 		SoundManager::getSoundManager()->StopSound("sound/BGM/sentou.mp3");
 		//逃げるの効果音を流す
@@ -405,7 +418,6 @@ void BattleScene::FleeProcess(Player::PlayerStatus& playerStatus , Enemy::EnemyS
 	else {
 		// 逃走に失敗した場合の処理
 		battle_log->addLog("逃げられなかった");
-		flee_flag = false;
 		tnl_sequence_.change(&BattleScene::seqChangeTurn);
 		GameManager::getGameManager()->getPlayer()->SetPlayerState(Player::PlayerState::IDLE);
 	}
@@ -426,7 +438,7 @@ void BattleScene::SkillSelectProcess()
 	//Enterキーを押された時に
 	if (tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
 		//スキルが何もない場合には処理を行わない
-		if (GameManager::getGameManager()->getInventory()->getSkillList().empty()) {
+		if (GameManager::getGameManager()->getPlayer()->getSkillList().empty()) {
 			return;
 		}
 		//プレイヤーの状態を攻撃に変えて攻撃
@@ -437,90 +449,74 @@ void BattleScene::SkillSelectProcess()
 		//効果音を鳴らす
 		SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
 		//行動を移す
-		select_action_menu = MenuAction::fight_action;
-		//カーソルを動けなくする
+		select_action_menu = MenuAction::FIGHT_ACTION;
+		//カーソルを動けるようにする
 		attack_window->SetSelectCousourMove();
-		//行動を決める為の選択画面のカーソルを動けないようにする
-		select_comand_menu->SetSelectCousourMove();
 	}
 }
 
 //スキルの描画
 void BattleScene::InventorySkillDraw() {
 
-	//スキルが0の時は描画しない
-	if (GameManager::getGameManager()->getInventory()->getSkillNum() > 0) {
-
-		// スキルインベントリのスキルを2行ずつ表示する
-		for (int i = 0; i < itemPerPage; ++i) {
-			int skillIndex = SkillCurentPage * itemPerPage + i;
-			if (skillIndex >= GameManager::getGameManager()->getInventory()->getSkillList().size()) {
-				break; // スキルインベントリの範囲外だったら終了する
-			}
-
-			//スキル配列を取得する
-			auto& skillDataPtr = GameManager::getGameManager()->getInventory()->getSkillList()[skillIndex];
-
-			// スキルの描画
-			DrawStringEx(350, StartY + i * lineHeight, Color_White, "%s", skillDataPtr->getName().c_str());
-
-			// 選択されたスキルのインデックスに基づいてカーソルを描画
-			if (skillIndex == GameManager::getGameManager()->getInventory()->GetSkillSelectedIndex()) {
-				// カーソルを描画する位置を計算
-				int cursorY = StartY + i * lineHeight;
-				ResourceManager::getResourceManager()->DrawRotaGraphEx("graphics/cur_sannkaku2.png", 330, cursorY, cursourSize, 0, true);
-			}
-		}
+	//ウィンドウの表示
+	//ポインタがかえって来たらウィンドウを描画する
+	if (auto skill_window = window_log.lock()) {
+		skill_window->Menu_draw(300, 510, 250, 200);
 	}
+
+	//インベントリ内のスキルを描画する
+	GameManager::getGameManager()->getInventory()->InventorySkill(ITEM_DRAW_POS , ITEM_CURENT_PAGE , CUROURY, ITEMPERPAGE_);
 }
 
 //スキルが使えるかどうかのチェック
 bool BattleScene::SkillUseMpChack(Player::PlayerStatus& playerStatus)
 {
 	//スキルが無ければ処理を飛ばす
-	if (GameManager::getGameManager()->getInventory()->getSkillList().empty()) {
+	if (GameManager::getGameManager()->getPlayer()->getSkillList().empty()) {
 		return false;
 	}
 
 	//MPが足りなかったら
-	if (playerStatus.getCurentMp() < GameManager::getGameManager()->getInventory()->getSkillList()[GameManager::getGameManager()->getInventory()->GetSkillSelectedIndex()]->getSkillConsumeMp()) {
+	if (playerStatus.GetCurentMp() < GameManager::getGameManager()->getPlayer()->getSkillList()[GameManager::getGameManager()->getInventory()->GetSkillSelectedIndex()]->getSkillConsumeMp()) {
 		battle_log->addLog("Mpが足りません");
 		return false;
 	}
-	GameManager::getGameManager()->getInventory()->getSkillList()[GameManager::getGameManager()->getInventory()->GetSkillSelectedIndex()]->SkillMpConsume(playerStatus);
+	GameManager::getGameManager()->getPlayer()->getSkillList()[GameManager::getGameManager()->getInventory()->GetSkillSelectedIndex()]->SkillMpConsume(playerStatus);
 	return true;
 }
 
 //スキルを使用した際の処理
 void BattleScene::SkillUseProcess(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_)
 {
+	auto& SkillList = GameManager::getGameManager()->getPlayer()->getSkillList()[GameManager::getGameManager()->getInventory()->GetSkillSelectedIndex()];
+
 	//スキルが使えなったら処理を飛ばす
 	if (!SkillUseMpChack(playerStatus)) {
-		select_action_menu = MenuAction::fight_action;
+		select_action_menu = MenuAction::FIGHT_ACTION;
 		return;
 	}
 	//攻撃系のスキルの場合
-	if (GameManager::getGameManager()->getInventory()->getSkillList()[GameManager::getGameManager()->getInventory()->GetSkillSelectedIndex()]->getSkillType() == 0 && !GameManager::getGameManager()->getInventory()->getSkillList().empty()) {
-
-		auto skillList = GameManager::getGameManager()->getInventory()->getSkillList()[GameManager::getGameManager()->getInventory()->GetSkillSelectedIndex()];
+	if (SkillList->getSkillType() == 0 && !GameManager::getGameManager()->getPlayer()->getSkillList().empty()) {
 
 		//ダメージを与える
-		GameManager::getGameManager()->getInventory()->getSkillList()[GameManager::getGameManager()->getInventory()->GetSkillSelectedIndex()]->SkillUse(playerStatus, enemyStatus_, battle_log);
+		GameManager::getGameManager()->getPlayer()->getSkillList()[GameManager::getGameManager()->getInventory()->GetSkillSelectedIndex()]->SkillUse(playerStatus, enemyStatus_, battle_log);
 
 		//エフェクトを流す
 		tnl_sequence_.change(&BattleScene::seqAnimation);
 	}
 	//バフ系のスキルの場合
-	else if (GameManager::getGameManager()->getInventory()->getSkillList()[GameManager::getGameManager()->getInventory()->GetSkillSelectedIndex()]->getSkillType() == 1) {
-		Skill_Buff_Flag = true;
+	else if (SkillList->getSkillType() == 1 && !GameManager::getGameManager()->getPlayer()->getSkillList().empty()) {
 
 		//バフ効果をプレイヤーに与える
-		GameManager::getGameManager()->getInventory()->getSkillList()[GameManager::getGameManager()->getInventory()->GetSkillSelectedIndex()]->SkillUse(playerStatus , battle_log);
+		GameManager::getGameManager()->getPlayer()->getSkillList()[GameManager::getGameManager()->getInventory()->GetSkillSelectedIndex()]->SkillUse(playerStatus , battle_log);
+
+		//エフェクトを流す
+		tnl_sequence_.change(&BattleScene::seqAnimation);
 	}
 	//アイテム系のスキル
 	else {
 		//ダメージを与える
-		GameManager::getGameManager()->getInventory()->getSkillList()[GameManager::getGameManager()->getInventory()->GetSkillSelectedIndex()]->SkillUse(enemyStatus_, battle_log);
+		GameManager::getGameManager()->getPlayer()->getSkillList()[GameManager::getGameManager()->getInventory()->GetSkillSelectedIndex()]->SkillUse(enemyStatus_, battle_log);
 
 		//エフェクトを流す
 		tnl_sequence_.change(&BattleScene::seqAnimation);
@@ -530,7 +526,7 @@ void BattleScene::SkillUseProcess(Player::PlayerStatus& playerStatus, Enemy::Ene
 	PlayerTurn = false;
 	
 	//スキル選択ウィンドウに戻す
-	select_action_menu = MenuAction::fight_action;
+	select_action_menu = MenuAction::FIGHT_ACTION;
 	//カーソルを動けるようにする
 	attack_window->SetSelectCousourMove();
 
@@ -543,39 +539,41 @@ void BattleScene::SkillUseProcess(Player::PlayerStatus& playerStatus, Enemy::Ene
 //メニュー毎の処理
 void BattleScene::MenuUpdate(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_)
 {
-	auto PlayerAttack = playerStatus.getAttack();
-	auto EnemyDefance = enemyStatus_.getEnemyDefance();
-	auto EnemyHp = enemyStatus_.getEnemyHp();
+	auto PlayerAttack = playerStatus.GetAttack();
+	auto EnemyDefance = enemyStatus_.GetEnemyDefance();
+	auto EnemyHp = enemyStatus_.GetEnemyHp();
 
 	switch (select_action_menu)
 	{
 		//一番最初のメニューの時の処理
-	case BattleScene::MenuAction::first_action:
+	case BattleScene::MenuAction::FIRST_ACTION:
 
 		//たたかう
-		if (select_comand_menu->getSelectNum() == Attack && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
+		if (select_comand_menu->getSelectNum() == ATTACK_ && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
 			SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
-			select_action_menu = MenuAction::fight_action;
+			select_action_menu = MenuAction::FIGHT_ACTION;
+			//カーソルを動けないようにする
+			select_comand_menu->SetSelectCousourMove();
 
 		}
 		//道具
-		else if (select_comand_menu->getSelectNum() == Item && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
+		else if (select_comand_menu->getSelectNum() == ITEM_ && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
 			SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
-			select_action_menu = MenuAction::item_action;
+			select_action_menu = MenuAction::ITEM_ACTION;
 			//最初の画面のカーソルを動けなくする
 			select_comand_menu->SetSelectCousourMove();
 		}
 		//逃げる
-		else if (select_comand_menu->getSelectNum() == Flee && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
+		else if (select_comand_menu->getSelectNum() == FLEE_ && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
 			GameManager::getGameManager()->getPlayer()->SetPlayerState(Player::PlayerState::FLEE);
 		}
 		break;
 
 		//攻撃選択の時に
-	case BattleScene::MenuAction::fight_action:
+	case BattleScene::MenuAction::FIGHT_ACTION:
 
 		//攻撃が押された時に
-		if (attack_window->getSelectNum() == Attack && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
+		if (attack_window->getSelectNum() == ATTACK_ && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
 
 			//プレイヤーの状態を攻撃に変える
 			GameManager::getGameManager()->getPlayer()->SetPlayerState(Player::PlayerState::NOMALATTACK);
@@ -584,23 +582,26 @@ void BattleScene::MenuUpdate(Player::PlayerStatus& playerStatus, Enemy::EnemySta
 			tnl_sequence_.change(&BattleScene::seqAnimation);
 		}
 		//特技が選択されたら
-		else if (attack_window->getSelectNum() == SpecialSkill && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
+		else if (attack_window->getSelectNum() == SPECIAL_SKILL_ && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
 
 			//持っているスキルの選択をさせる
-			select_action_menu = MenuAction::skill_action;
+			select_action_menu = MenuAction::SKILL_ACTION;
 
 			//行動を決める為の選択画面のカーソルを動けないようにする
-			select_comand_menu->SetSelectCousourMove();
+			attack_window->SetSelectCousourMove();
 		}
 		//閉じるが選択されたら
-		else if (attack_window->getSelectNum() == MenuClose && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
-			select_action_menu = MenuAction::first_action;
+		else if (attack_window->getSelectNum() == MENU_CLOSE_ && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
+			select_action_menu = MenuAction::FIRST_ACTION;
+
+			//カーソルを動けるようにする
+			select_comand_menu->SetSelectCousourMove();
 
 		}
 
 		break;
 
-	case BattleScene::MenuAction::item_action:
+	case BattleScene::MenuAction::ITEM_ACTION:
 
 		//アイテム選択処理
 		ItemSelectProcess();
@@ -609,13 +610,13 @@ void BattleScene::MenuUpdate(Player::PlayerStatus& playerStatus, Enemy::EnemySta
 		if (tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
 			//決定音を鳴らす
 			SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
-			select_action_menu = MenuAction::item_use_action;
+			select_action_menu = MenuAction::ITEM_USE_ACTION;
 		}
 
 		break;
 
 		//使うが選択されたら
-	case MenuAction::item_use_action:
+	case MenuAction::ITEM_USE_ACTION:
 
 		//アイテムを使った際の処理
 		ItemUseProcess();
@@ -623,7 +624,7 @@ void BattleScene::MenuUpdate(Player::PlayerStatus& playerStatus, Enemy::EnemySta
 		break;
 
 		//スキル処理
-	case MenuAction::skill_action:
+	case MenuAction::SKILL_ACTION:
 
 		//スキル選択時の処理
 		SkillSelectProcess();
@@ -640,21 +641,11 @@ void BattleScene::MenuUpdate(Player::PlayerStatus& playerStatus, Enemy::EnemySta
 //------------------------------------------------------------------------------------------------------------------------
 //プレイヤー関連
 
-//アニメーション使用時のターンチェンジ
-void BattleScene::AnimationTurnChange(int enemyhp , float delta_time)
-{
-	//バフ系のスキルを使った場合はターンを入れ替える
-	if (Skill_Buff_Flag) {
-		//ターンを切り替える
-		tnl_sequence_.change(&BattleScene::seqChangeTurn);
-	}
-}
-
 //レベルアップ判定 & 処理
 void BattleScene::ChackPlayerLevelUp(Player::PlayerStatus& player_status) {
 
 	//レベルを取得する
-	auto Playerlevel = player_status.getLevel();
+	auto Playerlevel = player_status.GetLevel();
 
 	//レベル10以上であればレベルアップしない(今後増やして行く予定)
 	if (Playerlevel >= 10) {
@@ -662,7 +653,7 @@ void BattleScene::ChackPlayerLevelUp(Player::PlayerStatus& player_status) {
 	}
 
 	//プレイヤーの必要な経験値が0以下になった時にレベルをあげる
-	if (player_status.getExpoint() <= 0)
+	if (player_status.GetExpoint() <= 0)
 	{
 		//レベルをあげる
 		//効果音を鳴らす
@@ -672,25 +663,25 @@ void BattleScene::ChackPlayerLevelUp(Player::PlayerStatus& player_status) {
 		battle_log->addLog("レベルアップした！");
 
 		//新しいレベルを取得する
-		auto Playerlevel = player_status.getLevel() + 1;
+		auto Playerlevel = player_status.GetLevel() + 1;
 
 		//プレイヤーのステータスをセットする
 		GameManager::getGameManager()->getPlayer()->SetPlayerStatus(Playerlevel);
 
 		//プレイヤーが武器を装備していたら
-		if (GameManager::getGameManager()->getInventory()->getEquipStatus(equipAttack) != 0) {
-			auto playerAttack = player_status.getAttack();
-			player_status.SetPlayerAttack(playerAttack + GameManager::getGameManager()->getInventory()->getEquipStatus(equipAttack));
+		if (GameManager::getGameManager()->getInventory()->GetEquipAttack() != 0) {
+			auto playerAttack = player_status.GetAttack();
+			player_status.SetPlayerAttack(playerAttack + GameManager::getGameManager()->getInventory()->GetEquipAttack());
 		}
 
 		//プレイヤーが防具を装備していたら
-		if (GameManager::getGameManager()->getInventory()->getEquipStatus(equipDefance) != 0) {
-			auto playerDefance = player_status.getDefance();
-			player_status.SetPlayerDefance(playerDefance + GameManager::getGameManager()->getInventory()->getEquipStatus(equipDefance));
+		if (GameManager::getGameManager()->getInventory()->GetEquipDefance() != 0) {
+			auto playerDefance = player_status.GetDefance();
+			player_status.SetPlayerDefance(playerDefance + GameManager::getGameManager()->getInventory()->GetEquipDefance());
 		}
 
 		//スキルをセットする
-		GameManager::getGameManager()->getInventory()->SkillSet();
+		GameManager::getGameManager()->getPlayer()->SkillSet(battle_log);
 	}
 	//必要な経験値が0にならなかったら
 	else {
@@ -705,44 +696,13 @@ void BattleScene::ChackPlayerLevelUp(Player::PlayerStatus& player_status) {
 //プレイヤーのHPとMPバーの処理
 void BattleScene::PlayerStatusDraw()
 {
-	//プレイヤーのステータスを取得する
-	auto plyerstatus = GameManager::getGameManager()->getPlayer()->getPlayerStatusSave();
+	if (auto playerStatus_window = window_log.lock()) {
+		//ウィンドウを描画する
+		playerStatus_window->Menu_draw(50, 50, 250, 240);
+	}
 
-	//ウィンドウを描画する
-	playerStatus_window->Menu_draw();
-
-	//プレイヤーの画像
-	ResourceManager::getResourceManager()->DrawRotaGraphEx("graphics/Player/Player_Icon_sentou.png" , 90 , 120  ,1.3f, 0 , true);
-
-	//hpバーの画像
-	int hpber_hdl =  ResourceManager::getResourceManager()->LoadGraphEX("graphics/hpbar.png");
-	//mpバーの画像
-	int mpber_hdl =  ResourceManager::getResourceManager()->LoadGraphEX("graphics/mpbar.png");
-	//hpバー最大の長さ
-	int maxHpBar = 200;
-	//mpバーの最大の長さ
-	int maxMpBer = 200;
-
-	// HPの割合を計算する
-	float hp_ratio = plyerstatus.getcurentHp() / plyerstatus.getMaxHp();
-	// HPバーの長さを計算する
-	float hpbar = static_cast<int>(maxHpBar * hp_ratio);
-
-	// MPの割合を計算する
-	float mp_ratio = plyerstatus.getCurentMp() / plyerstatus.getMaxMp();
-	// MPバーの長さを計算する
-	float mpbar = static_cast<int>(maxMpBer * mp_ratio);
-
-	DrawExtendGraph(75, 155, (75 + hpbar), 185, hpber_hdl, true);
-	DrawExtendGraph(75, 215, (75 + mpbar), 245, mpber_hdl, true);
-
-	//プレイヤーのHPを表示する
-	DrawStringEx(playerStatus_window->menu_x + 25, playerStatus_window->menu_y + 20, -1, "Player");
-	DrawStringEx(120, 110, -1, " Lv %d" , plyerstatus.getLevel());
-	DrawStringEx(playerStatus_window->menu_x + 25, playerStatus_window->menu_y + 140, -1, " Hp : %d / %d", static_cast<int>(plyerstatus.getcurentHp()),static_cast<int>(plyerstatus.getMaxHp()));
-	DrawStringEx(playerStatus_window->menu_x + 25, playerStatus_window->menu_y + 200, -1, " Mp : %d / %d", static_cast<int>(plyerstatus.getCurentMp()), static_cast<int>(plyerstatus.getMaxMp()));
-
-
+	//ステータスを表示する
+	UIManager::getUIManager()->PlayerStatusDrawWindow();
 
 }
 
@@ -764,22 +724,22 @@ void BattleScene::DeadEnemyProcces(Player::PlayerStatus& playerStatus,Enemy::Ene
 	BattleBuffResetProcess();
 
 	//バトルフラグを切り替える
-	GameManager::getGameManager()->getInventory()->BattleFlagSwitch(1);
+	item_->BattleFlagSwitch();
 
 	//必要な経験値を取得する
-	auto R_point = playerStatus.getExpoint();
+	auto R_point = playerStatus.GetExpoint();
 
 	//敵の経験値を取得する
-	auto Enemy_expoint = enemy_status.getEnemyExpoint();
+	auto Enemy_expoint = enemy_status.GetEnemyExpoint();
 
 	// データ処理
 	playerStatus.SetPlayerExpoint(R_point - Enemy_expoint);
 
 	//ゴールドを手に入れた時のログを流す
-	battle_log->addMoney("プレイヤー", enemy_status.getEnemyMoney());
+	battle_log->addMoney("プレイヤー", enemy_status.GetEnemyMoney());
 	
 	//所持金を追加する
-	GameManager::getGameManager()->getPlayer()->AddPlayerMoney(enemy_status.getEnemyMoney());
+	GameManager::getGameManager()->getPlayer()->AddPlayerMoney(enemy_status.GetEnemyMoney());
 }
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -796,7 +756,7 @@ bool BattleScene::seqIdle(float delta_time)
 	if (tnl_sequence_.isStart()) {
 		//素早さを比較する
 		//プレイヤーが早い場合
-		if (PlayerStatus.getSpeed() >= enemyStatus.getEnemySpeed()) {
+		if (PlayerStatus.GetSpeed() >= enemyStatus.GetEnemySpeed()) {
 			//プレイヤーのシーケンスへ
 			tnl_sequence_.change(&BattleScene::seqPlayerAction);
 			PlayerTurn = true;
@@ -824,13 +784,13 @@ bool BattleScene::seqPlayerAction(float delta_time)
 {
 	auto& playerStatus = GameManager::getGameManager()->getPlayer()->getPlayerStatusSave();
 	auto& enemyStatus = enemy->GetEnemyArray()[enemy->GetEnemy_Index()];
-	auto enemyHp = enemyStatus.getEnemyHp();
+	auto enemyHp = enemyStatus.GetEnemyHp();
 
 	if (tnl_sequence_.isStart()) {
 
 		PlayerTurn = true;
 
-		select_sequence = Sequence::PlayerAction;
+		select_sequence = Sequence::PLAYERACTION;
 
 		//ログをリセットする
 		battle_log->LogReset();
@@ -840,9 +800,6 @@ bool BattleScene::seqPlayerAction(float delta_time)
 	
 	}
 
-	//アニメーションを使用時にアニメーションを流してからターンをチェンジさせる
-	AnimationTurnChange(enemyHp, delta_time);
-
 	return false;
 
 }
@@ -851,14 +808,14 @@ bool BattleScene::seqPlayerAction(float delta_time)
 bool BattleScene::seqEnemyAction(float delta_time)
 {
 	auto& PlayerStatus = GameManager::getGameManager()->getPlayer()->getPlayerStatusSave();
-	auto& enemyStatus = enemy->GetEnemyArray()[enemy->GetEnemy_Index()];
+	auto& enemyStatus = enemy->GetEnemyArray()[enemy->GetEnemy_Index()]; 
 
 	//シーケンスが始まった最初の一回のみ処理を行う
 	if (tnl_sequence_.isStart()) {
 
 		PlayerTurn = false;
 
-		select_sequence = Sequence::EnemyAction;
+		select_sequence = Sequence::ENEMYACTION;
 
 		//ログをリセットする
 		battle_log->LogReset();
@@ -868,26 +825,26 @@ bool BattleScene::seqEnemyAction(float delta_time)
 
 		//敵の行動を行う
 		enemy->EnemyAction(battle_log);
-
-		//SEを流す
-		SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/dageki_2.mp3", DX_PLAYTYPE_BACK);
-
-		//ボリュームを変える
-		SoundManager::getSoundManager()->ChangeSoundVolume(70, "sound/SoundEffect/dageki_2.mp3");
-
-		//プレイヤーのHpが0になったら全滅のシーンに切り替える
-		GameManager::getGameManager()->getPlayer()->SetPlayerState(Player::PlayerState::DEAD);
-		PlayerTurn = true;
+		
+		//敵が雑魚的だったらそのままプレイヤーが死んでいるかのチェックを行う
+		if (enemy->GetEnemyType() == Enemy::Enemytype::MOB) {
+			//プレイヤーのHpが0になったら全滅のシーンに切り替える
+			GameManager::getGameManager()->getPlayer()->SetPlayerState(Player::PlayerState::DEAD);
+			PlayerTurn = true;
+		}
+		//敵がボスだったらボスの攻撃エフェクトを流す
+		else {
+			tnl_sequence_.change(&BattleScene::seqAnimation);
+		}
 		
 	}
 	//Hpが0にならなかったらターンを切り替える
-	if (PlayerStatus.getcurentHp() >= 0 && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
+	if (PlayerStatus.GetcurentHp() >= 0 && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
 
 		//状態を通常に戻してコマンドバトルを再度行う
 		GameManager::getGameManager()->getPlayer()->SetPlayerState(Player::PlayerState::IDLE);
 
 		tnl_sequence_.change(&BattleScene::seqPlayerAction);
-		select_sequence = Sequence::PlayerAction;
 	}
 
 	return false;
@@ -899,20 +856,22 @@ bool BattleScene::seqChangeTurn(float delta_time)
 	//Enterキーを押したらシーケンスを遷移させる
 	if (tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
 		tnl_sequence_.change(&BattleScene::seqEnemyAction);
-		select_sequence = Sequence::EnemyAction;
 	}
 
 	return false;
 }
 
-//アニメーションを流すシーケンス
+//エフェクトを流すシーケンス
 bool BattleScene::seqAnimation(float delta_time)
 {
+	//ボスモンスターをダウンキャストで呼び出す
+	auto boss_monster = std::dynamic_pointer_cast<BossMonster>(enemy);
+
 	//プレイヤーが攻撃を選択していたら
 	if (GameManager::getGameManager()->getPlayer()->GetPlayerState() == Player::PlayerState::NOMALATTACK) {
 		
 		if (tnl_sequence_.isStart()) {
-			//スキルのアニメーションを流す
+			//スキルのエフェクト流す
 			nomal_attack->SkillUseAnimation();
 		}
 
@@ -921,7 +880,7 @@ bool BattleScene::seqAnimation(float delta_time)
 
 		if (tnl_sequence_.getProgressTime() > 1.0f) {
 
-			//のアニメーションを止める
+			//のエフェクト止める
 			nomal_attack->SkillAnimationStop();
 
 			//敵が死んでいるか確認してもし死んでいたらバトルを終了させる
@@ -947,15 +906,15 @@ bool BattleScene::seqAnimation(float delta_time)
 	else if (GameManager::getGameManager()->getPlayer()->GetPlayerState() == Player::PlayerState::SKILL) {
 
 		if (tnl_sequence_.isStart()) {
-			//スキルのアニメーションを流す
-			GameManager::getGameManager()->getInventory()->getSkillList()[GameManager::getGameManager()->getInventory()->GetSkillSelectedIndex()]->SkillUseAnimation();
+			//スキルのエフェクト流す
+			GameManager::getGameManager()->getPlayer()->getSkillList()[GameManager::getGameManager()->getInventory()->GetSkillSelectedIndex()]->SkillUseAnimation();
 
 		}
 
 		if (tnl_sequence_.getProgressTime() > 1.0f) {
 
-			//スキルのアニメーションを止める
-			GameManager::getGameManager()->getInventory()->getSkillList()[GameManager::getGameManager()->getInventory()->GetSkillSelectedIndex()]->SkillAnimationStop();
+			//スキルのエフェクト止める
+			GameManager::getGameManager()->getPlayer()->getSkillList()[GameManager::getGameManager()->getInventory()->GetSkillSelectedIndex()]->SkillAnimationStop();
 
 			//敵が死んでいるか確認してもし死んでいたらバトルを終了させる
 			if (enemy->ChackDeadEnemy()) {
@@ -976,6 +935,37 @@ bool BattleScene::seqAnimation(float delta_time)
 			tnl_sequence_.change(&BattleScene::seqChangeTurn);
 		}
 
+
+	}
+	else if (enemy->GetEnemyType() == Enemy::Enemytype::BOSS) {
+
+		if (tnl_sequence_.isStart()) {
+			//スキルのエフェクト流す
+			boss_monster->GetEnemySkillList()[boss_monster->GetEnemySkillIndex()]->SkillUseAnimation();
+
+		}
+
+		if (tnl_sequence_.getProgressTime() > 1.0f) {
+
+			//スキルのエフェクト止める
+			boss_monster->GetEnemySkillList()[boss_monster->GetEnemySkillIndex()]->SkillAnimationStop();
+
+			//プレイヤーのHpが0になったら全滅のシーンに切り替える
+			GameManager::getGameManager()->getPlayer()->SetPlayerState(Player::PlayerState::DEAD);
+			PlayerTurn = true;
+
+			//プレイヤーのステータスを取得する
+			auto& PlayerStatus = GameManager::getGameManager()->getPlayer()->getPlayerStatusSave();
+
+			//プレイヤーのHPが0になって居なかったら
+			if (PlayerStatus.GetcurentHp() > 0 && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
+
+				//状態を通常に戻してコマンドバトルを再度行う
+				GameManager::getGameManager()->getPlayer()->SetPlayerState(Player::PlayerState::IDLE);
+
+				tnl_sequence_.change(&BattleScene::seqPlayerAction);
+			}
+		}
 
 	}
 

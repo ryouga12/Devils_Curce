@@ -5,6 +5,7 @@
 #include"../Manager/SceneManager.h"
 #include"tittleScene.h"
 
+class UIManager;
 
 class ResultScene : public BaseScene {
 public :
@@ -20,6 +21,8 @@ private:
 	bool seqIdle(float delta_time);
 
 	Shared<Menu>risult_menu = nullptr;
+
+	int enter_key = 0;
 	
 
 };

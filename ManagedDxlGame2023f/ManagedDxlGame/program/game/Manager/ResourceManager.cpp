@@ -16,7 +16,8 @@ ResourceManager::ResourceManager()
 
 ResourceManager::~ResourceManager()
 {
-	
+	//‰æ‘œ‚ğÁ‹‚·‚é
+	ghmap.clear();
 }
 
 void ResourceManager::Update()

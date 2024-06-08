@@ -3,11 +3,12 @@
 #include"../Menu/BattleLog.h"
 #include"../Manager/GameManager.h"
 #include"../Object/Player.h"
+#include"../Manager/CsvManager.h"
 
 Enemy::Enemy()
 {
 	//csvの読み込み	
-	Enemy_Csv_Array = tnl::LoadCsv<std::string>("csv/Enemy.csv");
+	enemy_csv_array = CsvManager::getCsvManager()->GetEnemyStatusCsv();
 
 	//Enemyのステータスをロードする関数
 	EnemyLoadTypeInfo();
@@ -15,61 +16,62 @@ Enemy::Enemy()
 	//Enemyの初期化
 	EnemyInit();
 
+	//アイテム
 	item = std::make_shared<Item>();
 
-
-	actor_type = Actor::ActorType::ENEMY;
 }
 
 //描画処理
 void Enemy::Draw()
 {
 	if (!dead_enemy_flag) {
-		DrawRotaGraph(600, 320, 0.8f, 0, enemy_hdl, true);
+		DrawRotaGraph(ENEMY_POS.x, ENEMY_POS.y, ENEMY_SIZE, COLOR_BRACK, enemy_hdl, true);
 	}
 }
 
 void Enemy::EnemyLoadTypeInfo()
 {
 
-	int max_num = Enemy_Csv_Array.size();
+	int max_num = static_cast<int>(enemy_csv_array.size());
 
 	EnemyStatus_Total_Num = max_num;
 
 	for (int y = 1; y < max_num; y++) {
 		
 		//csvから名前の取得
-		Enemy_Status_Type.SetEnemyName(Enemy_Csv_Array[y][0].c_str());
+		Enemy_Status_Type.SetEnemyName(enemy_csv_array[y][0].c_str());
 		//csvからidの取得
-		Enemy_Status_Type.SetEnemyId(std::stoi(Enemy_Csv_Array[y][1].c_str()));
+		Enemy_Status_Type.SetEnemyId(std::stoi(enemy_csv_array[y][1].c_str()));
 		//csvからhpの取得
-		Enemy_Status_Type.SetEnemyHp(std::stoi(Enemy_Csv_Array[y][2].c_str()));
+		Enemy_Status_Type.SetEnemyHp(std::stoi(enemy_csv_array[y][2].c_str()));
 		//csvから攻撃力の取得
-		Enemy_Status_Type.SetEnemyAttack(std::stoi(Enemy_Csv_Array[y][3].c_str()));
+		Enemy_Status_Type.SetEnemyAttack(std::stoi(enemy_csv_array[y][3].c_str()));
 		//csvから防御力の取得
-		Enemy_Status_Type.SetEnemyDefance(std::stoi(Enemy_Csv_Array[y][4].c_str()));
+		Enemy_Status_Type.SetEnemyDefance(std::stoi(enemy_csv_array[y][4].c_str()));
 		//csvからすばやさの取得
-		Enemy_Status_Type.SetEnemySpeed(std::stoi(Enemy_Csv_Array[y][5].c_str()));
+		Enemy_Status_Type.SetEnemySpeed(std::stoi(enemy_csv_array[y][5].c_str()));
 		//csvから経験値の取得
-		Enemy_Status_Type.SetEnemyExpoint(std::stoi(Enemy_Csv_Array[y][6].c_str()));
+		Enemy_Status_Type.SetEnemyExpoint(std::stoi(enemy_csv_array[y][6].c_str()));
 		//csvからお金の取得
-		Enemy_Status_Type.SetEnemyMoney(std::stoi(Enemy_Csv_Array[y][7].c_str()));
+		Enemy_Status_Type.SetEnemyMoney(std::stoi(enemy_csv_array[y][7].c_str()));
 		//csvからghpathの取得
-		Enemy_Status_Type.SetGhdl(Enemy_Csv_Array[y][8].c_str());
+		Enemy_Status_Type.SetGhdl(enemy_csv_array[y][8].c_str());
 		//csvから炎耐性値を取得
-		Enemy_Status_Type.SetFireResist(std::stoi(Enemy_Csv_Array[y][9].c_str()));
+		Enemy_Status_Type.SetFireResist(static_cast<float>(std::stoi(enemy_csv_array[y][9].c_str())));
 		//csvから氷耐性値の取得
-		Enemy_Status_Type.SetIceResist(std::stoi(Enemy_Csv_Array[y][10].c_str()));
+		Enemy_Status_Type.SetIceResist(static_cast<float>(std::stoi(enemy_csv_array[y][10].c_str())));
 		//csvから雷耐性値の取得
-		Enemy_Status_Type.SetThunderResist(std::stoi( Enemy_Csv_Array[y][11].c_str()));
+		Enemy_Status_Type.SetThunderResist(static_cast<float>(std::stoi(enemy_csv_array[y][11].c_str())));
 		//csvから通常ドロップのIDを取得
-		Enemy_Status_Type.SetNomalDropID(std::stoi(Enemy_Csv_Array[y][12].c_str()));
+		Enemy_Status_Type.SetNomalDropID(std::stoi(enemy_csv_array[y][12].c_str()));
 		//csvからレアドロップのIDを取得
-		Enemy_Status_Type.SetRareDoropID(std::stoi(Enemy_Csv_Array[y][13].c_str()));
+		Enemy_Status_Type.SetRareDoropID(std::stoi(enemy_csv_array[y][13].c_str()));
+		//csvから攻撃時のSEのpathを取得
+		Enemy_Status_Type.SetAttackSe(enemy_csv_array[y][14].c_str());
+		//csvから魔法力を取得
+		Enemy_Status_Type.SetMagicPower(std::stoi(enemy_csv_array[y][15].c_str()));
 
 		Enemy_Type_Array.emplace_back(Enemy_Status_Type);
-
-
 	}
 
 
@@ -78,13 +80,13 @@ void Enemy::EnemyLoadTypeInfo()
 void Enemy::EnemyInit()
 {
 	//エラー用の配列をクリアして初期化する
-	Null_Array.clear();
+	null_array.clear();
 }
 
 Enemy::EnemyStatus Enemy::GetEnemyStatus(int id) const
 {
 	auto it = std::find_if(Enemy_Type_Array.begin(), Enemy_Type_Array.end(), [id]
-	(const EnemyStatus& status) {return status.getEnemyId() == id; });
+	(const EnemyStatus& status) {return status.GetEnemyId() == id; });
 
 	if (it != Enemy_Type_Array.end()) {
 		return *it;
@@ -98,17 +100,17 @@ Enemy::EnemyStatus Enemy::GetEnemyStatus(int id) const
 //アイテムのドロップを決める
 void Enemy::InitEnemyItemDrop(int EnemyID)
 {
-	Enemy_Drop_Item.clear();
+	enemy_drop_item.clear();
 
 	//配列のIDを比較して該当したIDをインベントリに格納する
-	for (int i = 0; i < Enemy_Csv_Array.size(); i++) {
+	for (int i = 0; i < enemy_csv_array.size(); i++) {
 
 		//配列の1行目は説明の為+1して確認を行う
-		if (EnemyID == std::stoi(Enemy_Csv_Array[i + 1][1].c_str())) {
+		if (EnemyID == std::stoi(enemy_csv_array[i + 1][1].c_str())) {
 
 			//インベントリにそれぞれに対応したアイテムを格納
-			Enemy_Drop_Item.emplace_back(item->GetItemById(std::stoi(Enemy_Csv_Array[i + 1][12].c_str())));
- 			Enemy_Drop_Item.emplace_back(item->GetItemById(std::stoi(Enemy_Csv_Array[i + 1][13].c_str())));
+			enemy_drop_item.emplace_back(item->GetItemById(std::stoi(enemy_csv_array[i + 1][12].c_str())));
+ 			enemy_drop_item.emplace_back(item->GetItemById(std::stoi(enemy_csv_array[i + 1][13].c_str())));
 			break;
 		}
 	}
@@ -121,26 +123,27 @@ void Enemy::InitEnemyArray(int id)
 {
 	//敵の配列をクリアする
 	//敵の配列を一度クリアして同じ情報を取得できないようにする
-	Enemy_Array.clear();
+	enemy_array.clear();
 
 	//初期の敵(弱い)
 	if (id == 1) {
-		for (int i = 0; i < Enemy_num; i++) {
-			Enemy_Array.emplace_back(GetEnemyStatus(i));
+		for (int i = 0; i < ENEMY_NUM; i++) {
+			enemy_array.emplace_back(GetEnemyStatus(i));
 		}
 	}
 	//平原の敵(普通)
 	else if (id == 2) {
 
-		for (int i = 6; i < Enemy_Csv_Array.size(); i++) {
+		//csvの6行目から5体選出する
+		for (int i = 6; i < enemy_csv_array.size(); i++) {
 
 			//敵によってIDを取得する
 			//サイズが5個になるまで回す
-			if (Enemy_num > Enemy_Array.size()) {
-				auto enmeyid = GetEnemyStatus(std::stoi(Enemy_Csv_Array[i][1].c_str()));
+			if (ENEMY_NUM > enemy_array.size()) {
+				auto enmeyid = GetEnemyStatus(std::stoi(enemy_csv_array[i][1].c_str()));
 
 				//敵を配列に格納する
-				Enemy_Array.emplace_back(GetEnemyStatus(enmeyid.getEnemyId()));
+				enemy_array.emplace_back(GetEnemyStatus(enmeyid.GetEnemyId()));
 			}
 			//敵の最大の数を上回ったら処理を抜ける
 			else {
@@ -151,15 +154,16 @@ void Enemy::InitEnemyArray(int id)
 	//荒原の敵(少し強い)
 	else if (id == 3) {
 
-		for (int i = 11; i < Enemy_Csv_Array.size(); i++) {
+		//csvの11番目から5体選出する
+		for (int i = 11; i < enemy_csv_array.size(); i++) {
 
 			//敵によってIDを取得する
 			//サイズが5個になるまで回す
-			if (Enemy_num > Enemy_Array.size()) {
-				auto enmeyid = GetEnemyStatus(std::stoi(Enemy_Csv_Array[i][1].c_str()));
+			if (ENEMY_NUM > enemy_array.size()) {
+				auto enmeyid = GetEnemyStatus(std::stoi(enemy_csv_array[i][1].c_str()));
 
 				//敵を配列に格納する
-				Enemy_Array.emplace_back(GetEnemyStatus(enmeyid.getEnemyId()));
+				enemy_array.emplace_back(GetEnemyStatus(enmeyid.GetEnemyId()));
 			}
 			//敵の最大の数を上回ったら処理を抜ける
 			else {
@@ -170,15 +174,16 @@ void Enemy::InitEnemyArray(int id)
 	//ボスエリアにいる敵(強い)
 	else if (id == 4) {
 
-		for (int i = 16; i < Enemy_Csv_Array.size(); i++) {
+		//csvの16番目から5体選出する
+		for (int i = 16; i < enemy_csv_array.size(); i++) {
 
 			//敵によってIDを取得する
 			//サイズが5個になるまで回す
-			if (Enemy_num > Enemy_Array.size()) {
-				auto enmeyid = GetEnemyStatus(std::stoi(Enemy_Csv_Array[i][1].c_str()));
+			if (ENEMY_NUM > enemy_array.size()) {
+				auto enmeyid = GetEnemyStatus(std::stoi(enemy_csv_array[i][1].c_str()));
 
 				//敵を配列に格納する
-				Enemy_Array.emplace_back(GetEnemyStatus(enmeyid.getEnemyId()));
+				enemy_array.emplace_back(GetEnemyStatus(enmeyid.GetEnemyId()));
 			}
 			//敵の最大の数を上回ったら処理を抜ける
 			else {
@@ -192,13 +197,13 @@ void Enemy::InitEnemyArray(int id)
 bool Enemy::ChackDeadEnemy()
 {
 	//敵のHpが0になったかチェックを行う
-	if (Enemy_Array[enemy_index].getEnemyHp() <= 0) {
+	if (enemy_array[enemy_index].GetEnemyHp() <= 0) {
 
 		//敵が死んでたら死亡処理を呼び出す
-		battleScene->DeadEnemyProcces(GameManager::getGameManager()->getPlayer()->getPlayerStatusSave(), Enemy_Array[enemy_index]);
+		battle_scene_->DeadEnemyProcces(GameManager::getGameManager()->getPlayer()->getPlayerStatusSave(), enemy_array[enemy_index]);
 
 		//レベルアップ処理
-		battleScene->ChackPlayerLevelUp(GameManager::getGameManager()->getPlayer()->getPlayerStatusSave());
+		battle_scene_->ChackPlayerLevelUp(GameManager::getGameManager()->getPlayer()->getPlayerStatusSave());
 
 		return true;
 	}
@@ -206,37 +211,6 @@ bool Enemy::ChackDeadEnemy()
 		return false;
 	}
 	
-}
-
-//敵のポインタを初期化する
-void Enemy::InitEnemyPointer(Shared<Enemy>& enemy_pointer,int enemy_id)
-{
-	switch (enemy_type)
-	{
-	case Enemy::Enemytype::NONE:
-		break;
-	
-	//モブモンスターのポインタを格納する
-	case Enemy::Enemytype::MOB:
-
-		enemy_pointer = std::make_shared<MobMonster>(enemy_id);
-
-		break;
-
-	//ボスのポインタを格納する
-	case Enemy::Enemytype::BOSS:
-
-		enemy_pointer = std::make_shared<BossMonster>();
-		break;
-
-	default:
-		
-		tnl::DebugTrace("-----------------------------------------------------------------------------------\n");
-		tnl::DebugTrace("敵のポインタを生成できませんでした");
-		tnl::DebugTrace("-----------------------------------------------------------------------------------\n");
-
-		break;
-	}
 }
 
 //------------------------------------------------------------------------------------------------------------
@@ -248,6 +222,9 @@ void Enemy::InitEnemyPointer(Shared<Enemy>& enemy_pointer,int enemy_id)
 
 MobMonster::MobMonster(int enemy_id)
 {
+	//タイプをモブにする
+	enemy_type = Enemytype::MOB;
+
 	//敵を配列に格納する
 	InitEnemyArray(enemy_id);
 
@@ -255,31 +232,98 @@ MobMonster::MobMonster(int enemy_id)
 	enemy_index = rand() % 5;
 
 	//新しい配列を生成する
-	auto& enemy_ = GetEnemyArray()[enemy_index];
+	auto& enemy_ = enemy_array[enemy_index];
 
 	//敵のグラフィックハンドルを読み込む
-	enemy_hdl = ResourceManager::getResourceManager()->LoadGraphEX(enemy_.getEnemyGhdl().c_str());
+	enemy_hdl = ResourceManager::getResourceManager()->LoadGraphEX(enemy_.GetEnemyGhdl().c_str());
 
 	//敵のアイテムドロップを格納する
-	InitEnemyItemDrop(enemy_.getEnemyId());
+	InitEnemyItemDrop(enemy_.GetEnemyId());
 }
 
 //雑魚モンスターの攻撃処理
 void MobMonster::EnemyAction(Shared<BattleLog>battle_log)
 {
 	//プレイヤーの防御力を取得する
-	auto PlayerDefance = GameManager::getGameManager()->getPlayer()->getPlayerStatusSave().getDefance();
+	auto PlayerDefance = GameManager::getGameManager()->getPlayer()->getPlayerStatusSave().GetDefance();
 
 	//ダメージを計算する「
-	int damage = Enemy_Array[enemy_index].getEnemyAttack() - PlayerDefance;
+	int damage = enemy_array[enemy_index].GetEnemyAttack() - PlayerDefance;
 
 	//ダメージが0を下回るときに0に設定する
 	if (damage <= 0) { damage = 0; }
 
 	//プレイヤーのHpを減らす
-	GameManager::getGameManager()->getPlayer()->getPlayerStatusSave().SetPlayerCurentHp(GameManager::getGameManager()->getPlayer()->getPlayerStatusSave().getcurentHp() - damage);
+	GameManager::getGameManager()->getPlayer()->getPlayerStatusSave().SetPlayerCurentHp(GameManager::getGameManager()->getPlayer()->getPlayerStatusSave().GetcurentHp() - damage);
 
 	//バトルログを流す
 	battle_log->addDamagePlayerLog("Enemy", "Player", damage);
 
+	// SEを流す
+	SoundManager::getSoundManager()->sound_Play(enemy_array[enemy_index].GetSeAttack().c_str(), DX_PLAYTYPE_BACK);
+
+	//ボリュームを変える
+	SoundManager::getSoundManager()->ChangeSoundVolume(80, enemy_array[enemy_index].GetSeAttack().c_str());
+
+
+}
+
+//------------------------------------------------------------------------------------------------------------
+//
+//ボスモンスター
+//
+//-------------------------------------------------------------------------------------------------------------
+
+
+BossMonster::BossMonster() {
+
+	enemy_type = Enemytype::BOSS;
+
+	//スキルを格納する
+	enemy_skill_.emplace_back(std::make_shared<ChaosFlare>());
+	enemy_skill_.emplace_back(std::make_shared<DeathScytheWind>());
+	enemy_skill_.emplace_back(std::make_shared<DrakClaw>());
+	
+
+	//ボスのIdが20の為格納するidは20
+	enemy_array.emplace_back(GetEnemyStatus(20));
+
+	//配列は一つの為0を入れる
+	enemy_index = 0;
+
+	//敵の配列を格納する
+	auto& enemy = enemy_array[enemy_index];
+
+	//敵のグラフィックハンドルを読み込む
+	enemy_hdl = ResourceManager::getResourceManager()->LoadGraphEX(enemy.GetEnemyGhdl().c_str());
+
+	//敵のアイテムドロップを格納する
+	InitEnemyItemDrop(enemy.GetEnemyId());
+}
+
+void BossMonster::EnemyAction(Shared<BattleLog> battle_log)
+{
+	if (!enemy_skill_.empty()) {
+		
+		//ランダムでインデックスを取得する(スキルの総数は3の為 0 から 2 のインデックスを取得する)
+		enmey_skill_index = rand() % 3;
+
+		//プレイヤーのステータス
+		auto& player_status = GameManager::getGameManager()->getPlayer()->getPlayerStatusSave();
+
+		//プレイヤーに攻撃する
+		enemy_skill_[enmey_skill_index]->SkillUse(player_status, enemy_array[enemy_index], battle_log);
+
+		//プレイヤーのhpが0を下回ったら0に設定する
+		if (player_status.GetcurentHp() <= 0) {
+			player_status.SetPlayerCurentHp(0);
+		}
+	}
+	else {
+		tnl::DebugTrace("-------------------------------------------------------------");
+		tnl::DebugTrace("攻撃できませんでした");
+		tnl::DebugTrace("-------------------------------------------------------------");
+		return;
+
+	}
 }

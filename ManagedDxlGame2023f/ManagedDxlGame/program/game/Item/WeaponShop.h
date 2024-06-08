@@ -3,6 +3,9 @@
 #include"Weapon.h"
 #include"Inventory.h"
 
+class UIManger;
+class GameManager;
+
 class WeaponShop {
 public:
 
@@ -16,45 +19,42 @@ public:
 	void BuyWeapon(const Shared<Player>& player);
 
 	void WeaponShopCursorMove();
-
-	void setInventory(std::shared_ptr<Inventory> i) { inventory = i; }
 	
 //------------------------------------------------------------------------------------------------------------------------
 //ポインタ
 private:
 
 	Shared<Weapon>weapon_ = nullptr;
-	Shared<Inventory>inventory = nullptr;
-	Shared<Player>myplayer = nullptr;
 	Shared<MenuWindow>use_equip = nullptr;
-	Shared<Menu>menuWindow = nullptr;
+	Weak<Menu>menuWindow;
 
 //------------------------------------------------------------------------------------------------------------------------
 //武器関係
 private:
 
 	//武器が買えたか
-	enum class B_Weapon {
-		empty,
-		buy,
-		no,
+	enum class Buy_Weapon {
+		ENMPTY,
+		BUY,
+		NO,
 	};
 
 	//武器の総数
-	int WeaponNum = 0;
+	int weapon_num = 0;
 
 	//カーソルの動き
-	int SelectCousor = 0;
+	int select_cousor = 0;
 
 	//カーソルの座標
-	int coursorY = 0;
+	int cousor_y = 0;
 
-	B_Weapon buyWeapon = B_Weapon::empty;
+	Buy_Weapon buyWeapon = Buy_Weapon::ENMPTY;
 
 public:
 
+	//コメントをクリアする
 	void buyComentClear() {
-		buyWeapon =  B_Weapon::empty;
+		buyWeapon =  Buy_Weapon::ENMPTY;
 	}
 
 

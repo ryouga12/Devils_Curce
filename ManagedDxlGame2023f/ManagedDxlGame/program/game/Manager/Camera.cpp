@@ -11,7 +11,7 @@ void KonCamera::update(tnl::Vector3 target_pos , int MAP_WIDTH ,int MAP_HEIGHT)
     tnl::Vector3 camera_center = tnl::Vector3(DXE_WINDOW_WIDTH >> 1, DXE_WINDOW_HEIGHT >> 1, 0);
 
     // カメラの位置を更新
-    target_ += (target_pos - target_) * 0.45f;
+    target_ += (target_pos - target_) * 0.05f;
     
     // カメラの位置を制限
     // カメラの左上座標を計算
