@@ -6,7 +6,6 @@
 #include"../Menu/MenuWindow.h"
 #include "../../dxlib_ext/dxlib_ext.h"
 #include "../Item/Inventory.h"
-#include"SceneManager.h"
 
 class Player;
 class Skill;
@@ -37,6 +36,10 @@ public:
 
 	//ポインタをリセットする
 	void Reset();
+
+	//1フレームだけ走る関数
+	//主に一回の処理をさせたい時に使用
+	bool IsStart() { return true; }
 
 private:
 

@@ -40,6 +40,14 @@ void GameManager::PoiterCreate()
 	else {
 		tnl::DebugTrace("ポインタはすでに存在します");
 	}
+	//スキルのポインタ
+	if (skill == nullptr) {
+		skill = std::make_shared<Skill>();
+		skill->AddSkillList();
+	}
+	else {
+		tnl::DebugTrace("ポインタはすでに存在します");
+	}
 	//プレイヤーのポインタ
 	if (player == nullptr) {
 		player = std::make_shared<Player>();
@@ -54,13 +62,7 @@ void GameManager::PoiterCreate()
 	else {
 		tnl::DebugTrace("ポインタはすでに存在します");
 	}
-	//スキルのポインタ
-	if (skill == nullptr) {
-		skill = std::make_shared<Skill>();
-	}
-	else {
-		tnl::DebugTrace("ポインタはすでに存在します");
-	}
+
 }
 
 //ポインタをリセットする
@@ -129,7 +131,6 @@ bool GameManager::TimeCount(float delta_time, float Time)
 	}
 	return false;
 }
-
 
 
 
