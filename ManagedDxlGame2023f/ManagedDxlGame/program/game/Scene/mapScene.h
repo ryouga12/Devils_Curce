@@ -31,6 +31,12 @@ private:
 	//村に入った時の座標
 	const tnl::Vector3 village_pos = { 860 , 900 , 0 };
 
+	//町に入った時の座標
+	const tnl::Vector3 TOWN_POS = { 1180,1360,0 };
+
+	//城下町に入った時の座標
+	const tnl::Vector3 CASTLE_TOWN_POS = { 1950,950,0 };
+
 	//ボスの城に入った時の処理
 	const tnl::Vector3 boss_castle_pos = { 805 , 895 , 0};
 
@@ -58,8 +64,8 @@ private:
 //------------------------------------------------------------------------------------------------------------------------
 //シーケンス
 
-	tnl::Sequence<MapScene> sequence_ = tnl::Sequence<MapScene>(this, &MapScene::seqIdle);
-	bool seqIdle(float delta_time);
+	tnl::Sequence<MapScene> sequence_ = tnl::Sequence<MapScene>(this, &MapScene::seqMove);
+	bool seqMove(float delta_time);
 	//シーンを変える為のシーケンス
 	bool seqChangeScene(float delta_time);
 	
@@ -102,14 +108,14 @@ private:
 
 	int gpc_map_chip_hdls_[2096];
 
-	int MAP_HEIGHT = 3200;
-	int MAP_WIDTH  = 6400;
+	const int MAP_HEIGHT = 3200;
+	const int MAP_WIDTH  = 6400;
 
 	//この中の値で当たり判定をきめる
-	std::unordered_set<int> colisionObjectValues = { 10 , 11 ,12, 13 , 18 , 19, 20 , 21 ,25, 36 , 37  ,41 , 234  ,335,432,440,442  , 827 , 835 ,1302,1303, 1336, 1337, 1363 ,1364 ,1365, 1476, 1477, 2024 };
+	std::unordered_set<int> colisionObjectValues = { 2, 10 , 11 ,12, 13 , 18 , 19, 20 , 21 ,25, 36 , 37  ,41 , 97 ,432, 440 , 442 , 827 , 835 ,1302,1303, 1336, 1337, 1363 ,1364 ,1365, 1476, 1477, 2024 };
 
 	//町などの当たり判定に使う値
-	std::unordered_set<int>villageValues = { 334 , 2032 , 2033  , 2034 , 2035 , 2069, 2089, 2090 };
+	std::unordered_set<int>villageValues = { 334 ,335, 2032 , 2033  , 2034 , 2035 , 2069, 2089, 2090 };
 
 	//地形で使う当たり判定の値
 	std::unordered_set<int>worldCollisionValues = {2024 , 2027};
