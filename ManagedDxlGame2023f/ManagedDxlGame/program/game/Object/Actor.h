@@ -1,10 +1,15 @@
 #pragma once
 #include "../../dxlib_ext/dxlib_ext.h"
-#include"../Manager/Camera.h"
+#include"../System/Camera.h"
 #include<string>
 
 class BattleScene;
 class EventManager;
+
+//アニメーションを切り替える秒数
+static const float ChangeAnimationTime = 0.2f;
+//フレーム
+static const int animationFlame = 3;
 
 class Actor {
 public:
@@ -42,4 +47,5 @@ protected:
 
 	//白色
 	const int COLOR_WHITE = -1;
+
 };
