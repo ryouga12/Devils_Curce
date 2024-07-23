@@ -45,6 +45,12 @@
     <Filter Include="program\[003] game\Skill">
       <UniqueIdentifier>{7c72cd0f-5343-40bd-871d-0d6a6ff3335d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="program\[003] game\System">
+      <UniqueIdentifier>{b95e561c-31a4-4549-9a88-6ffbc5651c82}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="program\[003] game\Effect">
+      <UniqueIdentifier>{14a5f666-1301-4d35-a916-da001bda27c2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ManagedDxlGame.cpp">
@@ -218,12 +224,6 @@
     <ClCompile Include="program\game\Map\Mapchip.cpp">
       <Filter>program\[003] game\Map</Filter>
     </ClCompile>
-    <ClCompile Include="program\game\Manager\Camera.cpp">
-      <Filter>program\[003] game\Manager</Filter>
-    </ClCompile>
-    <ClCompile Include="program\game\Item\Weapon.cpp">
-      <Filter>program\[003] game\Item</Filter>
-    </ClCompile>
     <ClCompile Include="program\game\Item\Item.cpp">
       <Filter>program\[003] game\Item</Filter>
     </ClCompile>
@@ -242,9 +242,6 @@
     <ClCompile Include="program\game\Manager\SoundManager.cpp">
       <Filter>program\[003] game\Manager</Filter>
     </ClCompile>
-    <ClCompile Include="program\game\Manager\animation.cpp">
-      <Filter>program\[003] game\Manager</Filter>
-    </ClCompile>
     <ClCompile Include="program\game\Manager\EventManager.cpp">
       <Filter>program\[003] game\Manager</Filter>
     </ClCompile>
@@ -256,6 +253,18 @@
     </ClCompile>
     <ClCompile Include="program\game\Manager\CsvManager.cpp">
       <Filter>program\[003] game\Manager</Filter>
+    </ClCompile>
+    <ClCompile Include="program\game\Scene\BaseScene.cpp">
+      <Filter>program\[003] game\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="program\game\Effect\animation.cpp">
+      <Filter>program\[003] game\Effect</Filter>
+    </ClCompile>
+    <ClCompile Include="program\game\System\Camera.cpp">
+      <Filter>program\[003] game\System</Filter>
+    </ClCompile>
+    <ClCompile Include="program\game\System\EventNpc.cpp">
+      <Filter>program\[003] game\System</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -464,12 +473,6 @@
     <ClInclude Include="program\game\Map\Mapchip.h">
       <Filter>program\[003] game\Map</Filter>
     </ClInclude>
-    <ClInclude Include="program\game\Manager\Camera.h">
-      <Filter>program\[003] game\Manager</Filter>
-    </ClInclude>
-    <ClInclude Include="program\game\Item\Weapon.h">
-      <Filter>program\[003] game\Item</Filter>
-    </ClInclude>
     <ClInclude Include="program\game\Item\Item.h">
       <Filter>program\[003] game\Item</Filter>
     </ClInclude>
@@ -488,9 +491,6 @@
     <ClInclude Include="program\game\Manager\SoundManager.h">
       <Filter>program\[003] game\Manager</Filter>
     </ClInclude>
-    <ClInclude Include="program\game\Manager\animation.h">
-      <Filter>program\[003] game\Manager</Filter>
-    </ClInclude>
     <ClInclude Include="program\game\Manager\EventManager.h">
       <Filter>program\[003] game\Manager</Filter>
     </ClInclude>
@@ -505,6 +505,15 @@
     </ClInclude>
     <ClInclude Include="program\game\Manager\CsvManager.h">
       <Filter>program\[003] game\Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="program\game\Effect\animation.h">
+      <Filter>program\[003] game\Effect</Filter>
+    </ClInclude>
+    <ClInclude Include="program\game\System\Camera.h">
+      <Filter>program\[003] game\System</Filter>
+    </ClInclude>
+    <ClInclude Include="program\game\System\EventNpc.h">
+      <Filter>program\[003] game\System</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -8,13 +8,12 @@ Inventory::Inventory()
 
 	//メニューの初期化
 	InitMenuWinodow();
+
+	AddInventory(item->GetItemById(20).getItemId());
 }
 
 Inventory::~Inventory()
 {
-	SoundManager::getSoundManager()->daleteSound("sound/SoundEffect/decision.mp3");
-	SoundManager::getSoundManager()->daleteSound("sound/SoundEffect/cousour_bgm.mp3");
-	SoundManager::getSoundManager()->daleteSound("sound/SoundEffect/kaihuku.mp3");
 
 }
 
@@ -31,59 +30,65 @@ void Inventory::draw()
 {
 	//アイテムを表示する為のバックウィンドウ
 	auto item_coment_window = menu_window.lock();
+	//ボタン説明用のウィンドウ
+	auto button_detail_window = menu_window.lock();
 
 	if (select_menu == MenuWindow_I::EMPTY) {
 		Game_Menu();
 	}
-	//選択されているのが最初のメニューだったら
+	//選択されているのが最初のメニューの描画
 	else if (select_menu == MenuWindow_I::FIRSTMENU) {
 		First_Menu();
 	}
-	//選択されたのがアイテムメニューだったら
+	//選択されたのがアイテムメニューの描画
 	else if (select_menu == MenuWindow_I::ITEMMENU) {
 
 		menu_window.lock()->Menu_draw(MENU_WINDOW_POS.x , MENU_WINDOW_POS.y , MENU_WINDOW_WIDTH, MENU_WINDOW_HEIGHT);
 		ItemMenu(DRAWPOS, CURENTPAGETEXT, CURSORX,ITEMPERPAGE);
 	}
-	//選択されたのがプレイヤーの強さメニューだったら
+	//選択されたのがプレイヤーの強さメニューの描画
 	else if (select_menu == MenuWindow_I::STATUSMENU) {
 		PlyStatusMenu();
 	}
-	//選択されたのがアイテムの詳細メニューだったら
+	//選択されたのがアイテムの詳細メニューの描画
 	else if (select_menu == MenuWindow_I::ITEMUSEMENU) {
 		menu_window.lock()->Menu_draw(MENU_WINDOW_POS.x, MENU_WINDOW_POS.y, MENU_WINDOW_WIDTH, MENU_WINDOW_HEIGHT);
 		ItemMenu(DRAWPOS, CURENTPAGETEXT, CURSORX, ITEMPERPAGE);
 		ItemUseMenu();
-		if (!can_used_item) {
-			if (item_coment_window) {
-				item_coment_window->Menu_draw(600, 50, 300, 200);
-				DrawStringEx(ITEMCOMENTPOS.x, ITEMCOMENTPOS.y, COLORWHITE, "このアイテムは使用できません");
-			}
-		}
 	}
+	//アイテムを使用する際のウィンドウのメニューの描画
 	else if (select_menu == MenuWindow_I::ITEMDETAILMENU) {
 		menu_window.lock()->Menu_draw(MENU_WINDOW_POS.x, MENU_WINDOW_POS.y, MENU_WINDOW_WIDTH, MENU_WINDOW_HEIGHT);
 		ItemMenu(DRAWPOS, CURENTPAGETEXT, CURSORX, ITEMPERPAGE);
 		ItemUseMenu();
 		ItemDetail();
 	}
+	//スキル表示用のウィンドウの描画
 	else if (select_menu == MenuWindow_I::SKILLMENU) {
 		// ウィンドウの表示
 		menu_window.lock()->Menu_draw(MENU_WINDOW_POS.x, MENU_WINDOW_POS.y, MENU_WINDOW_WIDTH, MENU_WINDOW_HEIGHT);
 		InventorySkill(DRAWPOS , CURENTPAGETEXT , CURSORX ,ITEMPERPAGE);
 
 	}
+	//スキル説明用のウィンドウの描画
 	else if (select_menu == MenuWindow_I::SKILLDATAILMENU) {
 		// ウィンドウの表示
 		menu_window.lock()->Menu_draw(MENU_WINDOW_POS.x, MENU_WINDOW_POS.y, MENU_WINDOW_WIDTH, MENU_WINDOW_HEIGHT);
 		InventorySkill(DRAWPOS, CURENTPAGETEXT, CURSORX, ITEMPERPAGE);
 		SkillDetailDraw(skill_selected_index);
 	}
+	//インベントリ使用時に操作説明用の描画
+	if (select_menu != MenuWindow_I::EMPTY) {
+
+		button_detail_window->Menu_draw(50, 0, 150, 50);
+
+		DrawStringEx(70, 15, -1, "← キーで戻る");
+	}
 	
 }
 
 //アイテムを追加する
-void Inventory::AddInventory(int id)
+void Inventory::AddInventory(const int& id)
 {
 	if (inventory_list.size() == inventory_max_size_) return;
 	ItemBase newItem = item->GetItemById(id);
@@ -92,7 +97,7 @@ void Inventory::AddInventory(int id)
 }
 
 //武器を装備する
-void Inventory::EquipWeapon(int weaponIndex)
+void Inventory::EquipWeapon(const int& weaponIndex)
 {
 	//プレイヤーを取得する
 	auto& player = GameManager::getGameManager()->getPlayer();
@@ -180,7 +185,10 @@ void Inventory::ItemDetail()
 
 	item_detail_window->Menu_draw(ITEM_DETAIL_WINDOW_POS.x, ITEM_DETAIL_WINDOW_POS.y, ITEM_DETAIL_WINDOW_WIDTH, ITEM_DETAIL_WINDOW_HEIGHT);
 
-	DrawStringEx(630, 70, -1, "===アイテム説明===");
+	//アイテム説明の文字を表示する座標
+	const tnl::Vector2i ITEM_DETAIL = { 630 , 70 };
+
+	DrawStringEx(ITEM_DETAIL.x, ITEM_DETAIL.y, -1, "===アイテム説明===");
 
 	//アイテム説明を取得する
 	std::string ItemDetail = inventory_list[selected_index].getItemDetail();
@@ -339,24 +347,16 @@ void Inventory::Game_Menu()
 	//}
 
 	//UIManager::getUIManager()->PlayerStatusDrawWindow();
-
-	auto esc_key_string_window = menu_window.lock();
-
-	if (esc_key_string_window) {
-		esc_key_string_window->Menu_draw(50, 50, 250, 50);
-	}
-
-	DrawString(60, 65,"ESCキーでインベントリを表示" ,-1);
 }
 
 //一番最初のメニュー
 void Inventory::First_Menu()
 {
-	first_menu->All(50, 50, 250, 250);
+	first_menu->All(MENU_WINDOW_POS.x, MENU_WINDOW_POS.y, FIRST_MENU_WINDOW_WIDTH, FIRST_MENU_WINDOW_HEIGHT);
 }
 
 //アイテムの表示
-void Inventory::ItemMenu(const tnl::Vector2i& itemDrawPos, const tnl::Vector2i& curentPageText, int CousourX , int itemParPage)
+void Inventory::ItemMenu(const tnl::Vector2i& itemDrawPos, const tnl::Vector2i& curentPageText, int CousourX, int itemParPage)
 {
 	int i = 0;
 	const int Y = 34;
@@ -456,7 +456,7 @@ void Inventory::PlyStatusMenu()
 
 void Inventory::ItemUseMenu()
 {
-	select_detail_window->All(350, 50, 250, 280);
+	select_detail_window->All(ITEM_USE_POS.x, ITEM_USE_POS.y, ITEM_USE_WINDOW_WIDTH, ITEM_USE_WINDOW_HEIGHT);
 
 }
 
@@ -501,10 +501,17 @@ void Inventory::swichInventoryUpdate(float deltatime)
 			//決定音を鳴らす
 			SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
 			select_menu = MenuWindow_I::EMPTY;
-			//plyerを動けないようにする
+			//plyerを動けるようにする
 			GameManager::getGameManager()->getPlayer()->setPlayerControl();
 		
 			}
+
+		//左キーを押すとアイテム使用メニューに戻す
+		else if (tnl::Input::IsKeyDownTrigger(eKeys::KB_LEFT)) {
+			select_menu = MenuWindow_I::EMPTY;
+			//plyerを動けるようにする
+			GameManager::getGameManager()->getPlayer()->setPlayerControl();
+		}
 
 		break;
 
@@ -606,6 +613,11 @@ void Inventory::swichInventoryUpdate(float deltatime)
 				select_menu = MenuWindow_I::ITEMMENU;
 			}
 		}
+
+		//左キーを押すとアイテム使用メニューに戻す
+		if (tnl::Input::IsKeyDownTrigger(eKeys::KB_LEFT)) {
+			select_menu = MenuWindow_I::ITEMMENU;
+		}
 		
 		break;
 
@@ -639,7 +651,7 @@ void Inventory::swichInventoryUpdate(float deltatime)
 		//特技のカーソル移動
 		SkillCousorMove();
 
-		//左キーを押すとアイテム使用メニューに戻す
+		//左キーを押すと最初のメニューに戻す
 		if (tnl::Input::IsKeyDownTrigger(eKeys::KB_LEFT)) {
 			select_menu = MenuWindow_I::FIRSTMENU;
 		}
@@ -664,7 +676,7 @@ void Inventory::swichInventoryUpdate(float deltatime)
 }
 
 //スキルの描画
-void Inventory::InventorySkill(const tnl::Vector2i& SKILLDRAWPOS, const tnl::Vector2i& CURENTPAGETEXT, const int& COUSOURX, const int& ITEMPARPAGE)
+void Inventory::InventorySkill(const tnl::Vector2i& SKILLDRAWPOS, const tnl::Vector2i& CURENTPAGETEXT, const int COUSOURX, const int ITEMPARPAGE)
 {
 	int i = 0;
 	int y = 34;
