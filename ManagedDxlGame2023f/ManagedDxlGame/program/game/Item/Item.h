@@ -82,13 +82,15 @@ private:
 public:
 
 	//IDを指定してアイテムを取得する関数
+	//引数 : アイテムのID
+	//アイテムのIDを入れるとそれに該当したアイテムを取得する
 	ItemBase GetItemById(int id) const;
 
 	//アイテムを使用した時の処理
 	void ItemUse(int itemid);
 
 	//使用時Hp回復系
-	void ItemHpHeal(const float percentage, int itemid);
+	void ItemHpHeal(const float& percentage, int itemid);
 
 	//バトルログのポインタをセットする
 	void SetBattleLog(Shared<BattleLog>battle_log) { battle_log_ = battle_log; }

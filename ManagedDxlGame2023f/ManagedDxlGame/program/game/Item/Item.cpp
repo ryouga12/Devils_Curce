@@ -80,17 +80,18 @@ ItemBase Item::GetItemById(int id) const
 //アイテムを使用した時の処理
 void Item::ItemUse(int itemid)
 {
+
 	//回復量(Hpの3割分回復させる)
-	const float percentage = 0.3;
+	const float PERCENTAGE = 0.3f;
 
 	//回復量(Hpの半分を回復させる)
-	float hi_percentage = 0.5;
+	const float HI_PERCENTAGE = 0.5f;
 
 	//プレイヤーの攻撃力の半分の値をプラスさせる(調整対象)
-	float attack_percentage = 0.5;
+	const float ATTACK_PERCENTAGE = 0.5f;
 
 	//回復量(Hpの7割を回復させる)
-	float plant_percentage = 0.7;
+	const float PLANT_PERCENTAGE = 0.7f;
 
 	//プレイヤーの攻撃力を取得する
 	auto PlayerAttack = GameManager::getGameManager()->getPlayer()->getPlayerStatusSave().GetAttack();
@@ -110,7 +111,7 @@ void Item::ItemUse(int itemid)
 	case static_cast<int>(Item::UsedItem::PORTION):
 
 		//Hpを回復する
-		ItemHpHeal(percentage, itemid);
+		ItemHpHeal(PERCENTAGE, itemid);
 
 		//バトルシーンのみでログを流す
 		if (BattleFlag) {
@@ -123,7 +124,7 @@ void Item::ItemUse(int itemid)
 	case static_cast<int>(Item::UsedItem::HIPORTION):
 
 		//Hpを回復する
-		ItemHpHeal(hi_percentage, itemid);
+		ItemHpHeal(HI_PERCENTAGE, itemid);
 
 		if (BattleFlag) {
 			battle_log_->addRecoveryLog("Player", GetItemById(8).getItemName().c_str(), healAmount);
@@ -137,9 +138,7 @@ void Item::ItemUse(int itemid)
 		// アイテムIDが14でかつプレイヤーのMPがMAXでない場合に処理を実行
 		if (curentMp < max_mp) {
 
-			// MPを最大MPの30％回復させる
-			float percentage = 0.3;
-			int healAmount = static_cast<int>(max_mp * percentage);
+			int healAmount = static_cast<int>(max_mp * PERCENTAGE);
 			GameManager::getGameManager()->getPlayer()->getPlayerStatusSave().SetPlayerCurentMp(curentMp + healAmount);
 
 			//回復音を鳴らす
@@ -167,7 +166,7 @@ void Item::ItemUse(int itemid)
 
 	case static_cast<int>(Item::UsedItem::ATTACKPORTION):
 
-		AttackAmount = static_cast<int>(PlayerAttack * percentage);
+		AttackAmount = static_cast<int>(PlayerAttack * ATTACK_PERCENTAGE);
 		GameManager::getGameManager()->getPlayer()->getPlayerStatusSave().SetPlayerAttack(PlayerAttack + AttackAmount);
 
 		//アイテムがインベントリ内に存在したらインベントリから消去する
@@ -181,7 +180,7 @@ void Item::ItemUse(int itemid)
 	case static_cast<int>(Item::UsedItem::PLANTEXTRACT):
 
 		//hpを回復する
-		ItemHpHeal(plant_percentage, itemid);
+		ItemHpHeal(PLANT_PERCENTAGE, itemid);
 
 		//バトルシーンのみでログを流す
 		if (BattleFlag) {
@@ -218,7 +217,7 @@ void Item::ItemUse(int itemid)
 }
 
 //使用時Hp回復系
-void Item::ItemHpHeal(const float percentage, int itemid)
+void Item::ItemHpHeal(const float& percentage, int itemid)
 {
 	//現在のHpを取得する
 	auto curent_hp = static_cast<int>(GameManager::getGameManager()->getPlayer()->getPlayerStatusSave().GetcurentHp());
@@ -306,7 +305,7 @@ void Item::AddSkillItem(int itemid, Shared<T>skill)
 	if (itemToRemove != GameManager::getGameManager()->getInventory()->GetInventoryList().end()) {
 		GameManager::getGameManager()->getInventory()->GetInventoryList().erase(itemToRemove);
 		//アイテムの数を減らす
-		GameManager::getGameManager()->getInventory()->DelateItemNum();;
+		GameManager::getGameManager()->getInventory()->DelateItemNum();
 	}
 }
 
