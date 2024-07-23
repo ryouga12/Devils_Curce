@@ -20,47 +20,47 @@ public:
 	void Draw();
 
 	//Enemyのステータス
-	struct EnemyStatus
+	struct EnemyConnection
 	{
 	public:
 
-		//nameを返すゲッター
+		//nameを取得する
 		std::string GetEnemyString() const {
 			return name;
 		}
-		//IDを返すゲッター
+		//IDを取得する
 		int GetEnemyId() const {
 			return id;
 		}
-		//Hpを返すゲッター
+		//Hpを取得する
 		int GetEnemyHp() const{
 			return hp;
 		}
-		//Attackを返すゲッター
+		//Attackを取得する
 		int GetEnemyAttack() const {
 			return Attack;
 		}
-		//Defanceを返すゲッター
+		//Defanceを取得する
 		int GetEnemyDefance() const {
 			return Defance;
 		}
-		//Speedを返すゲッター
+		//Speedを取得する
 		int GetEnemySpeed() const {
 			return Speed;
 		}
-		//経験値を返すゲッター
+		//経験値を取得する
 		int GetEnemyExpoint() const {
 			return ex_point;
 		}
-		//moneyを返すゲッター
+		//moneyを取得する
 		int GetEnemyMoney() const {
 			return money;
 		}
-		//ghdlを返すゲッター
+		//ghdlを取得する
 		const std::string& GetEnemyGhdl()const {
 			return gh;
 		}
-		//それぞれの耐性を返すゲッター
+		//それぞれの耐性を取得する
 		float GetFireResist() const {
 			return FireResist;
 		}
@@ -70,21 +70,29 @@ public:
 		float GetThunderResist() const {
 			return ThunderResist;
 		}
-		//通常ドロップのアイテムのIDを返す
+		//通常ドロップのアイテムのIDを取得する
 		int GetNomalDrop()const {
 			return Nomal_Drop;
 		}
-		//レアドロップのアイテムIDを返す
+		//レアドロップのアイテムIDを取得する
 		int GetRareDrop()const {
 			return RareDrop;
 		}
-		//seのサウンドを返す
+		//seのサウンドを取得する
 		std::string GetSeAttack()const {
 			return attack_se;
 		}
-		//魔法力を返す
+		//魔法力を取得する
 		int GetMagicPower()const {
 			return magic_power;
+		}
+		//ノーマルドロップの確率を取得する
+		int GetNomalProbability()const {
+			return nomal_drop_probability;
+		}
+		//レアドロップの確率を取得する
+		int GetRareProbability()const {
+			return rare_drop_probability;
 		}
 
 		//---セッター---//
@@ -151,25 +159,53 @@ public:
 		void SetMagicPower(int new_magic_power) {
 			magic_power = new_magic_power;
 		}
+		//ノーマルドロップアイテムの確率をセットする
+		void SetNomalDropProbability(int new_nomal_probability) {
+			nomal_drop_probability = new_nomal_probability;
+		}
+		//レアドロップアイテムの確率をセットする
+		void SetRareDropProbability(int new_rare_probability) {
+			rare_drop_probability = new_rare_probability;
+		}
 
 	private:
 
+		//名前
 		std::string name;
+		//ID
 		int id = 0;
+		//体力
 		int hp = 0;
+		//攻撃力
 		int Attack = 0;
+		//防御力
 		int Defance = 0;
+		//素早さ
 		int Speed = 0;
+		//得られる経験値
 		int ex_point = 0;
+		//得られるお金
 		int money = 0;
+		//画像
 		std::string gh;
+		//炎耐性
 		float FireResist = 0;
+		//氷耐性
 		float IceResist = 0;
+		//雷耐性
 		float ThunderResist = 0;
+		//ノーマルドロップアイテム
 		int Nomal_Drop = 0;
+		//レアドロップアイテム
 		int RareDrop = 0;
+		//攻撃時のSE
 		std::string attack_se;
+		//魔法力
 		int magic_power = 0;
+		//ノーマルドロップアイテムのドロップ率
+		int nomal_drop_probability = 0;
+		//レアドロップアイテムのドロップ率
+		int rare_drop_probability = 0;
 	};
 
 	//Enemyのステータスを読み込む為の関数
@@ -179,10 +215,10 @@ public:
 	void EnemyInit();
 
 	//敵ののステータスのidを取得する
-	EnemyStatus GetEnemyStatus(int id) const;
+	EnemyConnection GetEnemyStatus(int id) const;
 	
 	//敵の配列を受け取る為のゲッター
-	std::vector<EnemyStatus>& GetEnemyArray(){
+	std::vector<EnemyConnection>& GetEnemyArray(){
 		return enemy_array;
 
 		//敵の配列を取得できなかったらエラー用の配列を返す
@@ -240,24 +276,23 @@ public:
 private:
 
 	//Enemyのステータスを入れておく変数
-	EnemyStatus Enemy_Status_Type;
+	EnemyConnection Enemy_Status_Type;
 
 	//構造体の総数
 	int EnemyStatus_Total_Num;
 
 	//構造体を格納する配列
-	std::vector<EnemyStatus>Enemy_Type_Array;
+	std::vector<EnemyConnection>Enemy_Type_Array;
 
 	//csvを入れておく配列
 	std::vector<std::vector<std::string>>enemy_csv_array;
 
-	//---敵を入れておく配列---//
 protected:
 
 	//エラー時に返す用の配列
-	std::vector<EnemyStatus>null_array;
+	std::vector<EnemyConnection>null_array;
 	//敵を入れておく配列
-	std::vector<EnemyStatus>enemy_array;
+	std::vector<EnemyConnection>enemy_array;
 
 private:
 
@@ -265,7 +300,9 @@ private:
 	const float ENEMY_SIZE = 0.8f;
 
 	//---座標系---//
-	const tnl::Vector2i ENEMY_POS = { 600 , 320 };
+
+	//敵の表示座標
+	const tnl::Vector3 ENEMY_POS = { 600 , 320 , 0 };
 
 
 
@@ -304,7 +341,7 @@ class MobMonster : public Enemy {
 public:
 
 	MobMonster() {};
-	MobMonster(int enemy_id);
+	MobMonster(const int enemy_id);
 	~MobMonster()override {};
 
 	//敵の攻撃処理
@@ -324,11 +361,14 @@ class BossMonster : public Enemy {
 
 public:
 
-	BossMonster();
+	BossMonster(int enemy_id);
 	~BossMonster()override {};
 
 	//敵の攻撃処理
 	void EnemyAction(Shared<BattleLog>battle_log)override;
+
+	//敵のスキル配列の初期化
+	void InitEnemySkill(int enemy_id);
 
 	//敵のスキル配列を取得する
 	std::vector <Shared<Skill>>& GetEnemySkillList() {
@@ -341,6 +381,17 @@ public:
 	}
 
 private:
+
+	//敵のボスの種類
+	//どのボスを指定してるか
+	//定数名はそれぞれモンスターの名前
+	enum class BossType {
+		NONE,
+		//最後のボス
+		ZERAHKIEL = 20,
+		//中ボス1体目
+		GROVEGUARDIAN = 21
+	};
 
 	//敵のスキル
 	std::vector<Shared<Skill>>enemy_skill_;

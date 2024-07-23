@@ -4,6 +4,7 @@
 #include"../Manager/GameManager.h"
 #include"../Object/Player.h"
 #include"../Manager/CsvManager.h"
+#include"../Manager/EventManager.h"
 
 Enemy::Enemy()
 {
@@ -25,7 +26,7 @@ Enemy::Enemy()
 void Enemy::Draw()
 {
 	if (!dead_enemy_flag) {
-		DrawRotaGraph(ENEMY_POS.x, ENEMY_POS.y, ENEMY_SIZE, COLOR_BRACK, enemy_hdl, true);
+		DrawRotaGraphF(ENEMY_POS.x, ENEMY_POS.y, ENEMY_SIZE, COLOR_BRACK, enemy_hdl, true);
 	}
 }
 
@@ -70,6 +71,10 @@ void Enemy::EnemyLoadTypeInfo()
 		Enemy_Status_Type.SetAttackSe(enemy_csv_array[y][14].c_str());
 		//csvから魔法力を取得
 		Enemy_Status_Type.SetMagicPower(std::stoi(enemy_csv_array[y][15].c_str()));
+		//csvからノーマルドロップの確率を取得する
+		Enemy_Status_Type.SetNomalDropProbability(std::stoi(enemy_csv_array[y][16].c_str()));
+		//csvからレアドロップの確率を取得する
+		Enemy_Status_Type.SetRareDropProbability(std::stoi(enemy_csv_array[y][17].c_str()));
 
 		Enemy_Type_Array.emplace_back(Enemy_Status_Type);
 	}
@@ -83,17 +88,17 @@ void Enemy::EnemyInit()
 	null_array.clear();
 }
 
-Enemy::EnemyStatus Enemy::GetEnemyStatus(int id) const
+Enemy::EnemyConnection Enemy::GetEnemyStatus(int id) const
 {
 	auto it = std::find_if(Enemy_Type_Array.begin(), Enemy_Type_Array.end(), [id]
-	(const EnemyStatus& status) {return status.GetEnemyId() == id; });
+	(const EnemyConnection& status) {return status.GetEnemyId() == id; });
 
 	if (it != Enemy_Type_Array.end()) {
 		return *it;
 	}
 	else {
 		// IDに対応するアイテムが見つからない場合は、適当なデフォルト値を返すかエラー処理を行うなど
-		return EnemyStatus{};
+		return EnemyConnection{};
 	}
 }
 
@@ -111,6 +116,7 @@ void Enemy::InitEnemyItemDrop(int EnemyID)
 			//インベントリにそれぞれに対応したアイテムを格納
 			enemy_drop_item.emplace_back(item->GetItemById(std::stoi(enemy_csv_array[i + 1][12].c_str())));
  			enemy_drop_item.emplace_back(item->GetItemById(std::stoi(enemy_csv_array[i + 1][13].c_str())));
+
 			break;
 		}
 	}
@@ -140,6 +146,7 @@ void Enemy::InitEnemyArray(int id)
 			//敵によってIDを取得する
 			//サイズが5個になるまで回す
 			if (ENEMY_NUM > enemy_array.size()) {
+
 				auto enmeyid = GetEnemyStatus(std::stoi(enemy_csv_array[i][1].c_str()));
 
 				//敵を配列に格納する
@@ -220,7 +227,7 @@ bool Enemy::ChackDeadEnemy()
 //-------------------------------------------------------------------------------------------------------------
 
 
-MobMonster::MobMonster(int enemy_id)
+MobMonster::MobMonster(const int enemy_id)
 {
 	//タイプをモブにする
 	enemy_type = Enemytype::MOB;
@@ -256,6 +263,10 @@ void MobMonster::EnemyAction(Shared<BattleLog>battle_log)
 	//プレイヤーのHpを減らす
 	GameManager::getGameManager()->getPlayer()->getPlayerStatusSave().SetPlayerCurentHp(GameManager::getGameManager()->getPlayer()->getPlayerStatusSave().GetcurentHp() - damage);
 
+	//カメラシェイクを起こす(ダメージを受けている感じを出す)
+	// 後程実装予定
+	//GameManager::getGameManager()->getCamera()->StartShake(1, 1.5f);
+
 	//バトルログを流す
 	battle_log->addDamagePlayerLog("Enemy", "Player", damage);
 
@@ -275,18 +286,16 @@ void MobMonster::EnemyAction(Shared<BattleLog>battle_log)
 //-------------------------------------------------------------------------------------------------------------
 
 
-BossMonster::BossMonster() {
+BossMonster::BossMonster(int enemy_id) {
 
+	//敵の種類をボスに変更する
 	enemy_type = Enemytype::BOSS;
 
 	//スキルを格納する
-	enemy_skill_.emplace_back(std::make_shared<ChaosFlare>());
-	enemy_skill_.emplace_back(std::make_shared<DeathScytheWind>());
-	enemy_skill_.emplace_back(std::make_shared<DrakClaw>());
-	
+	InitEnemySkill(enemy_id);
 
-	//ボスのIdが20の為格納するidは20
-	enemy_array.emplace_back(GetEnemyStatus(20));
+	//敵の死亡処理など配列に入れた値を参照している為配列に格納する
+	enemy_array.emplace_back(GetEnemyStatus(enemy_id));
 
 	//配列は一つの為0を入れる
 	enemy_index = 0;
@@ -301,8 +310,48 @@ BossMonster::BossMonster() {
 	InitEnemyItemDrop(enemy.GetEnemyId());
 }
 
+//敵のスキル配列の初期化
+void BossMonster::InitEnemySkill(int enemy_id)
+{
+	//敵のスキル配列を初期化する
+	enemy_skill_.clear();
+
+	switch (enemy_id)
+	{
+	
+	//最後のボス
+	case static_cast<int>(BossType::ZERAHKIEL):
+
+		//それぞれのスキルを格納する
+		enemy_skill_.emplace_back(std::make_shared<ChaosFlare>());
+		enemy_skill_.emplace_back(std::make_shared<DeathScytheWind>());
+		enemy_skill_.emplace_back(std::make_shared<DrakClaw>());
+
+		break;
+
+	case static_cast<int>(BossType::GROVEGUARDIAN):
+
+		//それぞれのスキルを格納する
+		enemy_skill_.emplace_back(std::make_shared<ChaosFlare>());
+		enemy_skill_.emplace_back(std::make_shared<DeathScytheWind>());
+		enemy_skill_.emplace_back(std::make_shared<DrakClaw>());
+
+		break;
+
+	default:
+
+		tnl::DebugTrace("-------------------------------------------------------------");
+		tnl::DebugTrace("スキルを初期化できませんでした");
+		tnl::DebugTrace("-------------------------------------------------------------");
+
+		break;
+	}
+}
+
+//ボスモンスターの攻撃処理
 void BossMonster::EnemyAction(Shared<BattleLog> battle_log)
 {
+	//敵のスキル配列が空じゃなかったら
 	if (!enemy_skill_.empty()) {
 		
 		//ランダムでインデックスを取得する(スキルの総数は3の為 0 から 2 のインデックスを取得する)
