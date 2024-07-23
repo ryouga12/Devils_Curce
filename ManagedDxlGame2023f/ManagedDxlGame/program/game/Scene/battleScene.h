@@ -3,6 +3,8 @@
 #include"../Manager/ResourceManager.h"
 #include"../Manager/SceneManager.h"
 #include"../Item/Item.h"
+#include"../Object/Player.h"
+#include"../Menu/MenuWindow.h"
 #include<random>
 
 //-----------------------------------------------------------------------------------------------------
@@ -11,10 +13,7 @@
 //
 //-----------------------------------------------------------------------------------------------------
 
-class Player;
-class Enemy;
-class Menu;
-class MenuWindow;
+//class Enemy;
 class MapScene;
 class RusultScene;
 class BattleLog;
@@ -27,7 +26,10 @@ class BattleScene : public  BaseScene{
 public:
 
 	BattleScene() {};
-	BattleScene(tnl::Vector3 pos ,int background , Shared<Enemy> enemy);
+
+	//バトルシーンのコンストラクタ
+	//引数 : arg1 保管する座標 、atg2 バトルの背景 、arg3 エネミー 、arg4 ボスの時はマップ内の為どこのマップにいるかも格納しておく 
+	BattleScene(tnl::Vector3 pos ,int background , Shared<Enemy> enemy ,int inmap_state = 0);
 	virtual~BattleScene()override;
 
 	//更新処理
@@ -40,7 +42,7 @@ public:
 	void BattleDraw();
 
 	//バトルシーン内で切り替える関数
-	void MenuUpdate(Player::PlayerStatus& playerStatus,Enemy::EnemyStatus& enemyStatus_);
+	void MenuUpdate(Player::PlayerStatus& playerStatus,Enemy::EnemyConnection& enemy_);
 
 	//アイテム選択時の処理
 	void ItemSelectProcess();
@@ -55,7 +57,7 @@ public:
 	void InitMenuWindow();
 
 	//敵の死亡処理、演出
-	void DeadEnemyProcces(Player::PlayerStatus& playerStatus,Enemy::EnemyStatus& enemy_status);
+	void DeadEnemyProcces(Player::PlayerStatus& playerStatus,Enemy::EnemyConnection& enemy_);
 
 	// レベルアップ判定 & 処理
 	void ChackPlayerLevelUp(Player::PlayerStatus& player_status);
@@ -64,7 +66,7 @@ public:
 	void PlayerStatusDraw();
 
 	//アイテムのドロップ処理
-	void ItemDropProcess();
+	void ItemDropProcess(Enemy::EnemyConnection& enemy_);
 
 	//一時的に上がった攻撃力などをリセットする
 	void BattleBuffResetProcess();
@@ -73,7 +75,7 @@ public:
 	void SetWeaponType();
 
 	//逃げるを選択した際の処理
-	void FleeProcess(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus , float delta_time);
+	void FleeProcess(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemy_ , float delta_time);
 
 
 	//バトルシーンの状態を管理する
@@ -101,11 +103,12 @@ private:
 	//逃げれる確率
 	int probability = 50;
 
-	//通常ドロップ
-	const float NOMALDROP = 30;
+	//InMapSceneの状態を保管しておく変数
+	//これを渡して戦闘終了時にどのマップ内に居るかを判断する
+	int inmap_state_save = 0;
 
-	//レアドロップ
-	const float RAREDROP = 10;
+	//最後のボスのID
+	const int LAST_BOSS_ID = 20;
 
 //------------------------------------------------------------------------------------------------------------------------
 //それぞれのフラグ
@@ -200,9 +203,9 @@ private:
 	//アイテムを表示するy座標
 	const int STARTY = 550;
 	//アイテムを表示する際の座標
-	const tnl::Vector2i ITEM_DRAW_POS = { 350 , 550 };
+	const tnl::Vector2i ITEM_DRAW_POS = { 350 , 540};
 	//アイテムのページ数の描画座標
-	const tnl::Vector2i ITEM_CURENT_PAGE = { 400 , 700 };
+	const tnl::Vector2i ITEM_CURENT_PAGE = { 400 , 690};
 	//各行の高さ
 	const int LINEHEIGHT = 30;
 	//各ページ
@@ -231,11 +234,11 @@ private:
 	//メニューウィンドウの共通座標
 	
 	//要素一つ目
-	const tnl::Vector2i MENU_COMENT_POS_FIRST = { 100 , 550 };
+	const tnl::Vector2i MENU_COMENT_POS_FIRST = { 100 , 540};
 	//要素二つ目
-	const tnl::Vector2i MENU_COMENT_POS_SECOND = { 100 , 600 };
+	const tnl::Vector2i MENU_COMENT_POS_SECOND = { 100 , 590 };
 	//要素三つ目
-	const tnl::Vector2i MENU_COMENT_POS_THIRD = { 100 , 650 };
+	const tnl::Vector2i MENU_COMENT_POS_THIRD = { 100 , 640};
 
 	//アイテム使用時のメニューウィンドウ座標
 	
@@ -263,7 +266,7 @@ public:
 	bool SkillUseMpChack(Player::PlayerStatus& playerStatus);
 
 	//スキルを使用した際の処理
-	void SkillUseProcess(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_);
+	void SkillUseProcess(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemy_);
 
 
 //---------------------------------------------------
