@@ -15,5 +15,5 @@ void MapChip::Update(float delta_time)
 void MapChip::Draw(const KonCamera& camera)
 {
 	tnl::Vector3 draw_pos = pos_ - camera.getTargetPos() + tnl::Vector3(DXE_WINDOW_WIDTH >> 1, DXE_WINDOW_HEIGHT >> 1, 0);
-	DrawRotaGraph(draw_pos.x, draw_pos.y, 1, 0, chip_gpc_hdl, true);
+	DrawRotaGraph(static_cast<int>(draw_pos.x), static_cast<int>(draw_pos.y), 1, 0, chip_gpc_hdl, true);
 }

@@ -9,7 +9,7 @@ Menu::Menu(const std::string& gh_path)
 
 }
 
-void Menu::Menu_draw(const int&  menu_x , const int&  menu_y ,const int&  menu_width ,const int&  menu_height)
+void Menu::Menu_draw(const int& menu_x, const int& menu_y, const int& menu_width, const int& menu_height)
 {
 	DrawGraph(menu_x, menu_y, menu_gh[0], TRUE);
 	DrawExtendGraph(menu_x + 16, menu_y, menu_x + menu_width - 16, menu_y + 16, menu_gh[1], TRUE);
@@ -34,7 +34,7 @@ MenuWindow::MenuWindow(const std::string& gh_path, MenuElement_t* elements, int 
 	, MenuElement(elements)
 	, back_ghdl_width(BackWidth)
 {
-	
+
 	MenuElement = elements;
 	elements_num_ = elements_num;
 	string_color_black = GetColor(0, 0, 0);
@@ -70,7 +70,7 @@ void MenuWindow::Read()
 	if (manage_select_flag) {
 		//àÍÇ¬â∫Ç…Ç∏ÇÍÇÈ
 		if (tnl::Input::IsKeyDownTrigger(eKeys::KB_DOWN)) {
-			Select_Num = (Select_Num + 1) % read_menu_element_num;			
+			Select_Num = (Select_Num + 1) % read_menu_element_num;
 		}
 		//àÍÇ¬è„Ç…Ç∏ÇÍÇÈ
 		else if (tnl::Input::IsKeyDownTrigger(eKeys::KB_UP)) {
@@ -78,7 +78,7 @@ void MenuWindow::Read()
 
 		}
 	}
-	if (tnl::Input::IsKeyDownTrigger(eKeys::KB_DOWN) || tnl::Input::IsKeyDownTrigger(eKeys::KB_UP)) 
+	if (tnl::Input::IsKeyDownTrigger(eKeys::KB_DOWN) || tnl::Input::IsKeyDownTrigger(eKeys::KB_UP))
 	{
 		SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/cousour_bgm.mp3", DX_PLAYTYPE_BACK);
 		for (int i = 0; i < elements_num_; i++) {
@@ -91,20 +91,20 @@ void MenuWindow::Read()
 	SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 255);
 
 	for (int i = 0; i < elements_num_; i++) {
-		DrawFormatString(MenuElement[i].x, MenuElement[i].y,-1, MenuElement[i].name.c_str());
+		DrawFormatString(MenuElement[i].x, MenuElement[i].y, -1, MenuElement[i].name.c_str());
 	}
 	ResourceManager::getResourceManager()->DrawRotaGraphEx("graphics/cur_sannkaku2.png", coursorX, coursorY, 0.2, 0, true);
-	
+
 }
 
 void MenuWindow::All(const int& menu_x, const int& menu_y, const int& menu_width, const int& menu_height)
 {
 	if (menu_live) {
-		Menu_draw(menu_x , menu_y , menu_width , menu_height);
+		Menu_draw(menu_x, menu_y, menu_width, menu_height);
 		Read();
 		m_IsStartOpend = false;
 	}
-	
+
 }
 
 //ÉJÅ[É\Éãêßå‰

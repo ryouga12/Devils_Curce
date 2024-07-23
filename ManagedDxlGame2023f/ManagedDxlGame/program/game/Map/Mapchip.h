@@ -4,7 +4,7 @@
 
 #pragma once
 #include "../../dxlib_ext/dxlib_ext.h"
-#include"../Manager/Camera.h"
+#include"../System/Camera.h"
 
 
 class MapChip {
@@ -15,9 +15,10 @@ public:
 	void Draw(const KonCamera& camera);
 
 	//マップチップサイズの取得
-	const float& GetChipSize(){
+	tnl::Vector2i GetChipSize()const {
 		return CHIP_SIZE;
 	}
+
 	//マップチップの座標取得
 	tnl::Vector3& MapChipPos() {
 		return pos_;
@@ -25,8 +26,7 @@ public:
 
 private:
 
-	const float CHIP_SIZE = 32;							//マップチップのサイズ
+	tnl::Vector2i CHIP_SIZE = { 32, 32 };				//マップチップのサイズ
 	int chip_gpc_hdl = 0;								//画像のhdl
 	tnl::Vector3 pos_ = { 0, 0, 0 };					//マップチップのpos
-
 };

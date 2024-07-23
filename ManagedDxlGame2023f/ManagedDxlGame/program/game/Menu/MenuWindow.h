@@ -55,6 +55,11 @@ public:
 		return manage_select_flag;
 	}
 
+	bool getAcrionFlag() { return is_active; }
+
+	//処理を受け付けるようにする
+	void IsActiveChangeFlag() { is_active = !is_active; }
+
 private:
 
 	//現在の選択番号
@@ -79,4 +84,5 @@ private:
 
 	bool second_menu_flag = false;
 	bool manage_select_flag = true;//Read関数のSelectNumを動かすかどうか trueなら動かす
+	bool is_active = false;		   //プレイヤーからEnterキーなどを受け付けるかどうかのフラグ
 };
