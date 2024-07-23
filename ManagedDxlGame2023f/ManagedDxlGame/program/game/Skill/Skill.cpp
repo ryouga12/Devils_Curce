@@ -1,6 +1,10 @@
 #include "Skill.h"
 #include"../Menu/BattleLog.h"
 
+Skill::Skill(int _id, const std::string _name, float _power, const std::string& _description, int consumeMp, int skilltype) : BaseSkill(_id, _name, _power, _description, consumeMp, skilltype)
+{
+}
+
 void Skill::SkillUseAnimation()
 {
 	Effect_Animation->play_animation();
@@ -19,6 +23,20 @@ void Skill::SkillAnimationDraw()
 void Skill::SkillAnimationUpdate(float delta_time)
 {
 	Effect_Animation->update(delta_time);
+}
+
+//‘S‘Ì‚ÌƒXƒLƒ‹‚ğŠi”[‚·‚é
+void Skill::AddSkillList()
+{
+	//‹ó‚Ìê‡‚Ì‚İ
+	if (skill_list.empty()) {
+		skill_list.emplace_back(std::make_shared<FlameSlash>());
+		skill_list.emplace_back(std::make_shared<IceBlast>());
+		skill_list.emplace_back(std::make_shared<ThunderBolt>());
+		skill_list.emplace_back(std::make_shared<Heal>());
+		skill_list.emplace_back(std::make_shared<SlimBell>());
+		skill_list.emplace_back(std::make_shared<SnakeBell>());
+	}
 }
 
 //---------------------------------------------------------------------------------------------------------
@@ -85,7 +103,7 @@ Nomal_Attack::~Nomal_Attack()
 }
 
 //’ÊíUŒ‚‚ğs‚Á‚½‚Ìˆ—(ƒhƒ‰ƒNƒG®ŒvZ®(ƒCƒ“ƒtƒŒ‚É‚à‘Î‰‚Å‚«‚é))
-void Nomal_Attack::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_ ,Shared<BattleLog>& battle_log)
+void Nomal_Attack::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemyStatus_ ,Shared<BattleLog>& battle_log)
 {
 	auto PlayerAttack = playerStatus.GetAttack();
 	auto EnemyDefance = enemyStatus_.GetEnemyDefance();
@@ -122,7 +140,7 @@ FlameSlash::FlameSlash() : Skill(1, "‰Î‰Ša‚è", 1.5f, "‰Š‚Ì—Í‚ğ‚Ü‚Æ‚Á‚½UŒ‚",2 ,
 }
 
 //‰Î‰Ša‚è‚ğg‚Á‚½‚Ìˆ—
-void FlameSlash::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_ , Shared<BattleLog>& battle_log)
+void FlameSlash::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemyStatus_ , Shared<BattleLog>& battle_log)
 {
 	auto PlayerAttack = playerStatus.GetAttack();
 	auto EnemyDefance = enemyStatus_.GetEnemyDefance();
@@ -183,7 +201,7 @@ IceBlast::IceBlast():Skill(2, "ƒAƒCƒXƒuƒ‰ƒXƒg", 2.0f, "•X‘®«‚Ì”š”­–‚–@", 3 , At
 }
 
 //ƒAƒCƒXƒuƒ‰ƒXƒg‚ğg‚Á‚½‚ÌŒvZˆ—
-void IceBlast::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_, Shared<BattleLog>& battle_log)
+void IceBlast::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemyStatus_, Shared<BattleLog>& battle_log)
 {
 	auto PlayerMagicPower = playerStatus.GetMagicPower();
 	auto EnemyDefance = enemyStatus_.GetEnemyDefance();
@@ -245,7 +263,7 @@ ThunderBolt::ThunderBolt():Skill(3, "ƒTƒ“ƒ_[ƒ{ƒ‹ƒg", 2.5f, "—‹‘®«‚Ì”š”­–‚–@", 
 }
 
 //ƒTƒ“ƒ_[ƒ{ƒ‹ƒgg‚Á‚½‚Ìˆ—
-void ThunderBolt::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_, Shared<BattleLog>& battle_log)
+void ThunderBolt::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemyStatus_, Shared<BattleLog>& battle_log)
 {
 	auto PlayerMagicPower = playerStatus.GetMagicPower();
 	auto EnemyDefance = enemyStatus_.GetEnemyDefance();
@@ -311,7 +329,7 @@ void Heal::SkillUse(Player::PlayerStatus& playerStatus, Shared<BattleLog>& battl
 	//Hp‚ªmaxhp‚æ‚è‚à‰º‰ñ‚Á‚Ä‚¢‚½ê‡g—p‚Å‚«‚é
 	if (playerStatus.GetcurentHp()< max_hp) {
 		// HP‚ğÅ‘åHp‚Ì30“‰ñ•œ‚³‚¹‚é
-		float percentage = 0.3;
+		double percentage = 0.3;
 		int healAmount = static_cast<int>(max_hp * percentage);
 
 		//Hp‚ğ‰ñ•œ‚·‚é
@@ -359,7 +377,7 @@ SlimBell::SlimBell() : Skill(20 , "ƒXƒ‰ƒCƒ€‚ğŒÄ‚Ô",5, "ƒXƒ‰ƒCƒ€‚Ì—Í‚ğØ‚è‚ÄUŒ‚‚
 }
 
 //ƒXƒ‰ƒCƒ€‚ÌUŒ‚ŒvZ
-void SlimBell::SkillUse(Enemy::EnemyStatus& enemyStatus_, Shared<BattleLog>& battle_log)
+void SlimBell::SkillUse(Enemy::EnemyConnection& enemyStatus_, Shared<BattleLog>& battle_log)
 {
 	//“G‚ª€‚ñ‚Å‹‚½‚çˆ—‚ğ‚Æ‚Î‚·
 	if (enemyStatus_.GetEnemyHp() <= 0)return;
@@ -393,7 +411,7 @@ SnakeBell::SnakeBell(): Skill(21 , "ƒXƒl[ƒN‚ğŒÄ‚Ô" , 10 , "ƒXƒl[ƒN‚Ì—Í‚ğØ‚è‚Ä
 }
 
 //ƒXƒl[ƒN‚Ì—é‚ğg‚Á‚½‚Ìˆ—
-void SnakeBell::SkillUse(Enemy::EnemyStatus& enemyStatus_, Shared<BattleLog>& battle_log)
+void SnakeBell::SkillUse(Enemy::EnemyConnection& enemyStatus_, Shared<BattleLog>& battle_log)
 {
 	//“G‚ª€‚ñ‚Å‹‚½‚çˆ—‚ğ‚Æ‚Î‚·
 	if (enemyStatus_.GetEnemyHp() <= 0)return;
@@ -417,14 +435,14 @@ void SnakeBell::SkillUse(Enemy::EnemyStatus& enemyStatus_, Shared<BattleLog>& ba
 //“G‚ÌƒXƒLƒ‹
 
 //ƒJƒIƒXƒtƒŒƒA
-ChaosFlare::ChaosFlare():Skill(5 , "ƒJƒIƒXƒtƒŒƒA", 3.5f , "ˆê“_W’†‚Ì‰Î‚Ì‹Ê‚ğ•ú‚¿A–½’†‚µ‚½“G‚É‘åƒ_ƒ[ƒW‚ğ—^‚¦‚é",0 , AttackType)
+ChaosFlare::ChaosFlare():Skill(5 , "ƒJƒIƒXƒtƒŒƒA", 2.5f , "ˆê“_W’†‚Ì‰Î‚Ì‹Ê‚ğ•ú‚¿A–½’†‚µ‚½“G‚É‘åƒ_ƒ[ƒW‚ğ—^‚¦‚é",0 , AttackType)
 {
 	//ƒAƒjƒ[ƒVƒ‡ƒ“‚ğì¬‚·‚é
 	Effect_Animation = std::make_shared<Animation>("graphics/Effect/chaos_flare.png", 600, 350, 5, 4, 192, 192, 20, 3);
 }
 
 //ƒJƒIƒXƒtƒŒƒAg‚Á‚½‚Ìˆ—
-void ChaosFlare::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_, Shared<BattleLog>& battle_log)
+void ChaosFlare::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemyStatus_, Shared<BattleLog>& battle_log)
 {
 	auto EnemyMagicPower = enemyStatus_.GetMagicPower();
 	auto PlayerDefance = playerStatus.GetDefance();
@@ -454,14 +472,14 @@ void ChaosFlare::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus
 }
 
 //ƒfƒXƒEƒBƒ“ƒh
-DeathScytheWind::DeathScytheWind() :Skill(6, "ƒfƒXƒEƒBƒ“ƒh", 3.5f, "‹­—Í‚È•—‘®«‚Ì–‚–@‚ğ•ú‚Â", 0, AttackType)
+DeathScytheWind::DeathScytheWind() :Skill(6, "ƒfƒXƒEƒBƒ“ƒh", 2.5f, "‹­—Í‚È•—‘®«‚Ì–‚–@‚ğ•ú‚Â", 0, AttackType)
 {
 	//ƒAƒjƒ[ƒVƒ‡ƒ“‚ğì¬‚·‚é
 	Effect_Animation = std::make_shared<Animation>("graphics/Effect/DeathScytheWind.png", 600, 350, 5, 4, 192, 192, 20, 8);
 }
 
 //ƒfƒXƒTƒCƒYƒEƒBƒ“ƒhg‚Á‚½‚Ìˆ—
-void DeathScytheWind::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_, Shared<BattleLog>& battle_log)
+void DeathScytheWind::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemyStatus_, Shared<BattleLog>& battle_log)
 {
 	auto EnemyMagicPower = enemyStatus_.GetMagicPower();
 	auto PlayerDefance = playerStatus.GetDefance();
@@ -498,7 +516,7 @@ DrakClaw::DrakClaw() : Skill(7 , "ƒ_[ƒNƒNƒƒE" , 3 , "ˆÅ‚Ì’Ü‚ÌUŒ‚",0 ,AttackTy
 }
 
 //ƒ_[ƒNƒNƒƒEg‚Á‚½‚Ìˆ—
-void DrakClaw::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_, Shared<BattleLog>& battle_log)
+void DrakClaw::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemyStatus_, Shared<BattleLog>& battle_log)
 {
 	auto EnemyAttack = enemyStatus_.GetEnemyAttack();
 	auto PlayerDefance = playerStatus.GetDefance();

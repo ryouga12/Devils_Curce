@@ -4,7 +4,7 @@
 #include<unordered_map>
 #include"../../game/Object/Player.h"
 #include"../../game/Object/Enemy.h"
-#include"../../game/Manager/animation.h"
+#include"../../game/Effect/animation.h"
 #include"../Manager/SoundManager.h"
 
 class BattleLog;
@@ -22,17 +22,17 @@ public:
 
 	Skill() {}
 	//(ID , 名前 , 攻撃力 , 特技の説明、特技の消費Mp、スキルのタイプ) を初期化する
-	Skill(int _id, const std::string _name, float _power, const std::string& _description, int consumeMp, int skilltype) :BaseSkill(_id, _name, _power, _description, consumeMp , skilltype) {}
+	Skill(int _id, const std::string _name, float _power, const std::string& _description, int consumeMp, int skilltype); 
 	virtual~Skill(){}
 
 	//攻撃スキルを使った時のダメージ計算
-	virtual void SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_, Shared<BattleLog>& battle_log) {}
+	virtual void SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemyStatus_, Shared<BattleLog>& battle_log) {}
 
 	//バフスキルを使った時の処理
 	virtual void SkillUse(Player::PlayerStatus& playerStatus, Shared<BattleLog>& battle_log) {};
 
 	//アイテム系を使った時の処理
-	virtual void SkillUse(Enemy::EnemyStatus& enemyStatus_, Shared<BattleLog>& battle_log) {};
+	virtual void SkillUse(Enemy::EnemyConnection& enemyStatus_, Shared<BattleLog>& battle_log) {};
 
 
 	//スキルを使った際のアニメーションの再生
@@ -63,6 +63,20 @@ public:
 	//スキルのタイプを取得する
 	int getSkillType()const{return SkillType;}
 
+	//全体のスキルを格納する
+	void AddSkillList();
+
+	//全体のスキルリストを取得する
+	std::vector<Shared<Skill>>& GetOverallSkills() {
+		return skill_list;
+	}
+
+private:
+
+	//全体のスキルリスト
+	//主にスキルのポインタのセーブロードに使用
+	std::vector<Shared<Skill>>skill_list;
+
 protected:
 
 	//エフェクト用のアニメーション
@@ -79,7 +93,7 @@ public:
 	~Nomal_Attack() override;
 
 	//通常攻撃を行った時の処理
-	void SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_ , Shared<BattleLog>& battle_log)override;
+	void SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemyStatus_ , Shared<BattleLog>& battle_log)override;
 
 private:
 
@@ -103,7 +117,7 @@ public:
 	~FlameSlash()override{}
 
 	//火炎斬りを使った時の処理
-	void SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_ , Shared<BattleLog>& battle_log)override;
+	void SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemyStatus_ , Shared<BattleLog>& battle_log)override;
 
 	//火炎斬りを使った時のMP処理
 	void SkillMpConsume(Player::PlayerStatus& playerStatus)override;
@@ -118,7 +132,7 @@ public:
 	~IceBlast()override {}
 
 	//アイスブラスト使った時の処理
-	void SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_, Shared<BattleLog>& battle_log)override;
+	void SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemyStatus_, Shared<BattleLog>& battle_log)override;
 
 	//アイスブラスト使った時のMP処理
 	void SkillMpConsume(Player::PlayerStatus& playerStatus)override;
@@ -132,7 +146,7 @@ public:
 	~ThunderBolt()override {}
 
 	//サンダーボルト使った時の処理
-	void SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_ , Shared<BattleLog>& battle_log)override;
+	void SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemyStatus_ , Shared<BattleLog>& battle_log)override;
 
 	//サンダーボルト使った時のMP処理
 	void SkillMpConsume(Player::PlayerStatus& playerStatus)override;
@@ -166,7 +180,7 @@ public:
 	~SlimBell()override {};
 
 	//スライムの鈴を使った時の処理
-	void SkillUse(Enemy::EnemyStatus& enemyStatus_ , Shared<BattleLog>& battle_log)override;
+	void SkillUse(Enemy::EnemyConnection& enemyStatus_ , Shared<BattleLog>& battle_log)override;
 
 };
 
@@ -178,7 +192,7 @@ public:
 	~SnakeBell()override {}
 
 	//スネークの鈴を使った時の処理
-	void SkillUse(Enemy::EnemyStatus& enemyStatus_ ,Shared<BattleLog>& battle_log)override;
+	void SkillUse(Enemy::EnemyConnection& enemyStatus_ ,Shared<BattleLog>& battle_log)override;
 
 };
 
@@ -194,7 +208,7 @@ public:
 	~ChaosFlare()override {};
 
 	//カオスフレアを使った時の処理
-	void SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_, Shared<BattleLog>& battle_log)override;
+	void SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemyStatus_, Shared<BattleLog>& battle_log)override;
 
 };
 
@@ -207,7 +221,7 @@ public:
 	~DeathScytheWind()override {};
 
 	//デスサイズウィンドを使った時の処理
-	void SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_, Shared<BattleLog>& battle_log)override;
+	void SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemyStatus_, Shared<BattleLog>& battle_log)override;
 
 };
 
@@ -219,6 +233,8 @@ public:
 	~DrakClaw()override {};
 
 	//ダーククロウ使った時の処理
-	void SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyStatus& enemyStatus_, Shared<BattleLog>& battle_log)override;
+	void SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemyStatus_, Shared<BattleLog>& battle_log)override;
 
 };
+
+//
