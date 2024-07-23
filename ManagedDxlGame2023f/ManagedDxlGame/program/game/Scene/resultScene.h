@@ -3,7 +3,7 @@
 #include"../Menu/MenuWindow.h"
 #include "../../dxlib_ext/dxlib_ext.h"
 #include"../Manager/SceneManager.h"
-#include"tittleScene.h"
+
 
 class UIManager;
 

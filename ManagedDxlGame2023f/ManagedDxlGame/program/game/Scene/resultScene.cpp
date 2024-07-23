@@ -1,11 +1,15 @@
 #include "resultScene.h"
 #include"../Manager/UiManager.h"
+#include"tittleScene.h"
 
 //------------------------------------------------------------------------------------------------------------------------
 //‰Šú‰»@&  ‰ğ•ú
 
 ResultScene::ResultScene()
 {
+	//Œ»İ‚ÌƒV[ƒ“‚ğResultScene‚Éİ’è
+	curent_scene = SceneState::RESULT;
+
 	risult_menu = std::make_shared<Menu>("graphics/WindowBase_02.png");
 
 	//map‚ğ’Ç‰Á‚·‚é
