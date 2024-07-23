@@ -5,9 +5,6 @@
 
 #pragma once
 #include"../Scene/BaseScene.h"
-#include"../Scene/mapScene.h"
-#include"../Scene/resultScene.h"
-#include"../Scene/battleScene.h"
 #include "../../dxlib_ext/dxlib_ext.h"
 
 class GameManager;
@@ -19,7 +16,19 @@ public:
 	static SceneManager* GetInstance(BaseScene* start_scene = nullptr);
 	static void Destroy();
 
-	void changeScene(BaseScene* next_scene, float transout_time = 0.5f, float transin_time = 0.5f);
+	//シーンを変える
+	void changeScene(BaseScene* next_scene, const float transout_time = 0.5f, const float transin_time = 0.5f);
+
+	//画面上にフェードを入れる
+	void FadeScene(const float transout_time = 0.5f, const float transin_time = 0.5f);
+
+	//フラグを切り替える
+	void SceneFlagChange() {
+		scene_change = !scene_change;
+	}
+
+	//フラグを取得する
+	bool GetSceneFlag() { return scene_change; }
 
 	void update(float delta_time);
 
@@ -29,6 +38,7 @@ private:
 	BaseScene* now_scene_ = nullptr;
 	BaseScene* next_scene_ = nullptr;
 	int tansition_graph_hdl_ = 0;
+	bool scene_change = true;
 
 	tnl::Sequence<SceneManager> sequence_ = tnl::Sequence<SceneManager>(this, &SceneManager::seqTransIn);
 	bool seqTransIn(const float delta_time);

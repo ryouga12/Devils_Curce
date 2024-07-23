@@ -10,6 +10,22 @@ UIManager* UIManager::getUIManager()
 	return p_instance;
 }
 
+void UIManager::Update(float delta_time)
+{
+	//アイコン用のアニメーション
+	if (icon_animation) {
+		icon_animation->update(delta_time);
+	}
+}
+
+void UIManager::Draw()
+{
+	//アイコン用のアニメーションの描画
+	if (icon_animation) {
+		icon_animation->draw();
+	}
+}
+
 void UIManager::addMenu(const std::string& menuName, std::shared_ptr<Menu> menu)
 {
 	//メニューマップにあるかを確認して
@@ -82,10 +98,34 @@ void UIManager::ComentLoad(const int max_num , const std::string& name)
 }
 
 //コメントを描画する
-void UIManager::ComentDraw(const tnl::Vector2i& coment_pos,const int max_draw_num)
+void UIManager::ComentDraw(const tnl::Vector2i& coment_pos)
+{
+
+	DrawStringEx(coment_pos.x, coment_pos.y, COLOR_WHITE, "%s", coment_[curent_num].c_str());
+
+	//閉じるを表示する座標
+	const int ADD_X = 450;  const int ADD_Y = 50;
+
+	DrawStringEx(coment_pos.x + ADD_X, coment_pos.y + ADD_Y, -1, "(0 : 閉じる)");
+
+}
+
+//整数値を表示できる用のコメント
+//void UIManager::ComentDraw(const tnl::Vector2i& coment_pos, int value)
+//{
+//	DrawStringEx(coment_pos.x, coment_pos.y, COLOR_WHITE, "%s", coment_[curent_num].c_str(), value);
+//
+//	//閉じるを表示する座標
+//	const int ADD_X = 450;  const int ADD_Y = 50;
+//
+//	DrawStringEx(coment_pos.x + ADD_X, coment_pos.y + ADD_Y, -1, "(0 : 閉じる)");
+//}
+
+//コメントを次に移動する
+void UIManager::ComentNextByInput(const int max_draw_num)
 {
 	//描画の最大数を超えてなければ
-	if (curent_num < max_draw_num) {
+	if (count < max_draw_num) {
 		//Enterキーを受け付ける
 		if (tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
 			//数を増やす
@@ -94,10 +134,6 @@ void UIManager::ComentDraw(const tnl::Vector2i& coment_pos,const int max_draw_nu
 			count++;
 		}
 	}
-
-	DrawStringEx(coment_pos.x, coment_pos.y, COLOR_WHITE, "%s", coment_[curent_num].c_str());
-
-
 }
 
 //プレイヤーのステータスをHPバーで表示する
@@ -123,8 +159,17 @@ void UIManager::PlayerStatusDrawWindow()
 	// HPバーの長さを計算する
 	int hpbar = static_cast<int>(maxHpBar * hp_ratio);
 
+	//int hpvar = 0;
+
+	//if (hpbar <= hpbaa) {
+	//	 
+	//	hpbaa -= 2;/*hpバーの減る速度*/
+	//}
+
+
 	// MPの割合を計算する
 	float mp_ratio = plyerstatus.GetCurentMp() / plyerstatus.GetMaxMp();
+
 	// MPバーの長さを計算する
 	int mpbar = static_cast<int>(maxMpBer * mp_ratio);
 
@@ -136,5 +181,91 @@ void UIManager::PlayerStatusDrawWindow()
 	DrawStringEx(120, 110, -1, " Lv %d", plyerstatus.GetLevel());
 	DrawStringEx(75, 190, -1, " Hp : %d / %d", static_cast<int>(plyerstatus.GetcurentHp()), static_cast<int>(plyerstatus.GetMaxHp()));
 	DrawStringEx(75, 250, -1, " Mp : %d / %d", static_cast<int>(plyerstatus.GetCurentMp()), static_cast<int>(plyerstatus.GetMaxMp()));
+
+}
+
+//セーブした時の文字を表示させる
+void UIManager::SaveText(const tnl::Vector3& text_pos)
+{
+	//セーブしている時に
+	if (save_flag) {
+
+		//フレームをインクリメント
+		frame++;
+
+		DrawStringEx(text_pos.x, text_pos.y, -1, "セーブ中です。");
+
+		//フレーム数が60を超えたら
+		if (frame >= 60) {
+
+			//フラグを切り替える
+			save_flag = false;
+
+		}
+
+	}
+	//フレーム数が60を超えてかつフラグが立っていなかったら
+	else if (frame >= 60 && !save_flag) {
+
+		//セーブが完了した時のテキストを出す
+		DrawStringEx(text_pos.x, text_pos.y, -1, "セーブしました。");
+	}
+
+}
+
+//プレイヤーの操作説明
+void UIManager::PlayerMoveDetail(const std::vector<std::string>& detail_text)
+{
+	if (player_detail_window_flag) {
+
+		auto menu_window = getMenu("menu_window");
+
+		menu_window->Menu_draw(850, 300, 400, 400);
+
+		for (int i = 0; i < detail_text.size(); i++)
+		{
+			DrawStringEx(900, 350 + (i * 50), -1, "%s", detail_text[i].c_str());
+		}
+	}
+}
+
+void UIManager::IconAnimation()
+{
+	//ポインタを生成する
+	if (icon_animation == nullptr) {
+
+		//プレイヤーの座標
+		auto palyer_pos = GameManager::getGameManager()->getPlayer()->getPlayerPos();
+
+		//カメラの座標
+		auto camera_pos = GameManager::getGameManager()->getCamera()->getTargetPos();
+
+		// プレイヤーの描画位置を計算
+		tnl::Vector3 draw_pos = palyer_pos - camera_pos + tnl::Vector3(DXE_WINDOW_WIDTH >> 1, DXE_WINDOW_HEIGHT >> 1, 0);
+
+		//アイコン用のアニメーション用のポインタを生成する
+		icon_animation = std::make_shared<Animation>("graphics/talk_icon.png", draw_pos.x, draw_pos.y - 80, 3, 1, 32, 32, 3, 8);
+
+		//描画を行う
+		icon_animation->play_animation();
+	}
+	//ポインタが生成場合
+	else {
+
+		//プレイヤーの座標
+		auto palyer_pos = GameManager::getGameManager()->getPlayer()->getPlayerPos();
+
+		//カメラの座標
+		auto camera_pos = GameManager::getGameManager()->getCamera()->getTargetPos();
+
+		// プレイヤーの描画位置を計算
+		tnl::Vector3 draw_pos = palyer_pos - camera_pos + tnl::Vector3(DXE_WINDOW_WIDTH >> 1, DXE_WINDOW_HEIGHT >> 1, 0);
+
+		//アイコンの座標を切り替える
+		icon_animation->SetAnimationPos(draw_pos.x , draw_pos.y - 50);
+
+		//描画を行う
+		icon_animation->play_animation();
+	}
 
 }

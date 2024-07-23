@@ -19,6 +19,12 @@ public:
 	static UIManager* getUIManager();
 	static void delategetUIManager() { delete getUIManager(); }
 
+	//更新処理
+	void Update(float delta_time);
+
+	//描画
+	void Draw();
+
 	//メニューを追加する
 	void addMenu(const std::string& menuName, std::shared_ptr<Menu> menu);
 
@@ -44,7 +50,12 @@ public:
 	void ComentLoad(const int max_num ,const std::string& name);
 
 	//コメントを表示する
-	void ComentDraw(const tnl::Vector2i& coment_pos, const int max_draw_num);
+	void ComentDraw(const tnl::Vector2i& coment_pos);
+
+	//void ComentDraw(const tnl::Vector2i& coment_pos , int value);
+
+	//コメントを次に移動する
+	void ComentNextByInput(const int max_draw_num);
 
 	//コメントを初期化して１から表示させる
 	void ComentClear() { curent_num = 0; }
@@ -55,9 +66,42 @@ public:
 	//カウンターをリセットする
 	void CountReset() { count = 0; }
 
+	//フレームをリセットする
+	void FrameReset() { frame = 0; }
+
 	//プレイヤーのステータスをHPバーで表示する
 	void PlayerStatusDrawWindow();
-	
+
+	//セーブした時の文字を表示させる
+	void SaveText(const tnl::Vector3& text_pos );
+
+	//セーブテキストの表示を切り替える（セーブテキストを表示する）
+	void SaveTextFlagChange() { save_flag = !save_flag; }
+
+	//プレイヤーの操作説明
+	void PlayerMoveDetail(const std::vector<std::string>& detail_text);
+
+	//説明の表示を切り替える
+	void PlayerDetailSwitchDisplay() {
+		player_detail_window_flag = !player_detail_window_flag;
+	}
+
+	//操作説明のテキストを取得する
+	std::vector<std::string>&GetPlayerMoveDetailText() {
+		return operation_instructions;
+	}
+
+	//バトル用の説明のテキストを取得する
+	std::vector<std::string>&GetBattlePlayerMoveDetailText() {
+		return battle_operation_instructions;
+	}
+
+	//話かける際のアイコンの表示
+	void IconAnimation();
+
+	//アイコン用のアニメーションを止める
+	void IconAnimationStop() { if (icon_animation) { icon_animation->stop_animation();  } }
+
 private:
 
 	UIManager(){}
@@ -94,4 +138,27 @@ private:
 
 	//カウンター(主にカウントを使ってコメント後のシーンを遷移させたりする)
 	int count = 0;
+	
+	//セーブした時のコメント用のフラグ
+	bool save_flag = false;
+	
+	//フレーム(主にフレームを数えてなにかイベントを起こすために使う)
+	int frame = 0;
+
+	//説明表示を切り替える為のフラグ
+	bool player_detail_window_flag = true;
+
+	//アイコンのアニメーション用のポインタ
+	Shared<Animation>icon_animation = nullptr;
+
+//--------------------------------------------------------------------------------------------------------------
+//UIの説明文用の文字列
+
+	//操作説明
+	std::vector<std::string> operation_instructions
+		= {"操作説明", "W : 上" ,"S : 下", "A : 左" , "D : 右","ESC : 道具を開く","TAB : ウィンドウの表示を切り替える"};
+
+	//バトルシーン用の操作説明
+	std::vector<std::string> battle_operation_instructions
+		= { "操作説明" , "十字キー : カーソルの移動" , "← : 一つ前に戻る","Enter : 決定 , 次に進む" ,"TAB : ウィンドウの表示を切り替える" };
 };
