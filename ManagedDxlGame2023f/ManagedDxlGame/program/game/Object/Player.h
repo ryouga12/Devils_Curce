@@ -6,37 +6,8 @@
 
 #include "../../dxlib_ext/dxlib_ext.h"
 #include"Actor.h"
-#include"../Manager/Camera.h"
+#include"../System/Camera.h"
 #include"Enemy.h"
-
-class CsvManager;
-
-//アニメーションを切り替える秒数
-static const float ChangeAnimationTime = 0.1f;
-//フレーム
-static const int animationFlame = 3;
-
-//アニメーション
-enum {
-	//下
-	DIR_DOWN,
-	//左
-	DIR_LEFT,
-	//右
-	DIR_RIGHT,
-	//上
-	DIR_UP,
-	//左下
-	DIR_DIAGONAL_DOWN_LEFT,
-	//右下
-	DIR_DIAGONA_DOWN_RIGTH,
-	//左上
-	DIR_DIAGONAL_UPPER_LEFT,
-	//右上
-	DIR_DIAGONAL_UPPER_RIGTH,
-	//最大値
-	DIR_MAX
-};
 
 class BattleLog;
 class SoundManager;
@@ -44,6 +15,8 @@ class GameManager;
 class SceneManager;
 class Skill;
 class Nomal_Attack;
+class CsvManager;
+class InMapScene;
 class CsvManager;
 
 class Player : public Actor {
@@ -59,47 +32,47 @@ public:
 	struct PlayerStatus {
 	public:
 
-		//levelを返すゲッター
+		//levelを取得する
 		int GetLevel() const {
 			return level;
 		}
-		//maxHpを返すゲッター
+		//maxHpを取得する
 		float GetMaxHp()const {
 			return maxHp;
 		}
-		//hpを返すゲッター
+		//hpを取得する
 		float GetcurentHp() const{
 			return curenthp;
 		}
-		//Attackを返すゲッター
+		//Attackを取得する
 		int GetAttack() const{
 			return Attack;
 		}
-		//Defanceを返すゲッター
+		//Defanceを取得する
 		int GetDefance() const {
 			return Defance;
 		}
-		//Speedを返すゲッター
+		//Speedを取得する
 		int GetSpeed() const {
 			return Speed;
 		}
-		//必要な経験値を返すゲッター
+		//必要な経験値を取得する
 		int GetExpoint() const {
 			return R_expoint;
 		}
-		//最大MPを返すゲッター
+		//最大MPを取得する
 		float GetMaxMp() const {
 			return maxMp;
 		}
-		//現在Mpを返すゲッター
+		//現在Mpを取得する
 		float GetCurentMp()const {
 			return curentMp;
 		}
-		//魔法力を返すゲッター
+		//魔法力を取得する
 		int GetMagicPower()const {
 			return magicPower;
 		}
-		//プレイヤーのIDを返すゲッター
+		//プレイヤーのIDを取得する
 		int GetPlayerID()const {
 			return player_id;
 		}
@@ -176,6 +149,28 @@ public:
 
 	};
 
+	//アニメーション
+	enum {
+		//下
+		DIR_DOWN,
+		//左
+		DIR_LEFT,
+		//右
+		DIR_RIGHT,
+		//上
+		DIR_UP,
+		//左下
+		DIR_DIAGONAL_DOWN_LEFT,
+		//右下
+		DIR_DIAGONA_DOWN_RIGTH,
+		//左上
+		DIR_DIAGONAL_UPPER_LEFT,
+		//右上
+		DIR_DIAGONAL_UPPER_RIGTH,
+		//最大値
+		DIR_MAX
+	};
+
 	//プレイヤーの状態
 	enum class PlayerState {
 		IDLE,
@@ -227,10 +222,8 @@ private:
 	tnl::Vector3 prev_pos = { 0 ,0,0 };
 
 	//プレイヤーの高さ
-	const int CHARA_HEIGHT = 48;	
-
 	//プレイヤーの幅
-	const int CHARA_WIDTH = 48;						
+	const tnl::Vector2i CHARASIZE = { 36 ,72 };
 
 	//プレイヤーの座標
 	tnl::Vector3 plyer_pos = {};
@@ -263,9 +256,11 @@ public:
 	void SetPlayerAnimationHdl(int ghdl_id);
 
 	//プレイヤーの動き
-	void player_Move(float delta_time, const float& velocity);
+	//引数 : Delta_time , 動く速度　, マップの高さ(移動制限の為)
+	void player_Move(float delta_time, const float& velocity ,const int MAPHEIGHT);
 
 	//プレイヤーの描画
+	//引数 : カメラ , プレイヤーのサイズ
 	void player_draw(const KonCamera& camera, float scale);
 
 	//プレイヤーの座標を取得する
@@ -295,10 +290,13 @@ public:
 
 	//プレイヤーのサイズを取得する
 	int GetPlayerWidth()const {
-		return CHARA_WIDTH;
+		return CHARASIZE.x;
 	}
 	int GetPlayerHight()const {
-		return CHARA_HEIGHT;
+		return CHARASIZE.y;
+	}
+	tnl::Vector2i GetPlayerSize()const {
+		return CHARASIZE;
 	}
 
 	//プレイヤーのステータス配列を取得する
@@ -306,7 +304,18 @@ public:
 		return plyerstatusSave;
 	}
 
+	//プレイヤーにマップの状態をセットする(主にプレイヤーがセーブの際どこに居るか認識する為)
+	void SetPlayerCurentMapMemory(int curent_inmap) {
+		player_curent_map_memory = curent_inmap;
+	}
 
+	//プレイヤーがどのマップの状態にいるか取得する
+	int GetPlayerCurentMapState()const {
+		return player_curent_map_memory;
+	}
+
+	//スキルを追加する
+	void SaveReadSkill(int skill_id);
 
 private:
 
@@ -315,10 +324,6 @@ private:
 	int anim_ctrl_dir = DIR_DOWN;
 	int anim_ctrl_frame = 0;
 	int anim_hdls[DIR_MAX][9];
-
-
-	//Statusを入れる変数
-	/*PlyerStatus plyer_Status;*/
 
 	//構造体の総数
 	int Ply_Status_Total_num;
@@ -333,10 +338,13 @@ private:
 	const float annihilation_Time = 3.5f;
 
 	//特技用のインベントリ
-	std::vector<Shared<Skill>> SkillList;
+	std::vector<Shared<Skill>> player_skill_list;
 
 	//特技の数
 	int SkillNum = 0;
+
+	//プレイヤーに保存しておくマップの状態の情報
+	int player_curent_map_memory = 0;
 
 	//---フラグ関係---//
 
@@ -367,7 +375,7 @@ public:
 
 	//スキルの配列を取得する
 	std::vector<Shared<Skill>>& getSkillList() {
-		return SkillList;
+		return player_skill_list;
 	}
 
 	//スキルの個数を取得する
@@ -379,17 +387,17 @@ public:
 	void DeadPlayerProcess(Shared<BattleLog>& battle_log);
 
 	//プレイヤーの攻撃処理
-	void PlayerAttackProcess(Enemy::EnemyStatus& enemy_status,Shared<BattleLog>& battle_log , Shared<Nomal_Attack>& nomal_attack);
+	void PlayerAttackProcess(Enemy::EnemyConnection& enemy_status,Shared<BattleLog>& battle_log , Shared<Nomal_Attack>& nomal_attack);
 
 	//スキルをセットする
-	void SkillSet(Shared<BattleLog>& battle_log);
+	void SkillSet(Shared<BattleLog> battle_log = nullptr);
 
 	//特技を追加する
-	void AddSkill(Shared<Skill>skill);
+	void AddSkill(const Shared<Skill>& skill);
 
 	//セーブロード機能を実験中（のちに追加予定）
-	/*void PlyerSave();
-	void PlyerLoad();*/
+	void PlyerSave();
+	void PlyerLoad();
 
 };
 

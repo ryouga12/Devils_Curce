@@ -1,5 +1,5 @@
 #include "Player.h"
-#include"../Manager/Camera.h"
+#include"../System/Camera.h"
 #include"../Menu/BattleLog.h"
 #include"Enemy.h"
 #include"../Skill/Skill.h"
@@ -8,6 +8,7 @@
 #include"../Manager/GameManager.h"
 #include"../Manager/CsvManager.h"
 #include"../Scene/battleScene.h"
+#include"../Scene/InMapScene.h"
 
 
 Player::Player() : money(1000)
@@ -22,10 +23,16 @@ Player::Player() : money(1000)
 	PlyStatusLoad();
 
 	//ステータスを設定する(Lv1からスタート)
-	SetPlayerStatus(1);
+	SetPlayerStatus(7);
 
 	//始まりは何も装備していない為0からスタート
 	SetPlayerAnimationHdl(0);
+
+	//デバック
+	SaveReadSkill(1);
+	SaveReadSkill(2);
+	SaveReadSkill(3);
+
 }
 
 Player::~Player()
@@ -47,8 +54,9 @@ void Player::Update(float delta_time)
 
 }
 
-
-void Player::player_Move(float delta_time , const float& velocity)
+//プレイヤーの動き
+//引数 : Delta_time , 動く速度　,　マップの高さ(移動制限の為)
+void Player::player_Move(float delta_time , const float& velocity , const int MAPHEIGHT)
 {
 	prev_pos = plyer_pos;
 
@@ -68,31 +76,31 @@ void Player::player_Move(float delta_time , const float& velocity)
 		//左上斜め
 		if ((tnl::Input::IsKeyDown(eKeys::KB_A)) && (tnl::Input::IsKeyDown(eKeys::KB_W))) {
 
-			plyer_pos.x += velocity * static_cast<float>(std::sin(CHARA_WIDTH / 2));
-			plyer_pos.y += velocity * static_cast<float>(std::sin(CHARA_HEIGHT / 2));
+			plyer_pos.x += velocity * static_cast<float>(std::sin(CHARASIZE.x / 2));
+			plyer_pos.y += velocity * static_cast<float>(std::sin(CHARASIZE.y / 2));
 			numberStep++;
 
 		}
 		//右上斜め
 		else if ((tnl::Input::IsKeyDown(eKeys::KB_D)) && (tnl::Input::IsKeyDown(eKeys::KB_W))) {
 
-			plyer_pos.x -= velocity * static_cast<float>(std::sin(CHARA_WIDTH / 2));
-			plyer_pos.y += velocity * static_cast<float>(std::sin(CHARA_HEIGHT / 2));
+			plyer_pos.x -= velocity * static_cast<float>(std::sin(CHARASIZE.x / 2));
+			plyer_pos.y += velocity * static_cast<float>(std::sin(CHARASIZE.y / 2));
 			numberStep++;
 
 		}
 		//左下斜め
 		else if ((tnl::Input::IsKeyDown(eKeys::KB_A)) && (tnl::Input::IsKeyDown(eKeys::KB_S))) {	
 
-			plyer_pos.x += velocity * static_cast<float>(std::sin(CHARA_WIDTH / 2));
-			plyer_pos.y -= velocity * static_cast<float>(std::sin(CHARA_HEIGHT / 2));
+			plyer_pos.x += velocity * static_cast<float>(std::sin(CHARASIZE.x / 2));
+			plyer_pos.y -= velocity * static_cast<float>(std::sin(CHARASIZE.y / 2));
 			numberStep++;
 		}
 		//右下斜め
 		else if ((tnl::Input::IsKeyDown(eKeys::KB_D)) && (tnl::Input::IsKeyDown(eKeys::KB_S))) {
 
-			plyer_pos.x -= velocity * static_cast<float>(std::sin(CHARA_WIDTH / 2));
-			plyer_pos.y -= velocity * static_cast<float>(std::sin(CHARA_HEIGHT / 2));
+			plyer_pos.x -= velocity * static_cast<float>(std::sin(CHARASIZE.x / 2));
+			plyer_pos.y -= velocity * static_cast<float>(std::sin(CHARASIZE.y / 2));
 			numberStep++;
 		}
 		else if (tnl::Input::IsKeyDown(eKeys::KB_A)) {
@@ -220,7 +228,7 @@ void Player::PlyStatusLoad()
 		plyerstatusSave.SetPlayerDefance(PlyerStatus_Csv_Info[y][3].getInt());
 		//csvからSpeedの取得
 		plyerstatusSave.SetPlayerSpeed(PlyerStatus_Csv_Info[y][4].getInt());
-		//csvから必要な経験値がいくつかの取得
+		//csvから必要な経験値の取得
 		plyerstatusSave.SetPlayerExpoint(PlyerStatus_Csv_Info[y][5].getInt());
 		//csvから最大Mpを取得
 		plyerstatusSave.SetPlayerCurentMp(PlyerStatus_Csv_Info[y][6].getFloat());
@@ -266,6 +274,27 @@ void Player::SetPlayerAnimationHdl(int ghdl_id)
 	}
 }
 
+//セーブする際のスキルの追加
+void Player::SaveReadSkill(int skill_id )
+{
+	// スキルリストを取得
+	auto& skill_list = GameManager::getGameManager()->getSkill()->GetOverallSkills();
+
+	// skill_id に一致するスキルを検索
+	auto it = std::find_if(skill_list.begin(), skill_list.end(),
+		[skill_id](const Shared<Skill>& skill) { return skill->getId() == skill_id; });
+
+	// スキルが見つかった場合
+	if (it != skill_list.end()) {
+		player_skill_list.emplace_back(*it);
+	}
+	// スキルが見つからなかった場合
+	else {
+		tnl::DebugTrace("----------------------------------------------------------------\n");
+		tnl::DebugTrace("スキルを追加できませんでした\n");
+	}
+}
+
 Player::PlayerStatus Player::GetPlyerStatus(int level) const
 {
 	auto it = std::find_if(Ply_Status_Type.begin(), Ply_Status_Type.end(), [level]
@@ -305,7 +334,7 @@ void Player::DeadPlayerProcess(Shared<BattleLog>& battle_log)
 }
 
 //プレイヤーの通常攻撃処理
-void Player::PlayerAttackProcess(Enemy::EnemyStatus& enemy_status, Shared<BattleLog>& battle_log , Shared<Nomal_Attack>& nomal_attack)
+void Player::PlayerAttackProcess(Enemy::EnemyConnection& enemy_status, Shared<BattleLog>& battle_log , Shared<Nomal_Attack>& nomal_attack)
 {
 	//敵が死んで居たら処理をとばす
 	if (enemy_status.GetEnemyHp() <= 0)return;
@@ -319,19 +348,22 @@ void Player::PlayerAttackProcess(Enemy::EnemyStatus& enemy_status, Shared<Battle
 }
 
 //スキルをセットする
-void Player::SkillSet(Shared<BattleLog>& battle_log)
+void Player::SkillSet(Shared<BattleLog> battle_log)
 {
 	switch (plyerstatusSave.GetLevel())
 	{
 		//レベル1の時は何も覚えない
 	case 1:
 		break;
+
 		//レベル2の時に火炎斬りを覚える
 	case 2:
 		AddSkill(std::make_shared<FlameSlash>());
 
-		//ログを流す
-		battle_log->addLog("火炎斬りを覚えた!");
+		if (battle_log) {
+			//ログを流す
+			battle_log->addLog("火炎斬りを覚えた!");
+		}
 
 		break;
 		//レベル3の時にヒールを覚える
@@ -339,73 +371,286 @@ void Player::SkillSet(Shared<BattleLog>& battle_log)
 		
 		AddSkill(std::make_shared<Heal>());
 
-		battle_log->addLog("ヒールを覚えた!");
+		if (battle_log) {
+			battle_log->addLog("ヒールを覚えた!");
+		}
 
 		break;
 		//レベル4の時にアイスブラストを覚える
 	case 4:
+
 		AddSkill(std::make_shared<IceBlast>());
 
-		battle_log->addLog("アイスブラストを覚えた!");
+		if (battle_log) {
+			battle_log->addLog("アイスブラストを覚えた!");
+		}
 
 		break;
 		//レベル5の時にサンダーボルトを覚える
 	case 5:
 		AddSkill(std::make_shared<ThunderBolt>());
 
-		battle_log->addLog("サンダーボルトを覚えた!");
+		if (battle_log) {
+			battle_log->addLog("サンダーボルトを覚えた!");
+		}
 
-	default:
 		break;
 	}
 }
 
 //スキルを追加する
-void Player::AddSkill(Shared<Skill> skill)
+void Player::AddSkill(const Shared<Skill>& skill)
 {
-	SkillList.emplace_back(skill);
+	player_skill_list.emplace_back(skill);
 	SkillNum++;
 }
 
-//void Player::PlyerSave()
-//{
-//	FILE* fp = nullptr;
-//	fopen_s(&fp, "player.bin", "wb");
-//
-//		
-//	if (fp) {
-//		fwrite(&plyerstatusSave.hp, sizeof(int), 1, fp);
-//		fwrite(&plyerstatusSave.Attack, sizeof(int), 1, fp);
-//		fwrite(&plyerstatusSave.Defance, sizeof(int), 1, fp);
-//		fwrite(&plyerstatusSave.Speed, sizeof(int), 1, fp);
-//		fwrite(&plyerstatusSave.level, sizeof(int), 1, fp);
-//		fwrite(&plyerstatusSave.R_expoint, sizeof(int), 1, fp);
-//		fwrite(&plyer_pos, sizeof(tnl::Vector3), 1, fp);
-//
-//		fclose(fp);
-//	}
-//
-//	
-//}
-//
-//void Player::PlyerLoad()
-//{
-//	FILE* fp = nullptr;
-//	fopen_s(&fp, "player.bin", "rb");
-//
-//
-//		if (fp) {
-//			fread(&plyerstatusSave.hp, sizeof(int), 1, fp);
-//			fread(&plyerstatusSave.Attack, sizeof(int), 1, fp);
-//			fread(&plyerstatusSave.Defance, sizeof(int), 1, fp);
-//			fread(&plyerstatusSave.Speed, sizeof(int), 1, fp);
-//			fread(&plyerstatusSave.level, sizeof(int), 1, fp);
-//			fread(&plyerstatusSave.R_expoint, sizeof(int), 1, fp);
-//			fread(&plyer_pos, sizeof(tnl::Vector3), 1, fp);
-//
-//			fclose(fp);
-//		}
-//
-//}
+//セーブ
+void Player::PlyerSave()
+{
+	FILE* fp = nullptr;
+	fopen_s(&fp, "player.bin", "wb");
+
+	if (fp) {
+
+		// Playerステータスを取得する
+		
+		//hp
+		float player_hp = plyerstatusSave.GetcurentHp();
+
+		//max_hp
+		float player_max_hp = plyerstatusSave.GetMaxHp();
+
+		//mp
+		float player_mp = plyerstatusSave.GetCurentMp();
+
+		//max_mp
+		float player_max_mp = plyerstatusSave.GetMaxMp();
+
+		//魔法力
+		int player_magic_power = plyerstatusSave.GetMagicPower();
+
+		//攻撃力
+		int player_attack;
+
+		//もし武器が装備されていたら
+		if (GameManager::getGameManager()->getInventory()->GetEquipAttack() != 0) {
+			//現在の攻撃力から装備武器の攻撃力を引いてから
+			//攻撃力を代入する
+			player_attack = plyerstatusSave.GetAttack() - GameManager::getGameManager()->getInventory()->GetEquipAttack();
+		}
+		//装備されていなかったら
+		else {
+			player_attack = plyerstatusSave.GetAttack();
+		}
+
+		//防御力
+		int player_defense;
+
+		//もし防具が装備されていたら
+		if (GameManager::getGameManager()->getInventory()->GetEquipDefance() != 0) {
+			//現在の防御力から装備防具の防御力を引いてから
+			plyerstatusSave.SetPlayerDefance(plyerstatusSave.GetDefance() - GameManager::getGameManager()->getInventory()->GetEquipDefance());
+			//防御力を代入する
+			player_defense = plyerstatusSave.GetDefance();
+		}
+		//装備されていなかったら
+		else {
+			//プレイヤーの防御力を取得する
+			player_defense = plyerstatusSave.GetDefance();
+		}
+
+		//素早さ
+		int player_speed = plyerstatusSave.GetSpeed();
+
+		//レベル
+		int player_level = plyerstatusSave.GetLevel();
+
+		//必要な経験値
+		int player_expoint = plyerstatusSave.GetExpoint();
+
+		//当たり判定の関係で座標を少し調整
+		tnl::Vector3 add_pos = { 0, 20 , 0 };
+
+		//現在位置
+		tnl::Vector3 player_pos = plyer_pos + add_pos;
+		
+		//インベントリのサイズ分回して配列に格納する
+		const auto& player_list = GameManager::getGameManager()->getInventory()->GetInventoryList();
+		std::vector<int> player_item_list;
+
+		//インベントリにアイテムがあれば
+		if (!player_list.empty()) {
+			for (int i = 0; i < player_list.size(); i++) {
+				player_item_list.emplace_back(GameManager::getGameManager()->getInventory()->GetInventoryList()[i].getItemId());
+			}
+		}
+
+		//スキルリストのサイズ分回して配列に格納する
+		std::vector<int> player_skill_list_array;
+
+		//スキルリストにスキルがあれば
+		if (!player_skill_list.empty()) {
+
+			for (int i = 0; i < player_skill_list.size(); i++) {
+				player_skill_list_array.emplace_back(player_skill_list[i]->getId());
+			}
+		}
+	
+
+		//プレイヤーのステータスを保存する
+
+		//hp
+		fwrite(&player_hp, sizeof(float), 1, fp);
+		//max_hp
+		fwrite(&player_max_hp, sizeof(float), 1, fp);
+		//mp
+		fwrite(&player_mp, sizeof(float), 1, fp);
+		//max_mp 
+		fwrite(&player_max_mp, sizeof(float), 1, fp);
+		//魔法力
+		fwrite(&player_magic_power, sizeof(float), 1, fp);
+		//攻撃力
+		fwrite(&player_attack, sizeof(int), 1, fp);
+		//防御力
+		fwrite(&player_defense, sizeof(int), 1, fp);
+		//素早さ
+		fwrite(&player_speed, sizeof(int), 1, fp);
+		//レベル
+		fwrite(&player_level, sizeof(int), 1, fp);
+		//必要な経験値
+		fwrite(&player_expoint, sizeof(int), 1, fp);
+		//現在座標
+		fwrite(&player_pos, sizeof(tnl::Vector3), 1, fp);
+		//プレイヤーが記憶しておくマップ状態
+		fwrite(&player_curent_map_memory, sizeof(int), 1, fp);
+		//所持金
+		fwrite(&money, sizeof(int), 1, fp);
+
+
+		//インベントリの保存
+		// サイズを格納する
+		size_t vector_size = player_item_list.size();
+		fwrite(&vector_size, sizeof(size_t), 1, fp);
+
+		// 要素を保存する
+		fwrite(player_item_list.data(), sizeof(int), vector_size, fp);
+
+		//スキルリストの保存
+		//サイズを格納する
+		size_t skill_size = player_skill_list_array.size();
+		fwrite(&skill_size, sizeof(size_t), 1, fp);
+
+		//スキルを保存する
+		fwrite(player_skill_list_array.data(), sizeof(int), skill_size, fp);
+
+		fclose(fp);
+	}
+	
+}
+
+//ロード
+void Player::PlyerLoad()
+{
+	FILE* fp = nullptr;
+	fopen_s(&fp, "player.bin", "rb");
+
+	if (fp) {
+
+		// 一時的に保存しておくステータス
+		float player_hp;
+		float player_max_hp;
+		float player_mp;
+		float player_max_mp;
+		int player_magic_power;
+		int player_attack;
+		int player_defense;
+		int player_speed;
+		int player_level;
+		int player_expoint;
+		tnl::Vector3 player_pos;
+		std::vector<int> player_inventory_list;
+		std::vector<int> playe_skill_list;
+		std::vector<int> playe_weapon_list;
+
+		// ステータスをロードする
+
+		//hp
+		fread(&player_hp, sizeof(float), 1, fp);
+		//max_hp
+		fread(&player_max_hp, sizeof(float), 1, fp);
+		//mp
+		fread(&player_mp, sizeof(float), 1, fp);
+		//max_mp
+		fread(&player_max_mp, sizeof(float), 1, fp);
+		//魔法力
+		fread(&player_magic_power, sizeof(float), 1, fp);
+		//攻撃力
+		fread(&player_attack, sizeof(int), 1, fp);
+		//防御力
+		fread(&player_defense, sizeof(int), 1, fp);
+		//素早さ
+		fread(&player_speed, sizeof(int), 1, fp);
+		//レベル
+		fread(&player_level, sizeof(int), 1, fp);
+		//必要な経験値
+		fread(&player_expoint, sizeof(int), 1, fp);
+		//現在座標
+		fread(&player_pos, sizeof(tnl::Vector3), 1, fp);
+		//プレイヤーが記憶しているマップ状態
+		fread(&player_curent_map_memory, sizeof(int), 1, fp);
+		//所持金
+		fread(&money, sizeof(int), 1, fp);
+
+		//インベントリのロード
+		// 配列のサイズをロードする
+		size_t vector_size;
+		fread(&vector_size, sizeof(size_t), 1, fp);
+
+		// 要素を保持するために配列のサイズを変更
+		player_inventory_list.resize(vector_size);
+
+		//要素を配列に保存する
+		fread(player_inventory_list.data(), sizeof(int), vector_size, fp);
+
+		//スキルリストのロード
+		// 配列のサイズをロードする
+		size_t skill_size;
+		fread(&skill_size, sizeof(size_t), 1, fp);
+
+		// 要素を保持するために配列のサイズを変更
+		playe_skill_list.resize(skill_size);
+
+		//要素を配列に保存する
+		fread(playe_skill_list.data(), sizeof(int), skill_size, fp);
+
+
+		// プレイヤーのステータスをセットする
+		plyerstatusSave.SetPlayerCurentHp(player_hp);
+		plyerstatusSave.SetPlayerMaxHp(player_max_hp);
+		plyerstatusSave.SetPlayerCurentMp(player_mp);
+		plyerstatusSave.SetPlayerMaxMp(player_max_mp);
+		plyerstatusSave.SetMagicPower(player_magic_power);
+		plyerstatusSave.SetPlayerAttack(player_attack);
+		plyerstatusSave.SetPlayerDefance(player_defense);
+		plyerstatusSave.SetPlayerSpeed(player_speed);
+		plyerstatusSave.SetPlayerLevel(player_level);
+		plyerstatusSave.SetPlayerExpoint(player_expoint);
+		plyer_pos = player_pos;
+
+		
+		// インベントリの要素を格納する
+		for (int  item : player_inventory_list) {
+			GameManager::getGameManager()->getInventory()->AddInventory(item);
+		}
+
+		//スキルリストの要素を格納する
+		for (int skill : playe_skill_list) {
+			SaveReadSkill(skill);
+		}
+
+		fclose(fp);
+	}
+}
 
 
