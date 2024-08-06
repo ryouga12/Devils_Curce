@@ -6,6 +6,7 @@
 #pragma once
 #include"../Scene/BaseScene.h"
 #include "../../dxlib_ext/dxlib_ext.h"
+#include"../../koni_name_space/common/common_value.h"
 
 class GameManager;
 class SoundManager;
@@ -17,10 +18,13 @@ public:
 	static void Destroy();
 
 	//シーンを変える
-	void changeScene(BaseScene* next_scene, const float transout_time = 0.5f, const float transin_time = 0.5f);
+	//arg_1 : シーンのポインタ
+	//arg_2 : トランスアウトの秒数
+	//arg_3 : トランスインの秒数
+	void changeScene(BaseScene* next_scene, const float& transout_time = 0.5f, const float& transin_time = 0.5f);
 
 	//画面上にフェードを入れる
-	void FadeScene(const float transout_time = 0.5f, const float transin_time = 0.5f);
+	void FadeScene(const float& transout_time = 0.5f, const float& transin_time = 0.5f);
 
 	//フラグを切り替える
 	void SceneFlagChange() {

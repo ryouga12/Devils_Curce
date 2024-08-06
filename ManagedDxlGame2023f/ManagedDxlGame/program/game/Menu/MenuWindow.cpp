@@ -9,6 +9,14 @@ Menu::Menu(const std::string& gh_path)
 
 }
 
+Menu::~Menu()
+{
+	tnl::DebugTrace("\n------------------------------------------------------------");
+	tnl::DebugTrace("\n Menuが解放されました");
+	tnl::DebugTrace("\n------------------------------------------------------------");
+
+}
+
 void Menu::Menu_draw(const int& menu_x, const int& menu_y, const int& menu_width, const int& menu_height)
 {
 	DrawGraph(menu_x, menu_y, menu_gh[0], TRUE);
@@ -24,7 +32,7 @@ void Menu::Menu_draw(const int& menu_x, const int& menu_y, const int& menu_width
 	DrawGraph(menu_x + menu_width - 16, menu_y + menu_height - 16, menu_gh[8], TRUE);
 }
 
-MenuWindow::MenuWindow(const std::string& gh_path, MenuElement_t* elements, int elements_num, double BackWidth)
+MenuWindow::MenuWindow(const std::string& gh_path, MenuElement_t* elements, const int& elements_num)
 
 	: Menu(gh_path)//メニューの大きさを決める(開始座標:左上,横幅,縦幅)
 
@@ -32,7 +40,6 @@ MenuWindow::MenuWindow(const std::string& gh_path, MenuElement_t* elements, int 
 	, m_IsStartOpend(false) // コンストラクタでは、メンバ変数の初期化はこう書くこともできる
 	, read_menu_element_num(elements_num)
 	, MenuElement(elements)
-	, back_ghdl_width(BackWidth)
 {
 
 	MenuElement = elements;
@@ -48,6 +55,10 @@ MenuWindow::~MenuWindow()
 	if (MenuElement) {
 		delete[]MenuElement;	//配列を廃棄する場合の書き方
 	}
+
+	tnl::DebugTrace("\n------------------------------------------------------------");
+	tnl::DebugTrace("\n Menuが解放されました");
+	tnl::DebugTrace("\n------------------------------------------------------------");
 
 }
 

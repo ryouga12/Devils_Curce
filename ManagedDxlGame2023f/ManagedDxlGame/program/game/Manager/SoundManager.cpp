@@ -44,7 +44,7 @@ bool SoundManager::daleteSound(const std::string& filepath)
 			return true;
 		}
 		else {
-			tnl::DebugTrace("\ ResourceManagerリソース解放 => %s のメモリ解放に失敗しました \n", filepath.c_str());
+			tnl::DebugTrace("ResourceManagerリソース解放 => %s のメモリ解放に失敗しました \n", filepath.c_str());
 			return false;
 		}
 	}
@@ -69,19 +69,19 @@ void SoundManager::StopSound(const std::string& filepath)
 
 
 
-void SoundManager::ChangeSoundVolume(int sound, const std::string& ghpath)
+void SoundManager::ChangeSoundVolume(const int& sound, const std::string& ghpath)
 {
 	int sound_ = LoadSoundBGM(ghpath);
-	ChangeVolumeSoundMem((255 * sound) / 100, sound_);
+	ChangeVolumeSoundMem((koni::Numeric::VOLUME_MAX_255 * sound) / koni::Numeric::VOLUME_MAX, sound_);
 
 }
 
 
 
-void SoundManager::sound_Play(const std::string& filepath, int playType)
+void SoundManager::sound_Play(const std::string& filepath, const int& playType)
 {
 	int sound = LoadSoundBGM(filepath);
-	ChangeVolumeSoundMem(255 *  30 / 100, sound);
+	ChangeVolumeSoundMem(koni::Numeric::VOLUME_MAX_255 * koni::Numeric::VOLUME_30_PERCENT / koni::Numeric::VOLUME_MAX, sound);
 	PlaySoundMem(sound, playType);
 
 }

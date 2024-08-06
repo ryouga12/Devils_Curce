@@ -21,7 +21,7 @@ void SceneManager::Destroy() {
 }
 
 
-void SceneManager::changeScene(BaseScene* next_scene, const float transout_time, const float transin_time) {
+void SceneManager::changeScene(BaseScene* next_scene, const float& transout_time, const float& transin_time) {
 	next_scene_ = next_scene;
 	transout_time_ = transout_time;
 	transin_time_ = transin_time;
@@ -29,7 +29,7 @@ void SceneManager::changeScene(BaseScene* next_scene, const float transout_time,
 }
 
 //画面上にフェードを入れる
-void SceneManager::FadeScene(const float transout_time, const float transin_time)
+void SceneManager::FadeScene(const float& transout_time, const float& transin_time)
 {
 	transout_time_ = transout_time;
 	transin_time_ = transin_time;
@@ -53,6 +53,11 @@ bool SceneManager::seqTransOut(const float delta_time)
 
 		sequence_.change(&SceneManager::seqTransIn);
 
+		//動きを制限する
+		if (GameManager::getGameManager()->getPlayer()->getPlayerControl()) {
+			GameManager::getGameManager()->getPlayer()->setPlayerControl();
+		}
+
 		//シーン遷移させる場合
 		if (scene_change) {
 
@@ -68,7 +73,7 @@ bool SceneManager::seqTransOut(const float delta_time)
 
 	SetDrawBlendMode(DX_BLENDMODE_ALPHA, alpha);
 	DrawExtendGraph(0, 0, DXE_WINDOW_WIDTH, DXE_WINDOW_HEIGHT, tansition_graph_hdl_, true);
-	SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 255);
+	SetDrawBlendMode(DX_BLENDMODE_NOBLEND, koni::Numeric::ALPHA_OPAQUE);
 
 	return true;
 }
@@ -80,16 +85,26 @@ bool SceneManager::seqTransIn(const float delta_time)
 		GameManager::getGameManager()->getCamera()->SetTargetPos();
 	}
 
-	int alpha = static_cast<int>(255 - (sequence_.getProgressTime() / transin_time_ * 255.0f));
+	//プレイヤーを見えるようにする
+	if (!GameManager::getGameManager()->getPlayer()->GetPlayerDisplayFlag()) {
+		GameManager::getGameManager()->getPlayer()->PlayerDisplayChange();
+	}
+
+	int alpha = static_cast<int>(koni::Numeric::ALPHA_OPAQUE - (sequence_.getProgressTime() / transin_time_ * 255.0f));
 
 	if (alpha <= 0) {
+
 		sequence_.change(&SceneManager::seqRunScene);
 
+		//動けるようにする
+		if (!GameManager::getGameManager()->getPlayer()->getPlayerControl()) {
+			GameManager::getGameManager()->getPlayer()->setPlayerControl();
+		}
 	}
 
 	SetDrawBlendMode(DX_BLENDMODE_ALPHA, alpha);
 	DrawExtendGraph(0, 0, DXE_WINDOW_WIDTH, DXE_WINDOW_HEIGHT, tansition_graph_hdl_, true);
-	SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 255);
+	SetDrawBlendMode(DX_BLENDMODE_NOBLEND, koni::Numeric::ALPHA_OPAQUE);
 
 
 	return true;

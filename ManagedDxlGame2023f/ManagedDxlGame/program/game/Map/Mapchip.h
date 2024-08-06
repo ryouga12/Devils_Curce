@@ -5,12 +5,13 @@
 #pragma once
 #include "../../dxlib_ext/dxlib_ext.h"
 #include"../System/Camera.h"
+#include"../../koni_name_space/common/common_value.h"
 
 
 class MapChip {
 public:
-	MapChip() {};
-	MapChip(const tnl::Vector3& pos , int gfx_hdl);
+	MapChip() = default;
+	MapChip(const tnl::Vector3& pos , const int gfx_hdl);
 	void Update(float delta_time);
 	void Draw(const KonCamera& camera);
 
