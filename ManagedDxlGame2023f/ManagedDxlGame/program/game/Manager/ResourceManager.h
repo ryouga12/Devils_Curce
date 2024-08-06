@@ -32,13 +32,13 @@ public:
 	void Draw();
 
 	//何回も同じ画像をロードしない為の関数
-	int LoadGraphEX(std::string gh);
+	int LoadGraphEX(const std::string&  gh);
 
 	//ロードした画像を消去する
 	bool deleteGraphEx(std::string ghpath);
 
 	//ロードした画像を描画する
-	void DrawRotaGraphEx(const std::string& ghpath , int x , int y , double Exlate, double Angle, int TransFlag);
+	void DrawRotaGraphEx(const std::string& ghpath , const int& x , const int& y , const double& Exlate, const double& Angle, const int& TransFlag);
 
 
 //------------------------------------------------------------------------------------------------------------------------	

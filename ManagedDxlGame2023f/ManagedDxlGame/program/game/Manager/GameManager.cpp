@@ -113,12 +113,6 @@ int GameManager::GetRandEx(int a, int b)
 	return 0;
 }
 
-void GameManager::displayDialogue()
-{
-	DrawStringEx(80, 100, -1, "(1 : 話す)");
-	DrawStringEx(80, 150, -1, "(0 : メニューを閉じる)");
-}
-
 bool GameManager::TimeCount(float delta_time, float Time)
 {
 	//指定した時間までプラスする

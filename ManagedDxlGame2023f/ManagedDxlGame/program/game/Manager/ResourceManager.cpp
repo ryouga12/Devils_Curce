@@ -33,7 +33,7 @@ void ResourceManager::Draw()
 
 
 //画像を重複して読み込まないようにこれを使う
-int ResourceManager::LoadGraphEX(std::string gh)
+int ResourceManager::LoadGraphEX(const std::string& gh)
 {
 
 	auto it = ghmap.find(gh);
@@ -71,7 +71,7 @@ bool ResourceManager::deleteGraphEx(std::string ghpath)
 }
 
 //ロードした画像を描画する
-void ResourceManager::DrawRotaGraphEx(const std::string& ghpath, int x, int y, double Exlate, double Angle , int TransFlag)
+void ResourceManager::DrawRotaGraphEx(const std::string& ghpath, const int& x, const int& y, const double& Exlate, const double& Angle, const int& TransFlag)
 {
 	int ghdl = LoadGraphEX(ghpath);
 	DrawRotaGraph(x, y, Exlate, Angle, ghdl, TransFlag);

@@ -1,6 +1,6 @@
 #pragma once
 ///
-///システム面を扱うマネージャー
+///共通で使う物の管理する中間役の役割のマネージャー
 /// 
 
 #include"../Menu/MenuWindow.h"
@@ -70,19 +70,12 @@ private:
 
 
 //------------------------------------------------------------------------------------------------------------------------
-//メニュー関連
-public:
-	
-	//話すコマンドの処理
-	void displayDialogue();
-
-//------------------------------------------------------------------------------------------------------------------------
 // 共通処理やインベントリの更新
 
 public:
 
 	//更新処理
-	void UpdateCommon(float delta_time) {
+	void UpdateCommon(const float& delta_time) {
 		inventory->Update(delta_time);
 		player->Update(delta_time);
 	}
