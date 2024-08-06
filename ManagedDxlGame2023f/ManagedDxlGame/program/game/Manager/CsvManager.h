@@ -7,6 +7,7 @@
 
 #pragma once
 #include "../../dxlib_ext/dxlib_ext.h"
+#include"../Scene/BaseScene.h"
 
 class CsvManager final {
 
@@ -51,11 +52,20 @@ public:
 	//ボスの城のオブジェクトデータ用のcsvを取得する
 	std::vector<std::vector<int>> GetBossCastleObjectCsv()const { return boss_castle_object_csv; }
 
+	//勇者のお墓の床データ用のcsvを取得する
+	std::vector<std::vector<int>> GetGraveFloorCsv()const { return grave_floor_csv; }
+
+	//勇者のお墓のオブジェクトデータ用のcsvを取得する
+	std::vector<std::vector<int>> GetGraveObjectCsv()const { return grave_object_csv; }
+
 	//プレイヤーのステータス用のcsvを取得する
 	std::vector<std::vector<tnl::CsvCell>>GetPlayerStatusCsv()const { return PlyerStatus_Csv_Info; }
 
 	//プレイヤーのアニメーション用の画像を取得する
 	std::vector<std::vector<std::string>>GetPlayerAnimationImage()const { return player_animation_csv; }
+
+	//Npcの画像を取得する
+	std::vector<std::vector<std::string>>GetNpcImageCsv()const { return npc_image_csv; }
 
 	//エネミー用のステータスcsvを取得する
 	std::vector<std::vector<std::string>>GetEnemyStatusCsv()const { return enemy_csv_array; }
@@ -66,60 +76,77 @@ public:
 	//アイテム用のcsvを取得する
 	std::vector<std::vector<tnl::CsvCell>>GetItemCsv()const { return itemStatus_Csv_Info;}
 
+	//ストーリー用のcsvを取得する
+	std::vector<std::vector<std::string>>GetStoryCsv()const { return story_csv; }
+
+	//csvをロードする
+	void LoadCsv(const BaseScene::SceneState& curent_state);
+
 private:
 
 	CsvManager();
 	~CsvManager() {};
 
 	//平原マップデータのロード
-	std::vector<std::vector<int>>world_map_csv = tnl::LoadCsv<int>("csv/world_map_plain.csv");
+	std::vector<std::vector<int>>world_map_csv;
 
 	//ワールドマップのオブジェクトデータのロード
-	std::vector<std::vector<int>>world_object_csv = tnl::LoadCsv<int>("csv/world_map_object.csv");
+	std::vector<std::vector<int>>world_object_csv;
 
 	//村のマップデータのロード
-	std::vector<std::vector<int>>village_map_csv = tnl::LoadCsv<int>("csv/map_chip_first_village_.csv");
+	std::vector<std::vector<int>>village_map_csv ;
 
 	//村のオブジェクトデータのロード
-	std::vector<std::vector<int>>village_map_object_csv = tnl::LoadCsv<int>("csv/map_chip_first_village_Object.csv");
+	std::vector<std::vector<int>>village_map_object_csv ;
 
 	//町の床データのロード
-	std::vector<std::vector<int>>town_map_csv = tnl::LoadCsv<int>("csv/town_.csv");
+	std::vector<std::vector<int>>town_map_csv ;
 
 	//町のマップオブジェクトデータのロード
-	std::vector<std::vector<int>>town_map_object_csv = tnl::LoadCsv<int>("csv/town_object.csv");
+	std::vector<std::vector<int>>town_map_object_csv;
 
 	//城下町の床データのロード
-	std::vector<std::vector<int>>castle_town_map_csv = tnl::LoadCsv<int>("csv/castle_town_.csv");
+	std::vector<std::vector<int>>castle_town_map_csv;
 
 	//城下町のマップオブジェクトデータのロード
-	std::vector<std::vector<int>>castle_town_map_object_csv = tnl::LoadCsv<int>("csv/castle_town_object.csv");
+	std::vector<std::vector<int>>castle_town_map_object_csv;
 
 	//城の床データのロード
-	std::vector<std::vector<int>>castle_map_csv = tnl::LoadCsv<int>("csv/castle_.csv");
+	std::vector<std::vector<int>>castle_map_csv;
 
 	//城のマップオブジェクトデータのロード
-	std::vector<std::vector<int>>castle_object_csv = tnl::LoadCsv<int>("csv/castle_Object.csv");
+	std::vector<std::vector<int>>castle_object_csv ;
 
 	//ボスの城の床データ
-	std::vector<std::vector<int>>boss_castle_floor_csv = tnl::LoadCsv<int>("csv/boss_castle__floor.csv");
+	std::vector<std::vector<int>>boss_castle_floor_csv ;
 
 	//ボスの城のオブジェクトデータ
-	std::vector<std::vector<int>>boss_castle_object_csv = tnl::LoadCsv<int>("csv/boss_castle__object.csv");
+	std::vector<std::vector<int>>boss_castle_object_csv;
 
-	//プレイヤーのステータスデータのロード
-	std::vector<std::vector<tnl::CsvCell>>PlyerStatus_Csv_Info = tnl::LoadCsv<tnl::CsvCell>("csv/PlyerStatus.csv");
+	//勇者の墓の床データ
+	std::vector<std::vector<int>>grave_floor_csv;
 
-	//プレイヤーのアニメーション画像データのロード
-	std::vector<std::vector<std::string>>player_animation_csv = tnl::LoadCsv<std::string>("csv/player_image.csv");
+	//勇者の墓のオブジェクトデータ
+	std::vector<std::vector<int>>grave_object_csv;
 
-	//エネミーのステータスをロード
-	std::vector<std::vector<std::string>>enemy_csv_array = tnl::LoadCsv<std::string>("csv/Enemy.csv");
+	//プレイヤーのステータスデータ
+	std::vector<std::vector<tnl::CsvCell>>PlyerStatus_Csv_Info;
 
-	//アクター用のコメントをロード
-	std::vector<std::vector<std::string>>coment_csv = tnl::LoadCsv<std::string>("csv/actor_coment.csv");
+	//プレイヤーのアニメーション画像データ
+	std::vector<std::vector<std::string>>player_animation_csv;
 
-	//アイテム用のcsvをロード
-	std::vector<std::vector<tnl::CsvCell>>itemStatus_Csv_Info = tnl::LoadCsv<tnl::CsvCell>("csv/Item.csv");
+	//Npcの画像データ
+	std::vector<std::vector<std::string>>npc_image_csv;
 
+	//エネミーのステータス
+	std::vector<std::vector<std::string>>enemy_csv_array;
+
+	//アクター用のコメント
+	std::vector<std::vector<std::string>>coment_csv;
+
+	//アイテム用のcsv
+	std::vector<std::vector<tnl::CsvCell>>itemStatus_Csv_Info;
+
+	//ストーリー用のcsv
+	std::vector<std::vector<std::string>>story_csv;
 };
