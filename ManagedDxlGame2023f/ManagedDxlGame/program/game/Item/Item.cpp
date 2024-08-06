@@ -8,21 +8,14 @@
 
 Item::Item()
 {
-		//アイテムのロード
-		ItemLoadTypeInfo();
+	//アイテムのロード
+	ItemLoadTypeInfo();
 }
 
 Item::~Item()
 {
 
 }
-
-void Item::update(float delta_time)
-{
-
-}
-
-
 
 void Item::ItemLoadTypeInfo()
 {
@@ -44,6 +37,8 @@ void Item::ItemLoadTypeInfo()
 		itemStatus_info.SetItemType(m_itemStatus_Csv_Info[y][2].getInt());
 		//csvからDamageの取得
 		itemStatus_info.SetItemDamage(m_itemStatus_Csv_Info[y][3].getInt());
+		//csvからEpicを取得する
+		itemStatus_info.SetItemEpic(m_itemStatus_Csv_Info[y][4].getInt());
 		//csvからdefanceの取得
 		itemStatus_info.SetItemDefance(m_itemStatus_Csv_Info[y][5].getInt());
 		//csvからpriceを取得
@@ -52,21 +47,23 @@ void Item::ItemLoadTypeInfo()
 		itemStatus_info.SetWeaponType(m_itemStatus_Csv_Info[y][7].getInt());
 		//csvからItemDetailを取得する
 		itemStatus_info.SetItemDetail(m_itemStatus_Csv_Info[y][8].getString());
+		//csvから武器の補正をかけるモンスターの種族の取得
+		itemStatus_info.SetEpicCorrection(m_itemStatus_Csv_Info[y][9].getString());
 
 		m_Item_Status_Type.emplace_back(itemStatus_info);
 	}
 
 	//ダメージ順にソート
 	m_Item_Status_Type.sort([](const Item::ItemBase& left, const Item::ItemBase& right){
-		return left.getItemDamage() > right.getItemDamage();
+		return left.GetItemDamage() > right.GetItemDamage();
 	});
 
 }
 
-ItemBase Item::GetItemById(int id) const
+ItemBase Item::GetItemById(const int& id) const
 {
 	auto it = std::find_if(m_Item_Status_Type.begin(), m_Item_Status_Type.end(),
-		[id](const ItemBase& item) { return item.getItemId() == id; });
+		[id](const ItemBase& item) { return item.GetItemId() == id; });
 
 	if (it != m_Item_Status_Type.end()) {
 		return *it;
@@ -78,7 +75,7 @@ ItemBase Item::GetItemById(int id) const
 }
 
 //アイテムを使用した時の処理
-void Item::ItemUse(int itemid)
+void Item::ItemUse(const int& itemid)
 {
 
 	//回復量(Hpの3割分回復させる)
@@ -115,7 +112,7 @@ void Item::ItemUse(int itemid)
 
 		//バトルシーンのみでログを流す
 		if (BattleFlag) {
-			battle_log_->addRecoveryLog("Player", GetItemById(3).getItemName().c_str(), healAmount);
+			battle_log_->addRecoveryLog("Player", GetItemById(3).GetItemName().c_str(), healAmount);
 		}
 
 		break;
@@ -127,7 +124,7 @@ void Item::ItemUse(int itemid)
 		ItemHpHeal(HI_PERCENTAGE, itemid);
 
 		if (BattleFlag) {
-			battle_log_->addRecoveryLog("Player", GetItemById(8).getItemName().c_str(), healAmount);
+			battle_log_->addRecoveryLog("Player", GetItemById(8).GetItemName().c_str(), healAmount);
 		}
 
 		break;
@@ -144,7 +141,7 @@ void Item::ItemUse(int itemid)
 			//回復音を鳴らす
 			SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/kaihuku.mp3", DX_PLAYTYPE_BACK);
 
-			// MPがMAX_Pを超える場合はMAX_HPにクリップする
+			// MPがMAX_MPを超える場合はMAX_MPにクリップする
 			if (GameManager::getGameManager()->getPlayer()->getPlayerStatusSave().GetCurentMp() > max_mp) {
 				GameManager::getGameManager()->getPlayer()->getPlayerStatusSave().SetPlayerCurentMp(max_mp);
 			}
@@ -154,7 +151,7 @@ void Item::ItemUse(int itemid)
 
 			//バトルシーンのみでログを流す
 			if (BattleFlag) {
-				battle_log_->addRecoveryLog("Player", GetItemById(14).getItemName().c_str(), healAmount);
+				battle_log_->addRecoveryLog("Player", GetItemById(14).GetItemName().c_str(), healAmount);
 			}
 		}
 		//MpがmaxMpと同じ場合処理を飛ばす
@@ -166,6 +163,9 @@ void Item::ItemUse(int itemid)
 
 	case static_cast<int>(Item::UsedItem::ATTACKPORTION):
 
+		//バトル時のみ使用
+		if (!BattleFlag) { return; }
+
 		AttackAmount = static_cast<int>(PlayerAttack * ATTACK_PERCENTAGE);
 		GameManager::getGameManager()->getPlayer()->getPlayerStatusSave().SetPlayerAttack(PlayerAttack + AttackAmount);
 
@@ -173,7 +173,7 @@ void Item::ItemUse(int itemid)
 		ItemRemove(itemid);
 
 		//ログを流す
-		battle_log_->addBuffLog("Player", GetItemById(16).getItemName().c_str(), "攻撃力", AttackAmount);
+		battle_log_->addBuffLog("Player", GetItemById(16).GetItemName().c_str(), "攻撃力", AttackAmount);
 
 		break;
 
@@ -184,7 +184,7 @@ void Item::ItemUse(int itemid)
 
 		//バトルシーンのみでログを流す
 		if (BattleFlag) {
-			battle_log_->addRecoveryLog("Player", GetItemById(17).getItemName().c_str(), healAmount);
+			battle_log_->addRecoveryLog("Player", GetItemById(17).GetItemName().c_str(), healAmount);
 		}
 
 		break;
@@ -217,19 +217,19 @@ void Item::ItemUse(int itemid)
 }
 
 //使用時Hp回復系
-void Item::ItemHpHeal(const float& percentage, int itemid)
+void Item::ItemHpHeal(const float& percentage, const int& itemid)
 {
 	//現在のHpを取得する
-	auto curent_hp = static_cast<int>(GameManager::getGameManager()->getPlayer()->getPlayerStatusSave().GetcurentHp());
+	int curent_hp = GameManager::getGameManager()->getPlayer()->getPlayerStatusSave().GetcurentHp();
 
 	//最大値のHpを取得する
-	float max_hp = GameManager::getGameManager()->getPlayer()->getPlayerStatusSave().GetMaxHp();
+	int max_hp = GameManager::getGameManager()->getPlayer()->getPlayerStatusSave().GetMaxHp();
 
 	// アイテムIDが回復アイテムでかつ最大Hpより低ければ実行できる
 	if (curent_hp < max_hp) {
 
 		healAmount = static_cast<int>(max_hp * percentage);
-		GameManager::getGameManager()->getPlayer()->getPlayerStatusSave().SetPlayerCurentHp(static_cast<float>(curent_hp + healAmount));
+		GameManager::getGameManager()->getPlayer()->getPlayerStatusSave().SetPlayerCurentHp(curent_hp + healAmount);
 
 		//回復音を鳴らす
 		SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/kaihuku.mp3", DX_PLAYTYPE_BACK);
@@ -241,7 +241,7 @@ void Item::ItemHpHeal(const float& percentage, int itemid)
 
 		// 選択したアイテムの ID と一致する要素を特定する
 		auto itemToRemove = std::find_if(GameManager::getGameManager()->getInventory()->GetInventoryList().begin(), GameManager::getGameManager()->getInventory()->GetInventoryList().end(),
-			[itemid](const ItemBase& item) { return item.getItemId() == itemid; });
+			[itemid](const ItemBase& item) { return item.GetItemId() == itemid; });
 
 		// アイテムが見つかった場合は削除する
 		if (itemToRemove != GameManager::getGameManager()->getInventory()->GetInventoryList().end()) {
@@ -258,11 +258,11 @@ void Item::ItemHpHeal(const float& percentage, int itemid)
 }
 
 //アイテムがインベントリ内に存在したらインベントリから消去する
-void Item::ItemRemove(int itemid)
+void Item::ItemRemove(const int& itemid)
 {
 	// 選択したアイテムの ID と一致する要素を特定する
 	auto itemToRemove = std::find_if(GameManager::getGameManager()->getInventory()->GetInventoryList().begin(), GameManager::getGameManager()->getInventory()->GetInventoryList().end(),
-		[itemid](const ItemBase& item) { return item.getItemId() == itemid; });
+		[itemid](const ItemBase& item) { return item.GetItemId() == itemid; });
 
 	// アイテムが見つかった場合は削除する
 	if (itemToRemove != GameManager::getGameManager()->getInventory()->GetInventoryList().end()) {
@@ -279,7 +279,7 @@ void Item::draw()
 
 //スキルを追加する系のアイテム
 template <class T>
-void Item::AddSkillItem(int itemid, Shared<T>skill)
+void Item::AddSkillItem(const int& itemid, Shared<T> skill)
 {
 	//---スキルを追加する---//
 
@@ -299,7 +299,7 @@ void Item::AddSkillItem(int itemid, Shared<T>skill)
 
 	// 選択したアイテムの ID と一致する要素を特定する
 	auto itemToRemove = std::find_if(GameManager::getGameManager()->getInventory()->GetInventoryList().begin(), GameManager::getGameManager()->getInventory()->GetInventoryList().end(),
-		[itemid](const ItemBase& item) { return item.getItemId() == itemid; });
+		[itemid](const ItemBase& item) { return item.GetItemId() == itemid; });
 
 	// アイテムが見つかった場合は削除する
 	if (itemToRemove != GameManager::getGameManager()->getInventory()->GetInventoryList().end()) {

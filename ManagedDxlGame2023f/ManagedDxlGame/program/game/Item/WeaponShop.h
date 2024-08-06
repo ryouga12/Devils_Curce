@@ -3,22 +3,22 @@
 #include"Inventory.h"
 #include"Item.h"
 #include"../Scene/InMapScene.h"
+#include"../../koni_name_space/common/common_value.h"
 
 class UIManger;
 class GameManager;
 
-class WeaponShop {
+class WeaponShop final{
 public:
 
+	WeaponShop() = default;
 	WeaponShop(const InMapScene::InMapState& curent_inmap_scene);
 	~WeaponShop();
-
-	void Update(float delta_time);
 
 	void Draw();
 
 	//武器の購入処理
-	//引数 : プレイヤーのポインタ
+	//引数 : arg_1 プレイヤーのポインタ
 	//武器屋で購入した際のインベントリへの追加とお金の処理
 	void BuyWeapon(const Shared<Player>& player);
 
@@ -26,7 +26,7 @@ public:
 	void WeaponShopCursorMove();
 
 	//武器屋の初期化処理
-	//引数 : InMapの状態
+	//引数 : arg_1 InMapの状態
 	//引数で指定したマップの武器リストを初期化する
 	void WeaponShopInit(const InMapScene::InMapState& curent_inmap_scene);
 
@@ -75,11 +75,8 @@ private:
 	//武器を格納する配列
 	std::vector<ItemBase>weponList;
 
-	//白
-	const int COLOR_WHITE = -1;
-
 	//カーソルのサイズ
-	const float CURSOR_SIZE = 0.3;
+	const float CURSOR_SIZE = 0.3f;
 
 	//インベントリの最大サイズ数
 	const int INVENTORY_MAX_SIZE = 20;
@@ -88,7 +85,7 @@ private:
 	//---座標系---//
 
 	//ウィンドウを表示する座標
-	tnl::Vector2i MENU_WINDOW_POS = { 50 ,50 };
+	const tnl::Vector2i MENU_WINDOW_POS = { 50 ,50 };
 
 	//ウィンドウの幅
 	const int MENU_WINDOW_WIDTH = 350;

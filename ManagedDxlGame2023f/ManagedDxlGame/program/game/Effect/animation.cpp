@@ -1,8 +1,8 @@
 #include "Animation.h"
 
-Animation::Animation(const std::string gh_pass, int x, int y, int width_num, int height_num, int width_size, int height_size, int frame_count, int delay)
+Animation::Animation(const std::string& gh_pass, const int& x, const int& y, const int& width_num, const int& height_num, const int& width_size, const int& height_size, const int& frame_count, const int& delay , const float& size)
 	:m_draw_pos_x(x), m_draw_pos_y(y), m_width_num(width_num), m_height_num(height_num), m_width_size(width_size), m_height_size(height_size), m_frame_num(frame_count),
-	m_current_frame(0), m_frame_interval(delay), m_timer(0), m_state(AnimationState::STOP), m_gh_ar(nullptr)
+	m_current_frame(0), m_frame_interval(delay), m_timer(0), m_state(AnimationState::STOP), m_gh_ar(nullptr),m_size(size)
 {
 	m_gh_ar = new int[m_frame_num];
 
@@ -59,7 +59,7 @@ void Animation::update(const float deltatime)
 void Animation::draw()
 {
 	if (m_gh_ar != nullptr && (m_state == AnimationState::PLAYING || m_state == AnimationState::PAUSE)) {
-		DrawRotaGraph(m_draw_pos_x, m_draw_pos_y, 2.0, 0.0, m_gh_ar[m_current_frame], true);
+		DrawRotaGraph(m_draw_pos_x, m_draw_pos_y, m_size, 0, m_gh_ar[m_current_frame], true);
 	}
 }
 

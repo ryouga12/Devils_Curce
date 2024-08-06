@@ -202,7 +202,8 @@
     <ClCompile Include="program\game\Scene\InMapScene.cpp" />
     <ClCompile Include="program\game\Skill\Skill.cpp" />
     <ClCompile Include="program\game\System\Camera.cpp" />
-    <ClCompile Include="program\game\System\EventNpc.cpp" />
+    <ClCompile Include="program\game\System\Event.cpp" />
+    <ClCompile Include="program\koni_name_space\common\common_value.cpp" />
     <ClCompile Include="program\library\json11.cpp" />
     <ClCompile Include="program\library\tnl_font_texture.cpp" />
     <ClCompile Include="program\library\tnl_inclution_owner_locked.cpp" />
@@ -282,7 +283,8 @@
     <ClInclude Include="program\game\Skill\BaseSkill.h" />
     <ClInclude Include="program\game\Skill\Skill.h" />
     <ClInclude Include="program\game\System\Camera.h" />
-    <ClInclude Include="program\game\System\EventNpc.h" />
+    <ClInclude Include="program\game\System\Event.h" />
+    <ClInclude Include="program\koni_name_space\common\common_value.h" />
     <ClInclude Include="program\library\json11.hpp" />
     <ClInclude Include="program\library\stb_image.h" />
     <ClInclude Include="program\library\tnl_csv.h" />

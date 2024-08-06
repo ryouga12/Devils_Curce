@@ -2,7 +2,8 @@
 ///
 ///アイテムを管理するクラス
 /// 
-#include<string>
+
+
 #include "../../dxlib_ext/dxlib_ext.h"
 #include"../Manager/ResourceManager.h"
 #include"../Item/ItemBase.h"
@@ -13,13 +14,12 @@ class Skill;
 class BattleLog;
 class CsvManager;
 
-class Item : public  ItemBase{
+class Item final: public  ItemBase{
 public:
 	
 	Item();
 	~Item();
 
-	void update(float delta_time);
 	void draw();
 
 	//アイテムの配列を取得する
@@ -84,23 +84,23 @@ public:
 	//IDを指定してアイテムを取得する関数
 	//引数 : アイテムのID
 	//アイテムのIDを入れるとそれに該当したアイテムを取得する
-	ItemBase GetItemById(int id) const;
+	ItemBase GetItemById(const int& id) const;
 
 	//アイテムを使用した時の処理
-	void ItemUse(int itemid);
+	void ItemUse(const int& itemid);
 
 	//使用時Hp回復系
-	void ItemHpHeal(const float& percentage, int itemid);
+	void ItemHpHeal(const float& percentage, const int& itemid);
 
 	//バトルログのポインタをセットする
 	void SetBattleLog(Shared<BattleLog>battle_log) { battle_log_ = battle_log; }
 
 	//アイテムがインベントリ内に存在したらインベントリから消去する
-	void ItemRemove(int itemid);
+	void ItemRemove(const int& itemid);
 
 	//スキルを追加する系のアイテム
 	template <class T>
-	void AddSkillItem(int itemid, Shared<T>skill);
+	void AddSkillItem(const int& itemid, Shared<T> skill);
 
 	//上がったAttack量の値を取得する
 	int getAttackAmount()const {

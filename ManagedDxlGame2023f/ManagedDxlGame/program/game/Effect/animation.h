@@ -10,12 +10,23 @@ enum class AnimationState {
 	STOP,//停止
 };
 
-class Animation {
+class Animation final {
 public:
 
+	Animation() = default;
+
 	//アニメーション
-	//引数 : (ハンドル , X座標 , Y座標 , アニメーションの幅の数 ,アニメーションの縦の数 , 幅のサイズ, 縦のサイズ , フレームの総数　,遅延する秒数 )
-	Animation(const std::string gh_pass, int x, int y, int width_num, int height_num, int width_size, int height_size, int frame_count, int delay);
+	//arg_1 :  ハンドル 
+	//arg_2 :  X座標  
+	//arg_3 : Y座標 
+	//arg_4 : アニメーションの幅の数 
+	//arg_5 : アニメーションの縦の数 
+	//arg_6 :  幅のサイズ 
+	//arg_7 : 縦のサイズ 
+	//arg_8 :  フレームの総数　
+	//arg_ 9 : 遅延する秒数 
+	//arg_10 :  エフェクトのサイズ(デフォルトは2で設定を変えたい場合は引数を使用する)) 
+	Animation(const std::string& gh_pass, const int& x, const int& y, const int& width_num, const int& height_num, const int& width_size, const int& height_size, const int& frame_count, const int& delay , const float& size = 2.0f);
 	~Animation();
 
 	void play_animation();//アニメーションを再生する関数
@@ -40,6 +51,7 @@ private:
 	int m_draw_pos_x;//描画のx座標					 
 	int m_draw_pos_y;//描画のy座標
 	AnimationState m_state;//アニメーションの状態
+	float m_size;	//エフェクトのサイズ
 	bool stop_flag = false;
 };
 

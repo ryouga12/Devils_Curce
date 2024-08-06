@@ -6,37 +6,46 @@ class ItemBase {
 public:
 
 	//アイテムの名前を取得する
-	const std::string& getItemName()const {
+	const std::string& GetItemName()const {
 		return name;
 	}
 	//アイテムのidを取得する
-	int getItemId()const {
+	int GetItemId()const {
 		return id;
 	}
 	//アイテムのタイプの取得する
-	int getItemType()const {
+	int GetItemType()const {
 		return type;
 	}
+	//アイテムのEPICを取得する
+	int GetEpic()const {
+		return epic;
+	}
 	//アイテムの攻撃力を取得する
-	int getItemDamage()const {
+	int GetItemDamage()const {
 		return damage;
 	}
 	//アイテムの防御力を取得する
-	int getItemDefance()const {
+	int GetItemDefance()const {
 		return defance;
 	}
 	//アイテムのお金を取得する
-	int getItemPrice()const {
+	int GetItemPrice()const {
 		return price;
 	}
 
 	//アイテムの詳細を取得する
-	const std::string& getItemDetail()const {
+	const std::string& GetItemDetail()const {
 		return ItemDetail;
 	}
+	//特殊武器の補正させるモンスターの名前の取得
+	const std::string& GetEpicCorrection()const {
+		return epic_correction;
+	}
+
 	
 	//武器のタイプをセットする
-	int getItemWeapontype()const {
+	int GetItemWeapontype()const {
 		return weaponType;
 	}
 
@@ -45,32 +54,40 @@ public:
 		name = newname;
 	}
 	//アイテムのidをセットする
-	void SetItemId(int newid) {
+	void SetItemId(const int& newid) {
 		id = newid;
 	}
 	//アイテムのタイプをセットする
-	void SetItemType(int newtype) {
+	void SetItemType(const int& newtype) {
 		type = newtype;
 	}
+	//アイテムのEpicをセットする
+	void SetItemEpic(const int& new_epic) {
+		epic = new_epic;
+	}
 	//アイテムの攻撃力をセットする
-	void SetItemDamage(int newdamage) {
+	void SetItemDamage(const int& newdamage) {
 		damage = newdamage;
 	}
 	//アイテムの防御力をセットする
-	void SetItemDefance(int newdefance) {
+	void SetItemDefance(const int& newdefance) {
 		defance = newdefance;
 	}
 	//アイテムのお金をセットする
-	void SetItemPrice(int newprice) {
+	void SetItemPrice(const int& newprice) {
 		price = newprice;
 	}
 	//武器のタイプをセットする
-	void SetWeaponType(int newweapontype) {
+	void SetWeaponType(const int& newweapontype) {
 		weaponType = newweapontype;
 	}
 	//アイテムの詳細をセットする
 	void SetItemDetail(const std::string& newdetail) {
 		ItemDetail = newdetail;
+	}
+	//敵のダメージに補正用の種族を取得する
+	void SetEpicCorrection(const std::string& new_correction) {
+		epic_correction = new_correction;
 	}
 
 
@@ -82,6 +99,8 @@ private:
 	int id = 0;
 	//アイテムのタイプ
 	int type = 0;
+	//特殊アイテム
+	int epic = 0;
 	//アイテムの攻撃力(装備アイテム)
 	int damage = 0;
 	//アイテムの防御力(装備アイテム)
@@ -92,5 +111,7 @@ private:
 	int weaponType = 0;
 	//アイテムの説明
 	std::string ItemDetail;
-	
+	//特殊武器のどのモンスターのダメージに補正をかけるか
+	std::string epic_correction;
+
 };

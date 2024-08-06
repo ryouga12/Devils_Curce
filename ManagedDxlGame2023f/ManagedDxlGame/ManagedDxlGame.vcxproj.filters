@@ -51,6 +51,12 @@
     <Filter Include="program\[003] game\Effect">
       <UniqueIdentifier>{14a5f666-1301-4d35-a916-da001bda27c2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="program\[002]koni_name_space">
+      <UniqueIdentifier>{9ce4d2a0-b62b-40f3-9d09-636cf3e9f089}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="program\[002]koni_name_space\common">
+      <UniqueIdentifier>{8511d664-ee84-4469-be24-b7dc282ef99f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ManagedDxlGame.cpp">
@@ -263,8 +269,11 @@
     <ClCompile Include="program\game\System\Camera.cpp">
       <Filter>program\[003] game\System</Filter>
     </ClCompile>
-    <ClCompile Include="program\game\System\EventNpc.cpp">
+    <ClCompile Include="program\game\System\Event.cpp">
       <Filter>program\[003] game\System</Filter>
+    </ClCompile>
+    <ClCompile Include="program\koni_name_space\common\common_value.cpp">
+      <Filter>program\[002]koni_name_space\common</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -512,8 +521,11 @@
     <ClInclude Include="program\game\System\Camera.h">
       <Filter>program\[003] game\System</Filter>
     </ClInclude>
-    <ClInclude Include="program\game\System\EventNpc.h">
+    <ClInclude Include="program\game\System\Event.h">
       <Filter>program\[003] game\System</Filter>
+    </ClInclude>
+    <ClInclude Include="program\koni_name_space\common\common_value.h">
+      <Filter>program\[002]koni_name_space\common</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
