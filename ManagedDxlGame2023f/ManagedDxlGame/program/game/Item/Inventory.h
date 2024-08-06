@@ -5,6 +5,7 @@
 #include"../Menu/MenuWindow.h"
 #include"../Manager/SoundManager.h"
 #include"../Skill/Skill.h"
+#include"../../koni_name_space/common/common_value.h"
 
 
 class ItemBase;
@@ -12,7 +13,7 @@ class GameManager;
 class UIManager;
 
 
-class Inventory
+class Inventory final
 {
 public:
 
@@ -20,7 +21,7 @@ public:
 	~Inventory();
 
 	//更新処理
-	void Update(float delta_time);
+	void Update(const float& delta_time);
 	//描画処理
 	void draw();
 
@@ -31,12 +32,12 @@ public:
 	int inventory_max_size_ = 20;
 
 	//アイテムを追加する関数
-	//引数 : item_id
+	//引数 : arg_1 item_id
 	//引数にアイテムのIDを入れる事でインベントリにアイテムが格納される
 	void AddInventory(const int& id);
 
 	//アイテムを装備する関数
-	//引数 : 武器のインデックス
+	//引数 : arg_1 武器のインデックス
 	//引数にインデックスを入れると武器を装備できる
 	void EquipWeapon(const int& weaponIndex);
 
@@ -49,10 +50,7 @@ public:
 	}
 
 	//アイテムのカーソルの移動処理の際のインデックスの操作
-	void ItemCurourIndex(int ItemPerPage);
-
-	//スキルのカーソルの移動処理の際のインデックスの操作
-	void SkillCurourIndex();
+	void ItemCurourIndex(const int& ItemPerPage);
 
 	//インデックスを0にする
 	void SelectedIndexClear() {
@@ -88,11 +86,14 @@ public:
 	};
 
 	//インベントリのメニューをセットする
-	//引数 : どのウィンドウに切り替えるのか
+	//引数 : arg_1 どのウィンドウに切り替えるのか
 	//他の場所でウィンドウを切り替える為の関数
-	void InventoryMenuChange(MenuWindow_I new_window) {
+	void InventoryMenuChange(const MenuWindow_I& new_window) {
 		select_menu = new_window;
 	}
+
+	//指定したIDのアイテムをインベントリから削除する
+	void InventoryItemRemove(const int& item_id);
 
 private:
 
@@ -107,10 +108,13 @@ private:
 
 public:
 
-	//アイテムのメニュー
-	//引数 : アイテムの座標, ページ数を表示する座標, カーソルのX座標 , ページ数
+	//アイテムのメニュー描画
+	//引数  : arg_1 アイテムの座標, 
+	//arg_2 : ページ数を表示する座標, 
+	//arg_3 : カーソルのX座標 , 
+	//arg_4 : ページ数
 	//バトルシーンやマップシーンでインベントリの座標が違う為使い分ける為
-	void ItemMenu(const tnl::Vector2i& itemDrawPos, const tnl::Vector2i& curentPageText, int CousourX, int itemParPage);
+	void ItemMenu(const tnl::Vector2i& itemDrawPos, const tnl::Vector2i& curentPageText, const int& CousourX, const int& itemParPage);
 
 	//インベントリをを取得する
 	MenuWindow_I GetSelectMenuNum() { return select_menu; }
@@ -191,9 +195,6 @@ private:
 	//現在のページを表示座標
 	const tnl::Vector2i CURENTPAGETEXT = { 100 , 280 };
 
-	//白色
-	const int COLORWHITE = -1;
-
 	//カーソルのサイズ
 	const float CURSORSIZE = 0.3f;
 
@@ -202,7 +203,7 @@ private:
 	int equip_defance = 0;
 
 	//それぞれのシーケンスでの処理
-	void swichInventoryUpdate(float deltatime);
+	void swichInventoryUpdate();
 
 	//アイテムやスキルを表示する座標
 	const tnl::Vector2i DRAWPOS = { 110 , 100 };
@@ -237,7 +238,6 @@ private:
 	//最初のウィンドウの高さ
 	const int FIRST_MENU_WINDOW_HEIGHT = 250;
 
-
 	//最初のESCを押したときに出る最初のメニューウィンドウの座標
 
 	//道具
@@ -271,8 +271,12 @@ private:
 	const int ITEM_DETAIL_WINDOW_WIDTH = 400;
 	//アイテム説明ウィンドウの高さ
 	const int ITEM_DETAIL_WINDOW_HEIGHT = 250;
-	//アイテムの説明を移す座標
+	//アイテムの説明をうつす座標
 	const tnl::Vector2i ITEM_DETAIL_POS = { 630 , 100 };
+	//アイテムのステータスをうつす座標
+	const tnl::Vector2i ITEM_STAUS_POS = { 630 , 250 };
+	//ずらす座標
+	const int ITEM_ADD_OFSET_ = 100;
 	//アイテムの使うや詳細を開いたりするウィンドウの座標と幅と高さ
 	const tnl::Vector2i ITEM_USE_POS = { 350 , 50 };
 	//幅
@@ -289,16 +293,26 @@ private:
 	//ゴールドを表示する為のウィンドウの高さ
 	const int GOLD_DISPLAY_WINDOW_HEIGHT = 50;
 
+	//ゴールド文字の表示座標
+	const tnl::Vector2i GOLD_STRING_POS = { 1030, 65 };
+
 	//---プレイヤーのステータスウィンドウのサイズ---//
 
 	//ゴールドを表示する為のウィンドウの幅
-	const int PLAYER_STATUS_WINDOW_WIDTH = 300;
+	const int PLAYER_STATUS_GOLD_WINDOW_WIDTH = 300;
 	//ゴールドを表示する為のウィンドウの高さ
-	const int PLAYER_STATUS_WINDOW_HEIGHT = 400;
+	const int PLAYER_STATUS_GOLD_WINDOW_HEIGHT = 400;
 
 	//プレイヤーのステータスを表示する座標
 	const int PLAYER_STATUS_X = 70;
 	const int PLAYER_STATUS_Y = 100;
+
+	//プレイヤーステータスのウィンドウの座標
+	const tnl::Vector2i PLAYER_STATUS_WINDOW_POS = { 50, 50 };
+
+	//プレイヤーステータスウィンドウのサイズ
+	const int PLAYER_STATUS_WINDOW_WIDTH = 250;
+	const int PLAYER_STATUS_WINDOW_HEIGHT = 250;
 
 	//---スキル説明を表示する為のウィンドウの座標とサイズ---//
 
@@ -308,6 +322,21 @@ private:
 	const int SKILL_DETAIL_WINDOW_WIDTH = 300;
 	//スキル説明を表示する為のウィンドウの高さ
 	const int SKILL_DETAIL_WINDOW_HEIGHT = 250;
+	//スキルの説明の文字を表示する座標
+	const tnl::Vector2i SKILL_DETAIL_POS = { 380 , 100 };
+	//スキルの必要なMPを表示する座標
+	const int SKILL_CONSME_POS_Y = 250;
+
+	//---操作キーの説明座標---//
+
+	//戻る為の説明ウィンドウの座標
+	const tnl::Vector2i BUTTON_DETAIL_WINDOW_POS = { 50, 0 };
+	//戻る為の説明ウィンドウのサイズ
+	const int BUTTON_DETAIL_WINDOW_WIDTH = 150;
+	const int BUTTON_DETAIL_WINDOW_HEIGHT = 50;
+	//戻るテキストの描画座標
+	const tnl::Vector2i BUTTON_BACK_STRING_POS = { 70, 15 };
+
 
 	//---選択ウィンドウの定数---//
 
@@ -320,7 +349,7 @@ private:
 		//強さ
 		STATUS,
 		//閉じる
-		CLOSE,
+		CLOSE
 	};
 
 	//アイテム使用メニュー
@@ -353,8 +382,8 @@ public:
 		return equipped_weapon;
 	}
 
-	//------------------------------------------------------------------------------------------------------------------------
-	//特技
+//------------------------------------------------------------------------------------------------------------------------
+//特技
 private:
 
 	//特技用のカーソル
@@ -371,22 +400,29 @@ public:
 
 	//特技の描画
 	//引数 : スキルを描画する座標 , ページ数を描画する座標 , カーソルのX座標 , アイテムのページ数
-	void InventorySkill(const tnl::Vector2i& SKILLDRAWPOS, const tnl::Vector2i& CURENTPAGETEXT, const int COUSOURX, const int ITEMPARPAGE);
+	void InventorySkill(const tnl::Vector2i& SKILLDRAWPOS, const tnl::Vector2i& CURENTPAGETEXT, const int& COUSOURX, const int& ITEMPARPAGE);
 
 	//特技を使用した時の描画
-	void SkillDetailDraw(int skill_index);
+	void SkillDetailDraw(const int& skill_index);
 
 	//特技のカーソル
 	void SkillCousorMove();
 
-	//------------------------------------------------------------------------------------------------------------------------
-	//ポインタ
+	//スキルのカーソルの移動処理の際のインデックスの操作
+	void SkillCurourIndex(const int& skil_list_perpage);
+
+//------------------------------------------------------------------------------------------------------------------------
+//ポインタ
 private:
 
+	//アイテム
 	Shared<Item>item = nullptr;
+	//最初のウィンドウ
 	Shared<MenuWindow>first_menu = nullptr;
+	//攻撃選択ウィンドウ
 	Shared<MenuWindow>select_action_menu = nullptr;
+	//説明ウィンドウ
 	Shared<MenuWindow>select_detail_window = nullptr;
-	Weak<Menu>menu_window;
+	//バトルログ
 	Shared<BattleLog>battleLog = nullptr;
 };

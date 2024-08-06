@@ -9,7 +9,12 @@ Inventory::Inventory()
 	//メニューの初期化
 	InitMenuWinodow();
 
-	AddInventory(item->GetItemById(20).getItemId());
+	AddInventory(item->GetItemById(21).GetItemId());
+	AddInventory(item->GetItemById(31).GetItemId());
+	AddInventory(item->GetItemById(12).GetItemId());
+	AddInventory(item->GetItemById(36).GetItemId());
+	AddInventory(item->GetItemById(38).GetItemId());
+
 }
 
 Inventory::~Inventory()
@@ -18,21 +23,20 @@ Inventory::~Inventory()
 }
 
 //更新処理
-void Inventory::Update(float delta_time)
+void Inventory::Update(const float& delta_time)
 {
 	//インベントリの更新
-	swichInventoryUpdate(delta_time);
+	swichInventoryUpdate();
+
+	//プレイヤーのステータスの更新処理
+	UIManager::getUIManager()->PlayerStatusBarUpdate(delta_time);
 
 }
 
 //描画処理
 void Inventory::draw()
 {
-	//アイテムを表示する為のバックウィンドウ
-	auto item_coment_window = menu_window.lock();
-	//ボタン説明用のウィンドウ
-	auto button_detail_window = menu_window.lock();
-
+	
 	if (select_menu == MenuWindow_I::EMPTY) {
 		Game_Menu();
 	}
@@ -43,7 +47,7 @@ void Inventory::draw()
 	//選択されたのがアイテムメニューの描画
 	else if (select_menu == MenuWindow_I::ITEMMENU) {
 
-		menu_window.lock()->Menu_draw(MENU_WINDOW_POS.x , MENU_WINDOW_POS.y , MENU_WINDOW_WIDTH, MENU_WINDOW_HEIGHT);
+		UIManager::getUIManager()->Menu_Draw("menu_window", MENU_WINDOW_POS.x, MENU_WINDOW_POS.y, MENU_WINDOW_WIDTH, MENU_WINDOW_HEIGHT);
 		ItemMenu(DRAWPOS, CURENTPAGETEXT, CURSORX,ITEMPERPAGE);
 	}
 	//選択されたのがプレイヤーの強さメニューの描画
@@ -52,13 +56,13 @@ void Inventory::draw()
 	}
 	//選択されたのがアイテムの詳細メニューの描画
 	else if (select_menu == MenuWindow_I::ITEMUSEMENU) {
-		menu_window.lock()->Menu_draw(MENU_WINDOW_POS.x, MENU_WINDOW_POS.y, MENU_WINDOW_WIDTH, MENU_WINDOW_HEIGHT);
+		UIManager::getUIManager()->Menu_Draw("menu_window", MENU_WINDOW_POS.x, MENU_WINDOW_POS.y, MENU_WINDOW_WIDTH, MENU_WINDOW_HEIGHT);
 		ItemMenu(DRAWPOS, CURENTPAGETEXT, CURSORX, ITEMPERPAGE);
 		ItemUseMenu();
 	}
 	//アイテムを使用する際のウィンドウのメニューの描画
 	else if (select_menu == MenuWindow_I::ITEMDETAILMENU) {
-		menu_window.lock()->Menu_draw(MENU_WINDOW_POS.x, MENU_WINDOW_POS.y, MENU_WINDOW_WIDTH, MENU_WINDOW_HEIGHT);
+		UIManager::getUIManager()->Menu_Draw("menu_window", MENU_WINDOW_POS.x, MENU_WINDOW_POS.y, MENU_WINDOW_WIDTH, MENU_WINDOW_HEIGHT);
 		ItemMenu(DRAWPOS, CURENTPAGETEXT, CURSORX, ITEMPERPAGE);
 		ItemUseMenu();
 		ItemDetail();
@@ -66,23 +70,23 @@ void Inventory::draw()
 	//スキル表示用のウィンドウの描画
 	else if (select_menu == MenuWindow_I::SKILLMENU) {
 		// ウィンドウの表示
-		menu_window.lock()->Menu_draw(MENU_WINDOW_POS.x, MENU_WINDOW_POS.y, MENU_WINDOW_WIDTH, MENU_WINDOW_HEIGHT);
+		UIManager::getUIManager()->Menu_Draw("menu_window", MENU_WINDOW_POS.x, MENU_WINDOW_POS.y, MENU_WINDOW_WIDTH, MENU_WINDOW_HEIGHT);
 		InventorySkill(DRAWPOS , CURENTPAGETEXT , CURSORX ,ITEMPERPAGE);
 
 	}
 	//スキル説明用のウィンドウの描画
 	else if (select_menu == MenuWindow_I::SKILLDATAILMENU) {
 		// ウィンドウの表示
-		menu_window.lock()->Menu_draw(MENU_WINDOW_POS.x, MENU_WINDOW_POS.y, MENU_WINDOW_WIDTH, MENU_WINDOW_HEIGHT);
+		UIManager::getUIManager()->Menu_Draw("menu_window",MENU_WINDOW_POS.x, MENU_WINDOW_POS.y, MENU_WINDOW_WIDTH, MENU_WINDOW_HEIGHT);
 		InventorySkill(DRAWPOS, CURENTPAGETEXT, CURSORX, ITEMPERPAGE);
 		SkillDetailDraw(skill_selected_index);
 	}
 	//インベントリ使用時に操作説明用の描画
 	if (select_menu != MenuWindow_I::EMPTY) {
 
-		button_detail_window->Menu_draw(50, 0, 150, 50);
+		UIManager::getUIManager()->Menu_Draw("menu_window", BUTTON_DETAIL_WINDOW_POS.x, BUTTON_DETAIL_WINDOW_POS.y, BUTTON_DETAIL_WINDOW_WIDTH, BUTTON_DETAIL_WINDOW_HEIGHT);
 
-		DrawStringEx(70, 15, -1, "← キーで戻る");
+		DrawStringEx(BUTTON_BACK_STRING_POS.x, BUTTON_BACK_STRING_POS.y, koni::Color::WHITE, "← キーで戻る");
 	}
 	
 }
@@ -113,7 +117,7 @@ void Inventory::EquipWeapon(const int& weaponIndex)
 	// 同じアイテムが既に装備されているかチェック
 	bool isAlreadyEquipped = false;
 	for (const auto& equipped : equipped_weapon) {
-		if (equipped.getItemId() == selectedItem.getItemId()) {
+		if (equipped.GetItemId() == selectedItem.GetItemId()) {
 			// 同じアイテムが装備されている場合、何もせずに関数を終了
 			isAlreadyEquipped = true;
 			break;
@@ -121,7 +125,7 @@ void Inventory::EquipWeapon(const int& weaponIndex)
 	}
 
 	for (const auto& equipped : equipped_armor) {
-		if (equipped.getItemId() == selectedItem.getItemId()) {
+		if (equipped.GetItemId() == selectedItem.GetItemId()) {
 			// 同じアイテムが装備されている場合、何もせずに関数を終了
 			isAlreadyEquipped = true;
 			break;
@@ -135,14 +139,12 @@ void Inventory::EquipWeapon(const int& weaponIndex)
 	}
 
 	// 新しいアイテムのタイプに応じて装備を切り替える
-	if (selectedItem.getItemType() == WEAPON) {
-		auto curentAttack = player->getPlayerStatusSave().GetAttack();
+	if (selectedItem.GetItemType() == WEAPON) {
+		auto base_attack = player->getPlayerStatusSave().GetBaseAttack();
 		// 装備中の武器を外す
 		if (!equipped_weapon.empty()) {
 			// 装備中の武器の効果を反映から削除する
 			ItemBase equippedWeaponItem = equipped_weapon.back();
-			//装備中の武器のステータスを削除する
-			curentAttack -= equippedWeaponItem.getItemDamage();
 			// 装備中の武器を削除する
 			equipped_weapon.pop_back();
 		}
@@ -150,20 +152,18 @@ void Inventory::EquipWeapon(const int& weaponIndex)
 		// 新しい武器を装備
 		equipped_weapon.push_back(selectedItem);
 		//装備した際にプレイヤーの画像を変える
-		player->SetPlayerAnimationHdl(selectedItem.getItemWeapontype());
+		player->SetPlayerAnimationHdl(selectedItem.GetItemWeapontype());
 		// プレイヤーのステータスに新しい武器の効果を反映
 		equip_weapon = true;
-		equip_attack = selectedItem.getItemDamage();
-		player->getPlayerStatusSave().SetPlayerAttack(curentAttack + equip_attack);
+		equip_attack = selectedItem.GetItemDamage();
+		player->getPlayerStatusSave().SetPlayerAttack(base_attack + equip_attack);
 	}
-	else if (selectedItem.getItemType() == ARMOR) {
-		auto curentDefance = player->getPlayerStatusSave().GetDefance();
+	else if (selectedItem.GetItemType() == ARMOR) {
+		auto base_defance = player->getPlayerStatusSave().GetBaseDefance();
 		// 装備中の防具を外す
 		if (!equipped_armor.empty()) {
 			// 装備中の防具の効果を反映から削除する
 			ItemBase equippedArmorItem = equipped_armor.back();
-			//装備中の防具のステータスを削除する
-			curentDefance -= equippedArmorItem.getItemDefance();
 			// 装備中の防具を削除する
 			equipped_armor.pop_back();
 		}
@@ -171,38 +171,40 @@ void Inventory::EquipWeapon(const int& weaponIndex)
 		equipped_armor.push_back(selectedItem);
 		// プレイヤーのステータスに新しい防具の効果を反映
 		equip_armor = true;
-		equip_defance = selectedItem.getItemDefance();
-		player->getPlayerStatusSave().SetPlayerDefance(curentDefance + equip_defance);
+		equip_defance = selectedItem.GetItemDefance();
+		player->getPlayerStatusSave().SetPlayerDefance(base_defance + equip_defance);
 	}
 }
 
 //アイテムの詳細を開いた時の処理
 void Inventory::ItemDetail()
 {
-	//アイテムの説明を出すためのバックウィンドウ
-	auto item_detail_window = menu_window.lock();
-
-
-	item_detail_window->Menu_draw(ITEM_DETAIL_WINDOW_POS.x, ITEM_DETAIL_WINDOW_POS.y, ITEM_DETAIL_WINDOW_WIDTH, ITEM_DETAIL_WINDOW_HEIGHT);
+	//ウィンドウの描画
+	UIManager::getUIManager()->Menu_Draw("menu_window", ITEM_DETAIL_WINDOW_POS.x, ITEM_DETAIL_WINDOW_POS.y, ITEM_DETAIL_WINDOW_WIDTH, ITEM_DETAIL_WINDOW_HEIGHT);
 
 	//アイテム説明の文字を表示する座標
 	const tnl::Vector2i ITEM_DETAIL = { 630 , 70 };
 
-	DrawStringEx(ITEM_DETAIL.x, ITEM_DETAIL.y, -1, "===アイテム説明===");
+	DrawStringEx(ITEM_DETAIL.x, ITEM_DETAIL.y, koni::Color::WHITE, "===アイテム説明===");
 
 	//アイテム説明を取得する
-	std::string ItemDetail = inventory_list[selected_index].getItemDetail();
+	auto& inventory_item = inventory_list[selected_index];
 
 	//インベントリが空じゃない場合
 	if (!inventory_list.empty()) {
-	//アイテムの詳細を表示する
-		DrawStringEx(ITEM_DETAIL_POS.x, ITEM_DETAIL_POS.y, COLORWHITE, "%s" ,ItemDetail.c_str());
+
+		//アイテムの詳細を表示する
+		DrawStringEx(ITEM_DETAIL_POS.x, ITEM_DETAIL_POS.y, koni::Color::WHITE, "%s" , inventory_item.GetItemDetail().c_str());
+		//アイテムのステータスを表示する
+		DrawStringEx(ITEM_STAUS_POS.x, ITEM_STAUS_POS.y, koni::Color::WHITE, "攻撃力 : %d", inventory_item.GetItemDamage());
+		DrawStringEx(ITEM_STAUS_POS.x + ITEM_ADD_OFSET_, ITEM_STAUS_POS.y, koni::Color::WHITE, "防御力 : %d", inventory_item.GetItemDefance());
+
 	}
 
 }
 
 //カーソル移動時のインデックス操作と取得
-void Inventory::ItemCurourIndex(int ItemPerPage)
+void Inventory::ItemCurourIndex(const int& ItemPerPage)
 {
 	//---選択したアイテムにをIDとして取得する---//
 
@@ -248,7 +250,7 @@ void Inventory::ItemCurourIndex(int ItemPerPage)
 	// selectedIndexが有効な範囲内にあるか確認して、選択されたアイテムのIDを取得する
 	if (selected_index >= 0 && selected_index < inventory_list.size()) {
 		ItemBase selectedItem = inventory_list[selected_index];
-		selected_item_id = selectedItem.getItemId();
+		selected_item_id = selectedItem.GetItemId();
 	}
 }
 
@@ -294,13 +296,13 @@ void Inventory::InitMenuWinodow()
 	//最初のESCを押したときに出る最初のメニュー
 	MenuWindow::MenuElement_t* first_menu_coment = new MenuWindow::MenuElement_t[]
 	{
-		{MENU_TOOL_POS.x, MENU_TOOL_POS.y , "道具", 0},
-		{MENU_SKILL_POS.x, MENU_SKILL_POS.y , "特技", 1},
-		{MENU_STATUS_POS.x, MENU_STATUS_POS.y , "強さ", 2},
-		{MENU_CLOSE_POS.x, MENU_CLOSE_POS.y , "閉じる" ,3}
+		{MENU_TOOL_POS.x,   MENU_TOOL_POS.y ,	 "道具",    MenuWindow::Elements::FIRST_ELEMENT },
+		{MENU_SKILL_POS.x,  MENU_SKILL_POS.y ,   "特技",    MenuWindow::Elements::SECOND_ELEMENT},
+		{MENU_STATUS_POS.x, MENU_STATUS_POS.y ,  "強さ",    MenuWindow::Elements::THERD_ELEMENT},
+		{MENU_CLOSE_POS.x,  MENU_CLOSE_POS.y ,   "閉じる" , MenuWindow::Elements::FOUR_ELEMENT}
 	};
 
-	first_menu = std::make_shared<MenuWindow>("graphics/WindowBase_01.png", first_menu_coment, 4 , 1);
+	first_menu = std::make_shared<MenuWindow>("graphics/WindowBase_01.png", first_menu_coment, 4);
 	first_menu->Open();
 
 	//mapに追加する
@@ -309,44 +311,36 @@ void Inventory::InitMenuWinodow()
 	//アイテムウィンドウ内で選択するメニュー
 	MenuWindow::MenuElement_t* select_detail = new MenuWindow::MenuElement_t[]
 	{
-		{MENU_ITEM_USE_POS.x , MENU_ITEM_USE_POS.y , "使う" , 0},
-		{MENU_ITEM_DETAIL_POS.x , MENU_ITEM_DETAIL_POS.y , "詳細" , 1},
-		{MENU_ITEM_EQUIP_POS.x , MENU_ITEM_EQUIP_POS.y , "装備する",2},
-		{MENU_ITEM_DISPOSE_POS.x , MENU_ITEM_DISPOSE_POS.y , "捨てる", 3},
-		{MENU_ITEM_CLOSE_POS.x , MENU_ITEM_CLOSE_POS.y , "閉じる" , 4}
+		{MENU_ITEM_USE_POS.x ,    MENU_ITEM_USE_POS.y ,     "使う" ,    MenuWindow::Elements::FIRST_ELEMENT},
+		{MENU_ITEM_DETAIL_POS.x , MENU_ITEM_DETAIL_POS.y ,  "詳細" ,    MenuWindow::Elements::SECOND_ELEMENT},
+		{MENU_ITEM_EQUIP_POS.x ,  MENU_ITEM_EQUIP_POS.y ,   "装備する" ,MenuWindow::Elements::THERD_ELEMENT},
+		{MENU_ITEM_DISPOSE_POS.x ,MENU_ITEM_DISPOSE_POS.y , "捨てる",   MenuWindow::Elements::FOUR_ELEMENT},
+		{MENU_ITEM_CLOSE_POS.x ,  MENU_ITEM_CLOSE_POS.y ,   "閉じる" ,  MenuWindow::Elements::FIVE_ELEMENT}
 	};
 
-	select_detail_window = std::make_shared<MenuWindow>("graphics/WindowBase_01.png", select_detail, 5, 1);
+	select_detail_window = std::make_shared<MenuWindow>("graphics/WindowBase_01.png", select_detail, 5);
 	select_detail_window->Open();
-
-
-	//メニューウィンドウ
-	menu_window = UIManager::getUIManager()->getMenu("menu_window");
 }
 
 //プレイヤーが動いている時のメニュー表示
 void Inventory::Game_Menu()
 {
+	//半透明にする
+	SetDrawBlendMode(DX_BLENDMODE_ALPHA, koni::Numeric::ALPHA_50_PERCENT);
+	UIManager::getUIManager()->Menu_Draw("menu_window", PLAYER_STATUS_WINDOW_POS.x, PLAYER_STATUS_WINDOW_POS.y, PLAYER_STATUS_WINDOW_WIDTH, PLAYER_STATUS_WINDOW_HEIGHT);
+	UIManager::getUIManager()->PlayerStatusDrawWindow();
+	//アルファ値を戻す
+	SetDrawBlendMode(DX_BLENDMODE_ALPHA, koni::Numeric::ALPHA_OPAQUE);
+
 	//プレイヤーを取得する
 	auto& player = GameManager::getGameManager()->getPlayer();
 
-	//ゴールドを表示する為のバックウィンドウ
-	auto gold_display_window = menu_window.lock();
+	//ウィンドウの描画
+	UIManager::getUIManager()->Menu_Draw("menu_window", GOLD_DISPLAY_WINDOW_POS.x, GOLD_DISPLAY_WINDOW_POS.y, GOLD_DISPLAY_WINDOW_WIDTH, GOLD_DISPLAY_WINDOW_HEIGHT);
+	
 
-	if (gold_display_window) {
-		gold_display_window->Menu_draw(GOLD_DISPLAY_WINDOW_POS.x, GOLD_DISPLAY_WINDOW_POS.y, GOLD_DISPLAY_WINDOW_WIDTH, GOLD_DISPLAY_WINDOW_HEIGHT);
-	}
+	DrawStringEx(GOLD_STRING_POS.x, GOLD_STRING_POS.y, koni::Color::WHITE, "G : %d", player->getPlayerMoney());
 
-	DrawStringEx(1030, 65, -1, "G : %d", player->getPlayerMoney());
-
-	//プレイヤーのHpなどを表示するウィンドウ
-	//auto player_status_window_ = menu_window.lock();
-
-	//if (player_status_window_) {
-	//	player_status_window_->Menu_draw(50, 50, 250, 240);
-	//}
-
-	//UIManager::getUIManager()->PlayerStatusDrawWindow();
 }
 
 //一番最初のメニュー
@@ -355,8 +349,24 @@ void Inventory::First_Menu()
 	first_menu->All(MENU_WINDOW_POS.x, MENU_WINDOW_POS.y, FIRST_MENU_WINDOW_WIDTH, FIRST_MENU_WINDOW_HEIGHT);
 }
 
+//指定したアイテムのIDを削除する
+void Inventory::InventoryItemRemove(const int& item_id)
+{
+	// 選択したアイテムの ID と一致する要素を特定する
+	auto itemToRemove = std::find_if(inventory_list.begin(), inventory_list.end(),
+		[&](const ItemBase& item) { return item.GetItemId() == item_id; });
+
+	// アイテムが見つかった場合は削除する
+	if (itemToRemove != inventory_list.end()) {
+
+		inventory_list.erase(itemToRemove);
+		//アイテムの数を減らす
+		--item_num;
+	}
+}
+
 //アイテムの表示
-void Inventory::ItemMenu(const tnl::Vector2i& itemDrawPos, const tnl::Vector2i& curentPageText, int CousourX, int itemParPage)
+void Inventory::ItemMenu(const tnl::Vector2i& itemDrawPos, const tnl::Vector2i& curentPageText, const int& CousourX, const int& itemParPage)
 {
 	int i = 0;
 	const int Y = 34;
@@ -372,27 +382,27 @@ void Inventory::ItemMenu(const tnl::Vector2i& itemDrawPos, const tnl::Vector2i& 
 			//
 			auto& InventoryData = inventory_list[index];
 			//アイテムの名前を取得する
-			std::string ItemName = InventoryData.getItemName();
+			std::string ItemName = InventoryData.GetItemName();
 
 			// アイテムの描画
-			DrawStringEx(itemDrawPos.x, itemDrawPos.y + Y * i, COLORWHITE, "%s", ItemName.c_str());
+			DrawStringEx(itemDrawPos.x, itemDrawPos.y + Y * i, koni::Color::WHITE, "%s", ItemName.c_str());
 
 			// カーソルを描画する位置を決定
 			int cursorY = itemDrawPos.y + Y * (select_cursor % itemParPage);
 			ResourceManager::getResourceManager()->DrawRotaGraphEx("graphics/cur_sannkaku2.png", CousourX, cursorY, CURSORSIZE, 0, true);
 		
 			//装備できるアイテムだった場合
-			if (InventoryData.getItemType() == 1 || InventoryData.getItemType() == 2) {
+			if (InventoryData.GetItemType() == 1 || InventoryData.GetItemType() == 2) {
 				// アイテムが装備されているか、選択されたアイテムかを確認
-				if ((equip_weapon && InventoryData.getItemId() == equipped_weapon.back().getItemId())) {
+				if ((equip_weapon && InventoryData.GetItemId() == equipped_weapon.back().GetItemId())) {
 					// 装備中のアイテムまたは選択されたアイテムの場合、"[E]" を表示
 					//アイテムの名前から左に30ずれた座標に表示
-					DrawStringEx(itemDrawPos.x - EQUIP_X_POS, itemDrawPos.y + EQUIP_Y_POS * i, COLORWHITE, "[E]");
+					DrawStringEx(itemDrawPos.x - EQUIP_X_POS, itemDrawPos.y + EQUIP_Y_POS * i, koni::Color::WHITE, "[E]");
 				}
-				if ((equip_armor && InventoryData.getItemId() == equipped_armor.back().getItemId())) {
+				if ((equip_armor && InventoryData.GetItemId() == equipped_armor.back().GetItemId())) {
 					// 装備中のアイテムまたは選択されたアイテムの場合、"[E]" を表示
 					//アイテムの名前から左に30ずれた座標に表示
-					DrawStringEx(itemDrawPos.x - EQUIP_X_POS, itemDrawPos.y + EQUIP_Y_POS * i, COLORWHITE, "[E]");
+					DrawStringEx(itemDrawPos.x - EQUIP_X_POS, itemDrawPos.y + EQUIP_Y_POS * i, koni::Color::WHITE, "[E]");
 				}
 				++i;
 			}
@@ -404,7 +414,7 @@ void Inventory::ItemMenu(const tnl::Vector2i& itemDrawPos, const tnl::Vector2i& 
 			
 		}
 		//ページの表示
-		DrawStringEx(curentPageText.x, curentPageText.y, COLORWHITE , "%d / 4", curent_page + 1);
+		DrawStringEx(curentPageText.x, curentPageText.y, koni::Color::WHITE, "%d / 4", curent_page + 1);
 
 }
 
@@ -415,18 +425,14 @@ void Inventory::PlyStatusMenu()
 	//プレイヤーを取得する
 	auto& player = GameManager::getGameManager()->getPlayer();
 
-	//プレイヤーのステータスを表示する為のバックウィンドウ
-	auto plyer_status_window = menu_window.lock();
-
-	if (plyer_status_window) {
-		plyer_status_window->Menu_draw(MENU_WINDOW_POS.x, MENU_WINDOW_POS.y, PLAYER_STATUS_WINDOW_WIDTH, PLAYER_STATUS_WINDOW_HEIGHT);
-	}
+	//ウィンドウの描画
+	UIManager::getUIManager()->Menu_Draw("menu_window", MENU_WINDOW_POS.x, MENU_WINDOW_POS.y, PLAYER_STATUS_GOLD_WINDOW_WIDTH, PLAYER_STATUS_GOLD_WINDOW_HEIGHT);
 
 	//強さ文字の座標
 	const tnl::Vector2i PLAYER_STATUS_STRING = { 150 , 70 };
 	
 	//強さの文字を表示する
-	DrawStringEx(PLAYER_STATUS_STRING.x, PLAYER_STATUS_STRING.y, -1, "===強さ===");
+	DrawStringEx(PLAYER_STATUS_STRING.x, PLAYER_STATUS_STRING.y, koni::Color::WHITE, "===強さ===");
 
 	//追加していく座標
 	const int Y = 50;
@@ -443,17 +449,18 @@ void Inventory::PlyStatusMenu()
 		int R_expoint = player->getPlayerStatusSave().GetExpoint();
 
 		// 取得したステータスを描画する
-		DrawStringEx(PLAYER_STATUS_X, PLAYER_STATUS_Y, COLORWHITE, "HP : %d", hp);
-		DrawStringEx(PLAYER_STATUS_X, PLAYER_STATUS_Y + Y, COLORWHITE, "MP : %d", mp);
-		DrawStringEx(PLAYER_STATUS_X, PLAYER_STATUS_Y + (Y * 2), COLORWHITE, "攻撃力 : %d", Attack);
-		DrawStringEx(PLAYER_STATUS_X, PLAYER_STATUS_Y + (Y * 3), COLORWHITE, "防御力 : %d", Defense);
-		DrawStringEx(PLAYER_STATUS_X, PLAYER_STATUS_Y + (Y * 4), COLORWHITE, "レベル : %d", Level);
-		DrawStringEx(PLAYER_STATUS_X, PLAYER_STATUS_Y + (Y * 5), COLORWHITE, "すばやさ : %d", Speed);
-		DrawStringEx(PLAYER_STATUS_X, PLAYER_STATUS_Y + (Y * 6), COLORWHITE, "レベルアップに必要な経験値 : %d", R_expoint);
+		DrawStringEx(PLAYER_STATUS_X, PLAYER_STATUS_Y, koni::Color::WHITE, "HP : %d", hp);
+		DrawStringEx(PLAYER_STATUS_X, PLAYER_STATUS_Y + Y, koni::Color::WHITE, "MP : %d", mp);
+		DrawStringEx(PLAYER_STATUS_X, PLAYER_STATUS_Y + (Y * koni::Numeric::SCALE_DOUBLE_I),	koni::Color::WHITE, "攻撃力 : %d", Attack);
+		DrawStringEx(PLAYER_STATUS_X, PLAYER_STATUS_Y + (Y * koni::Numeric::SCALE_TRIPLE_I),	koni::Color::WHITE, "防御力 : %d", Defense);
+		DrawStringEx(PLAYER_STATUS_X, PLAYER_STATUS_Y + (Y * koni::Numeric::SCALE_QUADRUPLE_I), koni::Color::WHITE, "レベル : %d", Level);
+		DrawStringEx(PLAYER_STATUS_X, PLAYER_STATUS_Y + (Y * koni::Numeric::SCALE_QUINTUPLE_I), koni::Color::WHITE, "すばやさ : %d", Speed);
+		DrawStringEx(PLAYER_STATUS_X, PLAYER_STATUS_Y + (Y * koni::Numeric::SCALE_SIXFOLD_I),   koni::Color::WHITE, "レベルアップに必要な経験値 : %d", R_expoint);
 	}
 
 }
 
+//アイテムを使用するメニュー
 void Inventory::ItemUseMenu()
 {
 	select_detail_window->All(ITEM_USE_POS.x, ITEM_USE_POS.y, ITEM_USE_WINDOW_WIDTH, ITEM_USE_WINDOW_HEIGHT);
@@ -461,7 +468,7 @@ void Inventory::ItemUseMenu()
 }
 
 //インベントリの処理
-void Inventory::swichInventoryUpdate(float deltatime)
+void Inventory::swichInventoryUpdate()
 {
 	auto& SkillList = GameManager::getGameManager()->getPlayer()->getSkillList();
 
@@ -502,7 +509,9 @@ void Inventory::swichInventoryUpdate(float deltatime)
 			SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
 			select_menu = MenuWindow_I::EMPTY;
 			//plyerを動けるようにする
-			GameManager::getGameManager()->getPlayer()->setPlayerControl();
+			if (!GameManager::getGameManager()->getPlayer()->getPlayerControl()) {
+				GameManager::getGameManager()->getPlayer()->setPlayerControl();
+			}
 		
 			}
 
@@ -510,7 +519,9 @@ void Inventory::swichInventoryUpdate(float deltatime)
 		else if (tnl::Input::IsKeyDownTrigger(eKeys::KB_LEFT)) {
 			select_menu = MenuWindow_I::EMPTY;
 			//plyerを動けるようにする
-			GameManager::getGameManager()->getPlayer()->setPlayerControl();
+			if (!GameManager::getGameManager()->getPlayer()->getPlayerControl()) {
+				GameManager::getGameManager()->getPlayer()->setPlayerControl();
+			}
 		}
 
 		break;
@@ -593,10 +604,10 @@ void Inventory::swichInventoryUpdate(float deltatime)
 				SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
 
 				// 選択したアイテムの ID と一致する要素を特定する
-				auto itemid = inventory_list[selected_index].getItemId();
+				auto itemid = inventory_list[selected_index].GetItemId();
 
 				auto itemToRemove = std::find_if(inventory_list.begin(), inventory_list.end(),
-					[itemid](const ItemBase& item) { return item.getItemId() == itemid; });
+					[itemid](const ItemBase& item) { return item.GetItemId() == itemid; });
 
 				// アイテムが見つかった場合は削除する
 				if (itemToRemove != inventory_list.end()) {
@@ -645,7 +656,7 @@ void Inventory::swichInventoryUpdate(float deltatime)
 		}
 
 		//スキルのカーソル移動時のインデックス操作
-		SkillCurourIndex();
+		SkillCurourIndex(ITEMPERPAGE);
 
 
 		//特技のカーソル移動
@@ -676,7 +687,7 @@ void Inventory::swichInventoryUpdate(float deltatime)
 }
 
 //スキルの描画
-void Inventory::InventorySkill(const tnl::Vector2i& SKILLDRAWPOS, const tnl::Vector2i& CURENTPAGETEXT, const int COUSOURX, const int ITEMPARPAGE)
+void Inventory::InventorySkill(const tnl::Vector2i& SKILLDRAWPOS, const tnl::Vector2i& CURENTPAGETEXT, const int& COUSOURX, const int& ITEMPARPAGE)
 {
 	int i = 0;
 	int y = 34;
@@ -695,7 +706,7 @@ void Inventory::InventorySkill(const tnl::Vector2i& SKILLDRAWPOS, const tnl::Vec
 		std::string skillName = SkillData->getName();
 
 		// アイテムの描画
-		DrawStringEx(SKILLDRAWPOS.x, SKILLDRAWPOS.y + y * i, COLORWHITE, "%s", skillName.c_str());
+		DrawStringEx(SKILLDRAWPOS.x, SKILLDRAWPOS.y + y * i, koni::Color::WHITE, "%s", skillName.c_str());
 
 		// カーソルを描画する位置を決定
 		int cursorY = SKILLDRAWPOS.y + y * (skill_cousour % ITEMPARPAGE);
@@ -706,35 +717,41 @@ void Inventory::InventorySkill(const tnl::Vector2i& SKILLDRAWPOS, const tnl::Vec
 	}
 
 	//ページの表示
-	DrawStringEx(CURENTPAGETEXT.x, CURENTPAGETEXT.y, COLORWHITE, "%d / 4", skill_curent_page + 1);
+	DrawStringEx(CURENTPAGETEXT.x, CURENTPAGETEXT.y, koni::Color::WHITE, "%d / 4", skill_curent_page + 1);
+
 
 }
 
 //スキル説明の描画
-void Inventory::SkillDetailDraw(int skill_index)
+void Inventory::SkillDetailDraw(const int& skill_index)
 {
 	//スキル配列
 	auto& SkillList = GameManager::getGameManager()->getPlayer()->getSkillList();
 
-	//スキル説明用のバックウィンドウ
-	auto skill_detail_window = menu_window.lock();
-	
 	//特技説明
-	skill_detail_window->Menu_draw(SKILL_DETAIL_WINDOW_POS.x, SKILL_DETAIL_WINDOW_POS.y, SKILL_DETAIL_WINDOW_WIDTH, SKILL_DETAIL_WINDOW_HEIGHT);
+	UIManager::getUIManager()->Menu_Draw("menu_window", SKILL_DETAIL_WINDOW_POS.x, SKILL_DETAIL_WINDOW_POS.y, SKILL_DETAIL_WINDOW_WIDTH, SKILL_DETAIL_WINDOW_HEIGHT);
 
 	//スキル説明の文字用座標
 	const tnl::Vector2i SUKILL_STRING_POS = { 400, 70 };
 
-	DrawStringEx(SUKILL_STRING_POS.x, SUKILL_STRING_POS.y, COLORWHITE, "==スキル説明==");
+	DrawStringEx(SUKILL_STRING_POS.x, SUKILL_STRING_POS.y, koni::Color::WHITE, "==スキル説明==");
 
 	//スキルデータを取得
 	auto& skillData = SkillList[skill_index];
 
-	//スキルデータのスキル説明を取得
-	std::string skillDatail = skillData->getDescription();
-	
-	//スキル説明を描画
-	DrawStringEx(380,100, COLORWHITE, "%s", skillDatail.c_str());
+	//スキルが入っていれば
+	if (!SkillList.empty()) {
+
+		//スキルデータのスキル説明を取得
+		const std::string& skillDatail = skillData->getDescription();
+		const int skill_mp = skillData->getSkillConsumeMp();
+
+		//スキル説明を描画
+		DrawStringEx(SKILL_DETAIL_POS.x, SKILL_DETAIL_POS.y, koni::Color::WHITE, "%s", skillDatail.c_str());
+
+		//スキルの必要Mpの描画
+		DrawStringEx(SKILL_DETAIL_POS.x, SKILL_CONSME_POS_Y, koni::Color::WHITE, "必要なMP : %d", skill_mp);
+	}
 
 }
 
@@ -773,7 +790,7 @@ void Inventory::SkillCousorMove()
 }
 
 //スキルカーソルの移動時のインデックス操作
-void Inventory::SkillCurourIndex()
+void Inventory::SkillCurourIndex(const int& skil_list_perpage)
 {
 
 	auto& SkillList = GameManager::getGameManager()->getPlayer()->getSkillList();
@@ -785,12 +802,12 @@ void Inventory::SkillCurourIndex()
 	}
 
 	if (tnl::Input::IsKeyDownTrigger(eKeys::KB_UP)) {
-		if (skill_selected_index % ITEMPERPAGE == 0) {
+		if (skill_selected_index % skil_list_perpage == 0) {
 			// カーソルがページ内の最上部にいる場合は、一つ上のページの最後の要素を選択
 			if (skill_curent_page > 0) {
 				--skill_curent_page;
 				// インデックスを更新してページの最後の要素を選択する
-				skill_selected_index = (skill_curent_page + 1) * ITEMPERPAGE - 1;
+				skill_selected_index = (skill_curent_page + 1) * skil_list_perpage - 1;
 			}
 		}
 		else {
@@ -806,13 +823,13 @@ void Inventory::SkillCurourIndex()
 	}
 
 	if (tnl::Input::IsKeyDownTrigger(eKeys::KB_DOWN)) {
-		if ((skill_selected_index + 1) % ITEMPERPAGE == 0) {
+		if ((skill_selected_index + 1) % skil_list_perpage == 0) {
 			// カーソルがページ内の最下部にいる場合は、一つ下のページの最初の要素を選択
 			// スキルが持てるインベントリは 20 で考えている為 4 ページ分まで開けるようにする
 			if (skill_curent_page < ITEM_MAX_PAGE) {
 				++skill_curent_page;
 				// インデックスを更新してページの最初の要素を選択する
-				skill_selected_index = curent_page * ITEMPERPAGE;
+				skill_selected_index = skill_curent_page * skil_list_perpage;
 			}
 		}
 		else {
