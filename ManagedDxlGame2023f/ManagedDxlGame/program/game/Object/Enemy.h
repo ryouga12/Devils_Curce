@@ -1,3 +1,9 @@
+//------------------------------------------------------------------------------------------------------------
+//
+//エネミークラス(モブクラスとボスクラスがある)
+//
+//-------------------------------------------------------------------------------------------------------------
+
 #pragma once
 #include "../../dxlib_ext/dxlib_ext.h"
 #include"../Item/Item.h"
@@ -5,13 +11,8 @@
 
 class ItemBase;
 class BattleLog;
-class GameManager;
-class SoundManager;
-class SceneManager;
-class CsvManager;
-class Player;
 
-class Enemy : public Actor{
+class Enemy  : public Actor{
 public:
 
 	Enemy();
@@ -94,6 +95,10 @@ public:
 		int GetRareProbability()const {
 			return rare_drop_probability;
 		}
+		//敵の種族を取得する
+		const std::string& GetEnemyRace()const {
+			return enemy_race;
+		}
 
 		//---セッター---//
 
@@ -167,6 +172,10 @@ public:
 		void SetRareDropProbability(int new_rare_probability) {
 			rare_drop_probability = new_rare_probability;
 		}
+		//敵の種族をセットする
+		void SetEnemyRace(const std::string& new_enemy_race) {
+			enemy_race = new_enemy_race;
+		}
 
 	private:
 
@@ -206,6 +215,10 @@ public:
 		int nomal_drop_probability = 0;
 		//レアドロップアイテムのドロップ率
 		int rare_drop_probability = 0;
+		//敵の種族
+		std::string enemy_race = "";
+
+
 	};
 
 	//Enemyのステータスを読み込む為の関数
@@ -222,13 +235,13 @@ public:
 		return enemy_array;
 
 		//敵の配列を取得できなかったらエラー用の配列を返す
-		if (enemy_array.size() == 0) {
+		if (enemy_array.empty()) {
 			return null_array;
 		}
 	}
 
 	//敵のIDによってドロップのアイテムを切り替える
-	void InitEnemyItemDrop(int EnemyID);
+	void InitEnemyItemDrop(const int& EnemyID);
 
 	//敵が所持しているアイテムの配列を取得する
 	std::vector<ItemBase>& getItemDropArray() {
@@ -236,10 +249,10 @@ public:
 	}
 
 	//敵の情報を配列に格納する
-	void InitEnemyArray(int id);
+	void InitEnemyArray(const int& id);
 
 	//敵の攻撃処理(主に子クラスで定義する)
-	virtual void EnemyAction(Shared<BattleLog>battle_log) {};
+	virtual void EnemyAction(const Shared<BattleLog>& battle_log) = 0;
 
 	//敵の死亡処理
 	virtual bool ChackDeadEnemy();
@@ -264,25 +277,25 @@ public:
 	};
 
 	//敵のタイプをセットする
-	void SetEnemyType(Enemytype enemyType) {
+	void SetEnemyType(const Enemytype& enemyType) {
 		enemy_type = enemyType;
 	}
 
 	//敵のタイプを取得する
-	Enemytype GetEnemyType()const {
+	const Enemytype GetEnemyType()const {
 		return enemy_type;
 	}
 
 private:
 
 	//Enemyのステータスを入れておく変数
-	EnemyConnection Enemy_Status_Type;
+	EnemyConnection enemy_status_type;
 
 	//構造体の総数
-	int EnemyStatus_Total_Num;
+	int enemy_status_total_num;
 
 	//構造体を格納する配列
-	std::vector<EnemyConnection>Enemy_Type_Array;
+	std::vector<EnemyConnection>enemy_type_array;
 
 	//csvを入れておく配列
 	std::vector<std::vector<std::string>>enemy_csv_array;
@@ -296,15 +309,10 @@ protected:
 
 private:
 
-	//敵のサイズ
-	const float ENEMY_SIZE = 0.8f;
-
 	//---座標系---//
 
 	//敵の表示座標
-	const tnl::Vector3 ENEMY_POS = { 600 , 320 , 0 };
-
-
+	const tnl::Vector3 ENEMY_POS = { 600 , 350 , 0 };
 
 	//---敵のドロップアイテムを格納しおく配列---//
 
@@ -312,9 +320,6 @@ private:
 
 	//アイテムのポインタ
 	Shared<Item>item = nullptr;
-
-	//敵の数
-	const int ENEMY_NUM = 5;
 
 	//死んだ判定のフラグ(主にfalseの場合敵の画像を表示する)
 	bool dead_enemy_flag = false;
@@ -327,7 +332,12 @@ protected:
 	//敵のインデックス
 	int enemy_index = 0;
 
+	//敵のタイプ
 	Enemytype enemy_type = Enemytype::NONE;
+
+	//敵の数
+	const int ENEMY_NUM = 5;
+
 
 };
 
@@ -337,15 +347,18 @@ protected:
 //
 //-------------------------------------------------------------------------------------------------------------
 
-class MobMonster : public Enemy {
+class MobMonster final : public Enemy {
 public:
 
-	MobMonster() {};
-	MobMonster(const int enemy_id);
+	MobMonster()= default;
+
+	//arg_1 : 敵のID
+	//敵のIDを受け取り、初期化する
+	MobMonster(const int& enemy_id);
 	~MobMonster()override {};
 
 	//敵の攻撃処理
-	void EnemyAction(Shared<BattleLog>battle_log)override;
+	void EnemyAction(const Shared<BattleLog>& battle_log)override;
 
 private:
 
@@ -357,21 +370,25 @@ private:
 //
 //-------------------------------------------------------------------------------------------------------------
 
-class BossMonster : public Enemy {
+class BossMonster final : public Enemy {
 
 public:
 
-	BossMonster(int enemy_id);
+	BossMonster() = default;
+
+	//arg_1 : 敵のID
+	//敵のIDを受け取り、初期化する
+	BossMonster(const int& enemy_id);
 	~BossMonster()override {};
 
 	//敵の攻撃処理
-	void EnemyAction(Shared<BattleLog>battle_log)override;
+	void EnemyAction(const Shared<BattleLog>& battle_log)override;
 
 	//敵のスキル配列の初期化
-	void InitEnemySkill(int enemy_id);
+	void InitEnemySkill(const int& enemy_id);
 
 	//敵のスキル配列を取得する
-	std::vector <Shared<Skill>>& GetEnemySkillList() {
+	const std::vector <Shared<Skill>>& GetEnemySkillList() {
 		return enemy_skill_;
 	}
 
@@ -379,8 +396,6 @@ public:
 	int GetEnemySkillIndex()const {
 		return enmey_skill_index;
 	}
-
-private:
 
 	//敵のボスの種類
 	//どのボスを指定してるか
@@ -390,8 +405,14 @@ private:
 		//最後のボス
 		ZERAHKIEL = 20,
 		//中ボス1体目
-		GROVEGUARDIAN = 21
+		GROVEGUARDIAN = 21,
+		//中ボス2体目
+		SOULWARRIOR = 27,
+		//中ボス3体目
+		SHADOWENEMY = 28
 	};
+
+private:
 
 	//敵のスキル
 	std::vector<Shared<Skill>>enemy_skill_;
