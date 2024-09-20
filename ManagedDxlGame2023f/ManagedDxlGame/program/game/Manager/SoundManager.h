@@ -1,3 +1,10 @@
+//------------------------------------------------------------------------------------------------------------
+//
+//音楽などを管理するマネージャー
+//
+//-------------------------------------------------------------------------------------------------------------
+
+
 #pragma once
 #include<unordered_map>
 #include "../../dxlib_ext/dxlib_ext.h"
@@ -8,14 +15,13 @@ class SoundManager final {
 public:
 //------------------------------------------
 // シングルトン設計
-//フライウェイトパターンを使う
 
-	static SoundManager* getSoundManager();
-	static void delateSoundManager() { delete getSoundManager(); }
+	static SoundManager* GetSoundManager();
+	static void DelateSoundManager();
 
 private:
 
-	SoundManager();
+	SoundManager() = default;
 	~SoundManager();
 
 	//BGMのパスを入れる配列
@@ -32,11 +38,12 @@ public:
 	//サウンドを再生させる
 	//arg_1 : サウンドのpath
 	//arg_2 : どのタイプで再生するか
-	void sound_Play(const std::string& filepath , const int& playType );
+	//arg_3 : どこから再生させるか
+	void Sound_Play(const std::string& filepath , const int& playType,const int& top_position_flag = 1);
 	
 	//サウンドを消去する
 	//arg_1 : サウンドのpath
-	bool daleteSound(const std::string& filepath);
+	bool DeleteSound(const std::string& filepath);
 
 	//サウンドを止める
 	//arg_1 : サウンドのpath

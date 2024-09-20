@@ -14,8 +14,6 @@
 class Menu {
 public:
 
-	Menu() = default;
-
 	//newするときにghのpathを引数で渡す
 	Menu(const std::string& gh_path);
 
@@ -30,12 +28,30 @@ public:
 
 private:
 
-	int menu_x, menu_y, menu_width, menu_height = 0;
-	int menu_gh[9] = { 0 };
+	//---定数系---//
+
+	//メニュー配列のサイズ
+	static const int MENU_GHDL_ARRAY_MAX_SIZE = 9;
+
+	//横幅の数
+	const int GHDL_WIDTH_NUM = 3;
+	//縦の数
+	const int GHDL_HEIGHT_NUM = 3;
+	//幅のサイズ
+	const int GHDL_WIDTH_SIZE = 16;
+	//縦のサイズ
+	const int GHDL_HEIGHT_SIZE = 16;
+
+	//メニューのグラフィックのハンドル
+	int menu_gh[MENU_GHDL_ARRAY_MAX_SIZE] = { 0 };
+
+	//追加座標
+	const int ADD_OFSET_POS = 16;
 	
 protected:
 
-	bool menu_live;
+	//メニュー関連の呼び出しフラグ
+	bool menu_live = false;
 
 };
 
@@ -66,6 +82,7 @@ public:
 	//メニューの描画とカーソル操作を行えるようにする
 	void All(const int& menu_x, const int& menu_y, const int& menu_width, const int& menu_height);
 
+	//選択番号を取得する
 	int getSelectNum() { return Select_Num;}
 
 	//カーソルを制御する
@@ -106,22 +123,35 @@ private:
 	//現在の選択番号
 	int Select_Num;
 
+	//初期化フラグ
 	bool menuInit = false;
 
-	int read_menu_element_num = 0;
-
-	int string_color_black = 0;
+	//要素の数
 	int elements_num_;
-	bool m_IsStartOpend;									//ESCキーで開いた1フレーム目
+
+	//ESCキーで開いた1フレーム目
+	bool m_IsStartOpend;									
 
 	//Menuの構造体のポインタ
 	MenuElement_t*  MenuElement = nullptr;
 
-	int cursor_gh = 0;
+	//メニューウィンドウのX座標
 	int coursorX = 0;
+	//メニューウィンドウのY座標
 	int coursorY = 0;
 
-	bool second_menu_flag = false;
-	bool manage_select_flag = true;//Read関数のSelectNumを動かすかどうか trueなら動かす
-	bool is_active = false;		   //プレイヤーからEnterキーなどを受け付けるかどうかのフラグ
+	//Read関数のSelectNumを動かすかどうか trueなら動かす
+	bool manage_select_flag = true;
+
+	//プレイヤーからEnterキーなどを受け付けるかどうかのフラグ
+	bool is_active = false;		  
+
+	//---定数系---//
+
+	//カーソルのX座標の位置を設定する為の引く値
+	const int MINUS_OFFSET_COURSOR_POS = 20;
+
+	//カーソルの調整座標
+	const int ADJUSTMENT_COURSOR_POS = 8;
+
 };

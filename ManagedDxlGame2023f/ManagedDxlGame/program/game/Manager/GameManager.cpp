@@ -2,7 +2,7 @@
 
 
 //シングルトン
-GameManager* GameManager::getGameManager()
+GameManager* GameManager::GetGameManager()
 {
 	static GameManager* p_instance = nullptr;
 
@@ -10,23 +10,9 @@ GameManager* GameManager::getGameManager()
 	return p_instance;
 }
 
-
-
-GameManager::GameManager()
+void GameManager::DelateGameManager()
 {
-	
-}
-
-GameManager::~GameManager()
-{
-	
-
-}
-
-void GameManager::draw()
-{
-
-	
+	delete GetGameManager();
 }
 
 //それぞれのポインターを生成する
@@ -36,14 +22,6 @@ void GameManager::PoiterCreate()
 
 	if (inventory == nullptr) {
 		inventory = std::make_shared<Inventory>();
-	}
-	else {
-		tnl::DebugTrace("ポインタはすでに存在します");
-	}
-	//スキルのポインタ
-	if (skill == nullptr) {
-		skill = std::make_shared<Skill>();
-		skill->AddSkillList();
 	}
 	else {
 		tnl::DebugTrace("ポインタはすでに存在します");
@@ -82,12 +60,6 @@ void GameManager::Reset()
 	}
 	if (camera != nullptr) {
 		camera.reset();
-	}
-	else {
-		tnl::DebugTrace("ポインタは存在しません");
-	}
-	if (skill != nullptr) {
-		skill.reset();
 	}
 	else {
 		tnl::DebugTrace("ポインタは存在しません");

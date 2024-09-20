@@ -2,24 +2,25 @@
 
 
 
-SoundManager* SoundManager::getSoundManager()
+SoundManager* SoundManager::GetSoundManager()
 {
 	static SoundManager* p_instance = nullptr;
 
 	if (!p_instance)p_instance = new SoundManager();
 	return p_instance;
 
-};
-
-SoundManager::SoundManager()
+}
+void SoundManager::DelateSoundManager()
 {
-
+	delete GetSoundManager();
 }
 
 SoundManager::~SoundManager()
 {
 	//中の要素を消去する
-	sound_map.clear();
+	for (auto& sound_array : sound_map) {
+		DeleteSound(sound_array.first);
+	}
 }
 
 int SoundManager::LoadSoundBGM(const std::string& bgmFile)
@@ -35,7 +36,7 @@ int SoundManager::LoadSoundBGM(const std::string& bgmFile)
 	}
 }
 
-bool SoundManager::daleteSound(const std::string& filepath)
+bool SoundManager::DeleteSound(const std::string& filepath)
 {
 	// soundが入っているか確認
 	if (auto it = sound_map.find(filepath); it != sound_map.end()) {
@@ -44,13 +45,13 @@ bool SoundManager::daleteSound(const std::string& filepath)
 			return true;
 		}
 		else {
-			tnl::DebugTrace("ResourceManagerリソース解放 => %s のメモリ解放に失敗しました \n", filepath.c_str());
+			tnl::DebugTrace("\nResourceManagerリソース解放 => %s のメモリ解放に失敗しました", filepath.c_str());
 			return false;
 		}
 	}
 
 	// 発見できなかった場合
-	tnl::DebugTrace("\n ResourceManagerリソース解放 => %s が見つかりませんでした \n", filepath.c_str());
+	tnl::DebugTrace("\nResourceManagerリソース解放 => %s が見つかりませんでした", filepath.c_str());
 	return false;
 
 
@@ -58,13 +59,8 @@ bool SoundManager::daleteSound(const std::string& filepath)
 
 void SoundManager::StopSound(const std::string& filepath)
 {
-	//デバックトレース
-	/*tnl::DebugTrace("----------------------------------------------------------\n");
-	auto c = tnl::BeginClock();*/
 	int handle = LoadSoundBGM(filepath);
 	StopSoundMem(handle);
-	/*float time = tnl::EndClock(c);
-	tnl::DebugTrace("sound_time %f\n", time);*/
 }
 
 
@@ -78,11 +74,11 @@ void SoundManager::ChangeSoundVolume(const int& sound, const std::string& ghpath
 
 
 
-void SoundManager::sound_Play(const std::string& filepath, const int& playType)
+void SoundManager::Sound_Play(const std::string& filepath, const int& playType ,const int& top_position_flag)
 {
 	int sound = LoadSoundBGM(filepath);
 	ChangeVolumeSoundMem(koni::Numeric::VOLUME_MAX_255 * koni::Numeric::VOLUME_30_PERCENT / koni::Numeric::VOLUME_MAX, sound);
-	PlaySoundMem(sound, playType);
+	PlaySoundMem(sound, playType ,top_position_flag);
 
 }
 

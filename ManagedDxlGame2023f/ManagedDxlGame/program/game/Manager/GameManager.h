@@ -1,7 +1,10 @@
 #pragma once
-///
-///共通で使う物の管理する中間役の役割のマネージャー
-/// 
+//------------------------------------------------------------------------------------------------------------
+//
+//共通で使う物の管理する中間役の役割のマネージャー
+//
+//-------------------------------------------------------------------------------------------------------------
+
 
 #include"../Menu/MenuWindow.h"
 #include "../../dxlib_ext/dxlib_ext.h"
@@ -10,26 +13,23 @@
 class Player;
 class Skill;
 
-class GameManager {
+class GameManager final{
 public:
 //------------------------------------------
 // シングルトン設計
 
-	static GameManager* getGameManager();
-	static void delateGameManager() { delete getGameManager(); }
+	static GameManager* GetGameManager();
+	static void DelateGameManager();
 
 private:
 
-	GameManager();
-	~GameManager();
+	GameManager()= default;
+	~GameManager()= default;
 
 public:
 
 	//秒数を数える
 	bool TimeCount(float delta_time, float Time);
-
-	//描画
-	void draw();
 
 	//ポインタを生成する
 	void PoiterCreate();
@@ -37,20 +37,10 @@ public:
 	//ポインタをリセットする
 	void Reset();
 
-	//1フレームだけ走る関数
-	//主に一回の処理をさせたい時に使用
-	bool IsStart() { return true; }
-
 private:
 
 	//時間
 	float count_time = 0;
-
-
-//------------------------------------------------------------------------------------------------------------------------
-//---武器関連---//
-
-
 
 //------------------------------------------------------------------------------------------------------------------------
 //---アイテム関連---//
@@ -63,40 +53,31 @@ public:
 //---ポインタ---//
 private:
 
+	//インベントリ
 	Shared<Inventory>inventory = nullptr;
+	//プレイヤー
 	Shared<Player>player = nullptr;
+	//カメラ
 	Shared<KonCamera>camera = nullptr;
-	Shared<Skill>skill = nullptr;
-
 
 //------------------------------------------------------------------------------------------------------------------------
 // 共通処理やインベントリの更新
 
 public:
 
-	//更新処理
-	void UpdateCommon(const float& delta_time) {
-		inventory->Update(delta_time);
-		player->Update(delta_time);
-	}
-
-	//ポインタの取得
+	//---ポインタの取得---//
 
 	//インベントリ
-	const Shared<Inventory>& getInventory(){
+	const Shared<Inventory>& GetInventory(){
 		return inventory;
 	}
 	//プレイヤー
-	const Shared<Player>& getPlayer() {
+	const Shared<Player>& GetPlayer() {
 		return player;
 	}
 	//カメラ
-	const Shared<KonCamera>& getCamera() {
+	const Shared<KonCamera>& GetCamera() {
 		return camera;
-	}
-	//スキル
-	const Shared<Skill>& getSkill() {
-		return skill;
 	}
 
 };

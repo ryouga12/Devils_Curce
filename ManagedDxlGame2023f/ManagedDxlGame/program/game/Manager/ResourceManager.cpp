@@ -1,7 +1,7 @@
 #include "ResourceManager.h"
 #include "../../dxlib_ext/dxlib_ext.h"
 
-ResourceManager* ResourceManager::getResourceManager()
+ResourceManager* ResourceManager::GetResourceManager()
 {
 	static ResourceManager* p_instance = nullptr;
 
@@ -9,28 +9,18 @@ ResourceManager* ResourceManager::getResourceManager()
 	return p_instance;
 }
 
-ResourceManager::ResourceManager()
+void ResourceManager::DelategetResourceManager()
 {
-
+	delete GetResourceManager();
 }
 
 ResourceManager::~ResourceManager()
 {
 	//画像を消去する
-	ghmap.clear();
+	for (auto& gh_array : ghmap) {
+		deleteGraphEx(gh_array.first);
+	}
 }
-
-void ResourceManager::Update()
-{
-	
-}
-
-void ResourceManager::Draw()
-{
-
-	
-}
-
 
 //画像を重複して読み込まないようにこれを使う
 int ResourceManager::LoadGraphEX(const std::string& gh)
@@ -51,21 +41,25 @@ int ResourceManager::LoadGraphEX(const std::string& gh)
 }
 
 //保存した画像を消去する
-bool ResourceManager::deleteGraphEx(std::string ghpath)
+bool ResourceManager::deleteGraphEx(const std::string& ghpath)
 {
 	if (auto it = ghmap.find(ghpath); it != ghmap.end()) {
-		if (DeleteSoundMem(it->second) != -1) {
+		if (DeleteGraph(it->second) != -1) {
 			ghmap.erase(ghpath);
+			tnl::DebugTrace("\n------------------------------------------------------------");
+			tnl::DebugTrace("\nResourceManagerリソース解放 = > %s のメモリ解放に成功しました", ghpath.c_str());
+			tnl::DebugTrace("\n------------------------------------------------------------");
 			return true;
+
 		}
 		else {
-			tnl::DebugTrace("ResourceManagerリソース解放 = > % s のメモリ解放に失敗しました \n", ghpath.c_str());
+			tnl::DebugTrace("\nResourceManagerリソース解放 = > % s のメモリ解放に失敗しました", ghpath.c_str());
 			return false;
 		}
 	}
 
 	// 発見できなかった場合
-	tnl::DebugTrace("ResourceManagerリソース解放 => %s が見つかりませんでした \n", ghpath.c_str());
+	tnl::DebugTrace("\nResourceManagerリソース解放 => %s が見つかりませんでした", ghpath.c_str());
 	return false;
 
 }

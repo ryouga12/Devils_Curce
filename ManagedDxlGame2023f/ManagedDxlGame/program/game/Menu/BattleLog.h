@@ -1,38 +1,30 @@
+//------------------------------------------------------------------------------------------------------------
+//
+//バトルログクラス(バトルログを設定して流す)
+//
+//-------------------------------------------------------------------------------------------------------------
+
 #pragma once
 #include "../../dxlib_ext/dxlib_ext.h"
+#include"../../koni_name_space/common/common_value.h"
 
-class BattleLog {
+class BattleLog final{
 public:
 
 	//ログを追加する
-	void addLog(const std::string& log);
-
-	//ダメージを与えた時のログ
-	void addDamageLog(const std::string& attacker, const std::string& target, int damage);
-
-	//ダメージをくらった時のログ
-	void addDamagePlayerLog(const std::string& attacker, const std::string& target, int damage);
+	void AddLog(const std::string& log);
 
 	//アイテムを使用した時のログ
-	void addRecoveryLog(const std::string& player, const std::string& Item, int recovery);
-
-	//特技を使った時のログ
-	void addSkillUseLog(const std::string& name, const std::string& Skillname, const std::string& target ,int damage);
-
-	//スキルを覚えた時のログ
-	void addSkillLog(const std::string& skillName);
-
-	//ゴールドを入手した時のログ
-	void addMoney(const std::string& Player, int money);
+	void AddRecoveryLog(const std::string& player, const std::string& Item, int recovery);
 
 	//アイテムを入手した時の処理
-	void addItemDrop(const std::string& Player, const std::string& ItemName);
+	void AddItemDrop(const std::string& Player, const std::string& ItemName);
 
 	//バフ系のログ
-	void addBuffLog(const std::string& player, const std::string& Item,const std::string& type, int buff);
+	void AddBuffLog(const std::string& player, const std::string& Item,const std::string& type, int buff);
 
 	//描画処理
-	void drawLogs()const;
+	void DrawLogs()const;
 
 	//バトルログのリセット
 	void LogReset() {

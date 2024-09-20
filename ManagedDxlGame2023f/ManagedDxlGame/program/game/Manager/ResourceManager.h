@@ -1,6 +1,8 @@
+//------------------------------------------------------------------------------------------------------------
 //
-//まとめるクラス
+//画像などを管理するマネージャー
 //
+//-------------------------------------------------------------------------------------------------------------
 
 
 #pragma once
@@ -18,26 +20,29 @@ class ResourceManager final {
 
 public:
 
-	static ResourceManager* getResourceManager();
-	static void delategetResourceManager() { delete getResourceManager(); }
+	static ResourceManager* GetResourceManager();
+	static void DelategetResourceManager();
 
 private:
 
-	ResourceManager();
+	ResourceManager() = default;
 	~ResourceManager();
 
 public:
-
-	void Update();
-	void Draw();
 
 	//何回も同じ画像をロードしない為の関数
 	int LoadGraphEX(const std::string&  gh);
 
 	//ロードした画像を消去する
-	bool deleteGraphEx(std::string ghpath);
+	bool deleteGraphEx(const std::string& ghpath);
 
 	//ロードした画像を描画する
+	//arg_1 : 画像のpath
+	//arg_2 : X座標
+	//arg_3 : Y座標
+	//arg_4 : 画像の大きさ
+	//arg_5 : 角度
+	//arg_6 : 透明か不透明か
 	void DrawRotaGraphEx(const std::string& ghpath , const int& x , const int& y , const double& Exlate, const double& Angle, const int& TransFlag);
 
 

@@ -8,7 +8,7 @@ SceneManager::SceneManager(BaseScene* start_scene) : now_scene_(start_scene) {
 	tansition_graph_hdl_ = LoadGraph("graphics/black.bmp");
 }
 
-SceneManager* SceneManager::GetInstance(BaseScene* start_scene) {
+SceneManager* SceneManager::GetSceneManager(BaseScene* start_scene) {
 	static SceneManager* instance = nullptr;
 	if (!instance) {
 		instance = new SceneManager(start_scene);
@@ -16,8 +16,8 @@ SceneManager* SceneManager::GetInstance(BaseScene* start_scene) {
 	return instance;
 }
 
-void SceneManager::Destroy() {
-	delete GetInstance();
+void SceneManager::DeleteSceneManager() {
+	delete GetSceneManager();
 }
 
 
@@ -49,14 +49,14 @@ bool SceneManager::seqTransOut(const float delta_time)
 {
 	int alpha = static_cast<int>((sequence_.getProgressTime() / transout_time_ * 255.0f));
 
+	//動きを制限する
+	if (GameManager::GetGameManager()->GetPlayer()->GetPlayerControl()) {
+		GameManager::GetGameManager()->GetPlayer()->PlayerControlChangeFlag();
+	}
+
 	if (alpha >= 255) {
 
 		sequence_.change(&SceneManager::seqTransIn);
-
-		//動きを制限する
-		if (GameManager::getGameManager()->getPlayer()->getPlayerControl()) {
-			GameManager::getGameManager()->getPlayer()->setPlayerControl();
-		}
 
 		//シーン遷移させる場合
 		if (scene_change) {
@@ -66,7 +66,7 @@ bool SceneManager::seqTransOut(const float delta_time)
 			now_scene_ = next_scene_;
 
 			//座標をセーブする
-			GameManager::getGameManager()->getCamera()->SavePosition(GameManager::getGameManager()->getPlayer()->getPlayerPos());
+			GameManager::GetGameManager()->GetCamera()->SavePosition(GameManager::GetGameManager()->GetPlayer()->GetPlayerPos());
 
 		}
 	}
@@ -82,12 +82,12 @@ bool SceneManager::seqTransIn(const float delta_time)
 {
 	if (sequence_.isStart()&& scene_change) {
 		//カメラの座標を合わせる
-		GameManager::getGameManager()->getCamera()->SetTargetPos();
+		GameManager::GetGameManager()->GetCamera()->SetTargetPos();
 	}
 
 	//プレイヤーを見えるようにする
-	if (!GameManager::getGameManager()->getPlayer()->GetPlayerDisplayFlag()) {
-		GameManager::getGameManager()->getPlayer()->PlayerDisplayChange();
+	if (!GameManager::GetGameManager()->GetPlayer()->GetPlayerDisplayFlag()) {
+		GameManager::GetGameManager()->GetPlayer()->PlayerDisplayChange();
 	}
 
 	int alpha = static_cast<int>(koni::Numeric::ALPHA_OPAQUE - (sequence_.getProgressTime() / transin_time_ * 255.0f));
@@ -97,8 +97,8 @@ bool SceneManager::seqTransIn(const float delta_time)
 		sequence_.change(&SceneManager::seqRunScene);
 
 		//動けるようにする
-		if (!GameManager::getGameManager()->getPlayer()->getPlayerControl()) {
-			GameManager::getGameManager()->getPlayer()->setPlayerControl();
+		if (!GameManager::GetGameManager()->GetPlayer()->GetPlayerControl()) {
+			GameManager::GetGameManager()->GetPlayer()->PlayerControlChangeFlag();
 		}
 	}
 

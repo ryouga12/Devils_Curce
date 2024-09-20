@@ -1,6 +1,8 @@
-///
-///MapChipクラス
-///
+//------------------------------------------------------------------------------------------------------------
+//
+//MapChipクラス
+//
+//-------------------------------------------------------------------------------------------------------------
 
 #pragma once
 #include "../../dxlib_ext/dxlib_ext.h"
@@ -8,11 +10,17 @@
 #include"../../koni_name_space/common/common_value.h"
 
 
-class MapChip {
+class MapChip final{
 public:
+
 	MapChip() = default;
+
+	//arg_1 : マップチップの座標
+	//arg_2 : マップチップの画像
+	//マップチップの座標と画像を設定する
 	MapChip(const tnl::Vector3& pos , const int gfx_hdl);
-	void Update(float delta_time);
+	
+	//描画
 	void Draw(const KonCamera& camera);
 
 	//マップチップサイズの取得
@@ -27,7 +35,10 @@ public:
 
 private:
 
-	tnl::Vector2i CHIP_SIZE = { 32, 32 };				//マップチップのサイズ
-	int chip_gpc_hdl = 0;								//画像のhdl
-	tnl::Vector3 pos_ = { 0, 0, 0 };					//マップチップのpos
+	//マップチップのサイズ
+	tnl::Vector2i CHIP_SIZE = { 32, 32 };				
+	//画像のhdl
+	int chip_gpc_hdl = 0;								
+	//マップチップのpos
+	tnl::Vector3 pos_ = { 0, 0, 0 };					
 };
