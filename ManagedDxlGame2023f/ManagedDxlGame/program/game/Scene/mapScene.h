@@ -1,6 +1,8 @@
-///
-///WorldMapクラス
+//------------------------------------------------------------------------------------------------------------
 //
+//WorldMapクラス
+//
+//-------------------------------------------------------------------------------------------------------------
 
 #pragma once
 #include	<unordered_set>
@@ -12,9 +14,8 @@
 class BaseScene;
 class Enemy;
 class MapChip;
-class CsvManager;
 
-class MapScene : public BaseScene {
+class MapScene final: public BaseScene {
 public:
 	MapScene();
 	~MapScene()override;
@@ -24,12 +25,11 @@ public:
 
 private:
 
+	//マップチップの読み込み
 	void worldMapLoad();
 
-	tnl::Vector3 pos = { 0 , 0 , 0 };
-
 	//村に入った時の座標
-	const tnl::Vector3 village_pos = { 860 , 900 , 0 };
+	const tnl::Vector3 VILLAGE_POS = { 860 , 900 , 0 };
 
 	//町に入った時の座標
 	const tnl::Vector3 TOWN_POS = { 1180,1360,0 };
@@ -37,23 +37,11 @@ private:
 	//城下町に入った時の座標
 	const tnl::Vector3 CASTLE_TOWN_POS = { 1950,950,0 };
 
-	//ボスの城に入った時の処理
-	const tnl::Vector3 boss_castle_pos = { 805 , 895 , 0};
+	//ボスの城に入った時の座標
+	const tnl::Vector3 BOSS_CASTLE_POS = { 769 , 895 , 0};
 
-	//村に入るときのフラグ(trueになったら遷移させる)
-	bool viilage_flag = false;
-
-	//ボスの城に入るときのフラグ
-	bool boss_castle_flag = false;
-
-	//遅延させる秒数
-	const float time = 0.5f;
-
-	//遅延させるSEの秒数
-	const float time_se = 0.8f;
-
-	//プレイヤーのサイズ
-	const float player_size = 1;
+	//勇者の墓に入った時の座標
+	const tnl::Vector3 GRAVE_POS = { 805 , 895 , 0 };
 
 	//プレイヤーの速度
 	float player_velocity = 2.5f;
@@ -61,73 +49,41 @@ private:
 	//プレイヤーのアニメーション
 	int Animation_default = 0;
 
+	//デバック用
+	void DebugMapScene();
+
 //------------------------------------------------------------------------------------------------------------------------
 //シーケンス
 
 	tnl::Sequence<MapScene> sequence_ = tnl::Sequence<MapScene>(this, &MapScene::seqMove);
+
+	//プレイヤーの行動(移動など)
 	bool seqMove(float delta_time);
+	//イベント関連
+	bool seqEvent(float delta_time);
 	//シーンを変える為のシーケンス
 	bool seqChangeScene(float delta_time);
+
+	//他の所でシーケンスを切り替える
+	void SequenceChangeMove()override;
 	
-		
-//------------------------------------------------------------------------------------------------------------------------
-//---武器関係---//
-
-//--------------------------------------------------------------------------------------------------------------------------
-//ポインタ変数
-//
-private:
-
-	Shared<MapChip>mapchip = nullptr;
-
 //--------------------------------------------------------------------------------------------------------------------------
 //mapchip関連
 //
+
 private:
 
-	std::string map_chip_ghdl_pass;
-	//建物や木などのオブジェクト用のcsvのdatapass
-	std::string map_chip_csv_object_pass;
-
-	//オブジェクト用のマップチップ
-	std::list<Shared<MapChip>>MapChips_object;
-
-	//平原用のマップチップ
-	std::list<Shared<MapChip>>MapChip_continent;
-
-	// マップチップの幅
-	int map_chip_width_;	
-	// マップチップの高さ
-	int map_chip_height_;	
-	// マップチップの総フレーム数
-	int map_chip_all_size_;	
-	// マップチップの横フレーム数
-	int map_chip_x_size_;
-	//mapchipの縦フレーム数
-	int map_chip_y_size_;
-
-	int gpc_map_chip_hdls_[2096];
-
-	const int MAP_HEIGHT = 3200;
-	const int MAP_WIDTH  = 6400;
-
 	//この中の値で当たり判定をきめる
-	std::unordered_set<int> colisionObjectValues = { 2, 10 , 11 ,12, 13 , 18 , 19, 20 , 21 ,25, 36 , 37  ,41 , 97 ,432, 440 , 442 , 827 , 835 ,1302,1303, 1336, 1337, 1363 ,1364 ,1365, 1476, 1477, 2024 };
+	std::unordered_set<int> colisionObjectValues = { 12 ,13 ,16 , 17 , 20 , 21 ,24 , 25 ,46 , 47, 97 ,432, 434 , 442  ,1244 , 1245 , 1328 , 1329 ,1336 , 1337,1670,1677, 2025 };
 
 	//町などの当たり判定に使う値
-	std::unordered_set<int>villageValues = { 334 ,335, 2032 , 2033  , 2034 , 2035 , 2069, 2089, 2090 };
+	std::unordered_set<int>ObjectValues = { 334 ,335, 1247, 2032 , 2033  , 2034 , 2035 , 2069, 2089, 2090 };
 
 	//地形で使う当たり判定の値
 	std::unordered_set<int>worldCollisionValues = {2024 , 2027};
 
 	//エンカウントで使う整数値
-	std::unordered_set<int>encount_kind = { 0 , 1 , 2 , 4 , 5 };
-
-	//村のマップチップ
-	const int map_chip_village = 2035;
-
-	//ボスの城のマップチップ
-	const int map_chip_boss_castle = 2090;
+	std::unordered_set<int>encount_kind = { 0 , 1 , 2 ,3 , 5 ,6 ,1320};
 
 	//当たり判定
 	void WorldMapCollision();
@@ -138,34 +94,15 @@ private:
 private:
 
 	//ランダムエンカウントでバトルシーンで遷移する為の関数
-	bool ChackEncount(int step);
+	bool ChackEncount(const int& step);
 
 	//何歩でエンカウントするか
 	int encounterThreshold = 0;
-
-	//平原
-	int plain = 2;
-
-	//平原2
-	int plain_second = 0;
-
-	//荒原
-	int wilderness[2] = { 1 , 4 };
-
-	//ボスエリア
-	int boss_area = 5;
 
 	//バトルシーンで使うハンドル
 	int background_hdl = 0;
 
 	//敵の配列のID
 	int enemy_id = 0;
-
-//------------------------------------------------------------------------------------------------------------------------
-//インベントリ関係
-private:
- 
-    //インベントリを開く
-	int first_menu = 1;
 
 };
