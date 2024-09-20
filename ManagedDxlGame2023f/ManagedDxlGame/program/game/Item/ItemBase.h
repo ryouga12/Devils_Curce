@@ -1,6 +1,9 @@
 #pragma once
 #include "../../dxlib_ext/dxlib_ext.h"
 
+//---------------------------------------------------------------------------------------------------------
+//アイテムのベースクラス
+
 
 class ItemBase {
 public:
@@ -36,11 +39,15 @@ public:
 
 	//アイテムの詳細を取得する
 	const std::string& GetItemDetail()const {
-		return ItemDetail;
+		return item_detail;
 	}
 	//特殊武器の補正させるモンスターの名前の取得
 	const std::string& GetEpicCorrection()const {
 		return epic_correction;
+	}
+	//特別アイテムかのフラグを取得する
+	bool GetEssentialItemsFlag()const {
+		return essential_items_flag;
 	}
 
 	
@@ -83,11 +90,16 @@ public:
 	}
 	//アイテムの詳細をセットする
 	void SetItemDetail(const std::string& newdetail) {
-		ItemDetail = newdetail;
+		item_detail = newdetail;
 	}
-	//敵のダメージに補正用の種族を取得する
+	//敵のダメージに補正用の種族をセットする
+	//主にドラゴンキラーなどの特殊武器の為の補正用の情報を取得する
 	void SetEpicCorrection(const std::string& new_correction) {
 		epic_correction = new_correction;
+	}
+	//特別アイテムか示すフラグをセットする
+	void SetEssentialItemsFlag(const int& new_flag) {
+		essential_items_flag = new_flag;
 	}
 
 
@@ -110,8 +122,9 @@ private:
 	//武器のタイプ
 	int weaponType = 0;
 	//アイテムの説明
-	std::string ItemDetail;
+	std::string item_detail;
 	//特殊武器のどのモンスターのダメージに補正をかけるか
 	std::string epic_correction;
-
+	//そのアイテムは特別なアイテムか(主にイベントアイテムなど売却できないアイテムなど)
+	bool essential_items_flag = false;
 };

@@ -18,9 +18,9 @@
 // ゲーム起動時に１度だけ実行されます
 void gameStart() {
 	srand(static_cast<unsigned>(time(0)));
-	SetBackgroundColor(32, 32, 32);
-
-	SceneManager::GetInstance(new TittleScene());
+	
+	//最初にタイトルシーンに設定
+	SceneManager::GetSceneManager(new TittleScene());
 }
 
 
@@ -28,10 +28,8 @@ void gameStart() {
 // 毎フレーム実行されます
 void gameMain(float delta_time) {
 
-
-	SceneManager::GetInstance()->update(delta_time);
-
-	//DrawFpsIndicator({ 10, DXE_WINDOW_HEIGHT - 10, 0 }, delta_time);
+	//シーンの更新処理と描画処理とシーケンス処理を呼び出す
+	SceneManager::GetSceneManager()->update(delta_time);
 }
 
 //------------------------------------------------------------------------------------------------------------
@@ -39,10 +37,10 @@ void gameMain(float delta_time) {
 void gameEnd() {
 	
 	//シングルトンの解放
-	EventManager::delateEventManager();
-	GameManager::delateGameManager();
-	ResourceManager::delategetResourceManager();
-	SceneManager::Destroy();
-	SoundManager::delateSoundManager();
-	UIManager::delategetUIManager();
+	EventManager::DelateEventManager();
+	GameManager::DelateGameManager();
+	ResourceManager::DelategetResourceManager();
+	SceneManager::DeleteSceneManager();
+	SoundManager::DelateSoundManager();
+	UIManager::DeleteGetUIManager();
 }

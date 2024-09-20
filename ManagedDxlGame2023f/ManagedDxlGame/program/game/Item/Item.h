@@ -18,13 +18,11 @@ class Item final: public  ItemBase{
 public:
 	
 	Item();
-	~Item();
-
-	void draw();
+	~Item()=default;
 
 	//アイテムの配列を取得する
-	const std::list<ItemBase>&getItemArray()const {
-		return m_Item_Status_Type;
+	const std::list<ItemBase>&GetItemArray()const {
+		return item_status_type;
 	}
 
 	//使用できるアイテム
@@ -52,20 +50,11 @@ private:
 	//読み込み関数
 	void ItemLoadTypeInfo();
 	
-	//modelを入れる変数
-	ItemBase item_Status_ary;
-
 	//構造体の総数
-	int m_item_Status_Total_num;
+	int item_status_total_num;
 
 	//構造体を格納する配列
-	std::list<ItemBase>m_Item_Status_Type;
-
-	//アイテムなどの説明文などを入れる配列
-	std::string ItemDisc = {};
-
-	//itemの座標
-	tnl::Vector3 item_pos = {};
+	std::list<ItemBase>item_status_type;
 
 	//バトルシーンのみで使う為のフラグ
 	bool BattleFlag = false;
@@ -82,36 +71,29 @@ private:
 public:
 
 	//IDを指定してアイテムを取得する関数
-	//引数 : アイテムのID
+	//arg_1 : アイテムのID
 	//アイテムのIDを入れるとそれに該当したアイテムを取得する
 	ItemBase GetItemById(const int& id) const;
 
 	//アイテムを使用した時の処理
+	//arg_1 : アイテムのID
+	//アイテムのIDによって処理を分ける
 	void ItemUse(const int& itemid);
 
 	//使用時Hp回復系
+	//arg_1 : 倍率
+	//arg_2 : アイテムのID
 	void ItemHpHeal(const float& percentage, const int& itemid);
 
 	//バトルログのポインタをセットする
-	void SetBattleLog(Shared<BattleLog>battle_log) { battle_log_ = battle_log; }
-
-	//アイテムがインベントリ内に存在したらインベントリから消去する
-	void ItemRemove(const int& itemid);
+	//arg_1 : バトルログのSharedポインタ
+	void SetBattleLog(const Shared<BattleLog>& battle_log) { battle_log_ = battle_log; }
 
 	//スキルを追加する系のアイテム
 	template <class T>
 	void AddSkillItem(const int& itemid, Shared<T> skill);
 
-	//上がったAttack量の値を取得する
-	int getAttackAmount()const {
-		return AttackAmount;
-	}
-
-	//recoveryを取得する
-	int getRecovery() { return healAmount; }
-
 	//フラグを切り替える
-	//0 が true で 1 が false
 	void BattleFlagSwitch() {
 		BattleFlag = !BattleFlag;
 	}
