@@ -1,6 +1,8 @@
+//------------------------------------------------------------------------------------------------------------
 //
 //カメラクラス
 //
+//-------------------------------------------------------------------------------------------------------------
 
 
 #pragma once
@@ -8,17 +10,19 @@
 
 class Player;
 
-class KonCamera {
+class KonCamera final{
 public:
 	KonCamera();
 
 	//カメラの動き処理
-	//引数 : 追従する座標 , マップの幅 , マップの高さ 
-	void update(tnl::Vector3 target_pos = {0 , 0 , 0}, int MAP_WIDTH = 0, int MAP_HEIGHT = 0);
+	//arg_1 : 追従する座標
+	//arg_2 : マップの幅 
+	//arg_3 : マップの高さ 
+	void update(const tnl::Vector3& target_pos, const int& MAP_WIDTH, const int& MAP_HEIGHT);
 	void draw();
 
 	//ターゲットの座標を取得する
-	tnl::Vector3 getTargetPos()const{
+	tnl::Vector3 GetTargetPos()const{
 		return target_;
 	}
 
@@ -32,21 +36,6 @@ public:
 		camera_trarget_savepos_ = target_pos;
 	}
 
-	//カメラの状態
-	//カメラ状態を切り替えてカメラを操作する
-	enum class CameraState {
-		INPLAY,			//プレイ中
-		DEBUG			//デバック
-	};
-
-	//カメラシェイクをスタートさせる
-	void StartShake(const float duration, const float magnitude);
-
-	// バトル用カメラ座標を取得する
-	tnl::Vector3 getBattleCameraPos() const {
-		return battle_camera_pos_;
-	}
-
 private:
 
 	//---主にマップで使うカメラ---//
@@ -57,25 +46,7 @@ private:
 	//カメラの座標を保管しておく
 	tnl::Vector3 camera_trarget_savepos_;
 
-	//---バトル時に使うカメラ---//
+	//プレイヤーの追跡するスピード
+	const float TRACKING_SPPED = 0.05f;
 
-	//バトル時のカメラ
-	tnl::Vector3 battle_camera_pos_ = { DXE_WINDOW_WIDTH / 2, DXE_WINDOW_HEIGHT / 2 ,  0 };
-
-	//保存用のカメラ
-	tnl::Vector3 battle_camera_save_pos = { DXE_WINDOW_WIDTH / 2, DXE_WINDOW_HEIGHT / 2 ,  0 };
-
-	//---カメラシェイク用のパラメータ---//
-
-	// カメラがシェイク中かどうかを示すフラグ
-	bool is_shaking_ = false;       
-	// シェイクの継続時間（秒）
-	float shake_duration_ = 0;  
-	// シェイクの強度（揺れの幅）
-	float shake_magnitude_ = 0; 
-	// シェイクが開始してからの経過時間（秒）
-	float shake_elapsed_ = 0;      
-
-	//カメラシェイク
-	void CameraShake();
 };
