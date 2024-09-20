@@ -1,7 +1,9 @@
 #pragma once
-///
-///プレイヤーに関するクラス
-/// 
+//------------------------------------------------------------------------------------------------------------
+//
+//プレイヤーに関するクラス
+//
+//-------------------------------------------------------------------------------------------------------------
 
 
 #include "../../dxlib_ext/dxlib_ext.h"
@@ -10,23 +12,15 @@
 #include"Enemy.h"
 
 class BattleLog;
-class SoundManager;
-class GameManager;
-class SceneManager;
 class Skill;
 class Nomal_Attack;
-class CsvManager;
 class InMapScene;
-class CsvManager;
 
-class Player : public Actor {
+class Player final: public Actor {
 public:
 
-	
 	Player();
 	~Player();
-
-	void Update(float delta_time);
 
 	//playerのステータス
 	struct PlayerStatus {
@@ -37,16 +31,24 @@ public:
 			return level;
 		}
 		//maxHpを取得する
-		float GetMaxHp()const {
+		int GetMaxHp()const {
 			return maxHp;
 		}
 		//hpを取得する
-		float GetcurentHp() const{
+		int GetcurentHp() const{
 			return curenthp;
 		}
 		//Attackを取得する
 		int GetAttack() const{
 			return Attack;
+		}
+		//基礎攻撃力を取得する
+		int GetBaseAttack()const {
+			return base_attack;
+		}
+		//基礎防御力を取得する
+		int GetBaseDefance()const {
+			return base_defance;
 		}
 		//Defanceを取得する
 		int GetDefance() const {
@@ -61,65 +63,65 @@ public:
 			return R_expoint;
 		}
 		//最大MPを取得する
-		float GetMaxMp() const {
+		int GetMaxMp() const {
 			return maxMp;
 		}
 		//現在Mpを取得する
-		float GetCurentMp()const {
+		int GetCurentMp()const {
 			return curentMp;
 		}
 		//魔法力を取得する
 		int GetMagicPower()const {
 			return magicPower;
 		}
-		//プレイヤーのIDを取得する
-		int GetPlayerID()const {
-			return player_id;
-		}
 
 		//levelをセットする
-		void SetPlayerLevel(int newlevel) {
+		void SetPlayerLevel(const int newlevel) {
 			level = newlevel;
 		}
 		//maxHpをセットする
-		void SetPlayerMaxHp(float newmaxhp) {
+		void SetPlayerMaxHp(const int newmaxhp) {
 			maxHp = newmaxhp;
 		}
 		//hpをセットする
-		void SetPlayerCurentHp(float newhp) {
+		void SetPlayerCurentHp(const int newhp) {
 			curenthp = newhp;
 		}
 		//Attackをセットする
-		void SetPlayerAttack(int newattack) {
+		void SetPlayerAttack(const int newattack) {
 			Attack = newattack;
 		}
 		//Defanceをセットする
-		void SetPlayerDefance(int newdefance) {
+		void SetPlayerDefance(const int newdefance) {
 			Defance = newdefance;
 		}
+		//基礎攻撃力をセットする
+		void SetPlayerBaseAttack(const int new_attack) {
+			base_attack = new_attack;
+		}
+		//基礎防御力をセットする
+		void SetBaseDefance(const int new_defance) {
+			base_defance = new_defance;
+		}
 		//Speedをセットする
-		void SetPlayerSpeed(int newspeed) {
+		void SetPlayerSpeed(const int newspeed) {
 			Speed = newspeed;
 		}
 		//必要な経験値をセットする
-		void SetPlayerExpoint(int newexpoint) {
+		void SetPlayerExpoint(const int newexpoint) {
 			R_expoint = newexpoint;
 		}
 		//最大Mpをセットする
-		void SetPlayerMaxMp(float newmaxmp) {
+		void SetPlayerMaxMp(const int newmaxmp) {
 			maxMp = newmaxmp;
 		}
 		//現在のMpをセットする
-		void SetPlayerCurentMp(float newmp) {
+		void SetPlayerCurentMp(const int newmp) {
 			curentMp = newmp;
 		}
 		//魔法力をセットする
-		void SetMagicPower(int newmagicpower) {
+		void SetMagicPower(const int newmagicpower) {
 			magicPower = newmagicpower;
-		}
-		//プレイヤーのIDをセットする
-		void SetPlayerID(int new_player_id) {
-			player_id = new_player_id;
 		}
 
 	private:
@@ -127,11 +129,15 @@ public:
 		//プレイヤーのレベル
 		int level;
 		//プレイヤーの最大HP
-		float maxHp;
+		int maxHp;
 		//プレイヤーの現在のHP
-		float curenthp;
+		int curenthp;
+		//プレイヤーの基礎攻撃力
+		int base_attack;
 		//プレイヤーの攻撃力
 		int Attack;
+		//プレイヤーの基礎防御力
+		int base_defance;
 		//プレイヤーの防御力
 		int Defance;
 		//プレイヤーの素早さ
@@ -139,14 +145,11 @@ public:
 		//プレイヤーの必要な経験値
 		int R_expoint;
 		//プレイヤーの最大MP
-		float maxMp;
+		int maxMp;
 		//プレイヤーの現在のMP
-		float curentMp;
+		int curentMp;
 		//プレイヤーの魔法力
 		int magicPower;
-		//プレイヤーのID
-		int player_id;
-
 	};
 
 	//アニメーション
@@ -173,11 +176,32 @@ public:
 
 	//プレイヤーの状態
 	enum class PlayerState {
-		IDLE,
+		//選択状態
+		CHOICE,
+		//通常攻撃
 		NOMALATTACK,
+		//スキル使用時
 		SKILL,
+		//逃げる
 		FLEE,
+		//死亡
 		DEAD,
+		//待機状態
+		IDLE
+	};
+
+	//プレイヤーの見た目の状態
+	enum PlayerEquipState {
+		//素手
+		BARE_HANDS,
+		//剣
+		SWORD,
+		//ハンマー
+		HAMMER,
+		//槍
+		SPEAR,
+		//ロングソード
+		LONGSWORD
 	};
 
 	//プレイヤーの状態を切り替える
@@ -190,33 +214,203 @@ public:
 		return player_state;
 	}
 
-	//プレイヤーの行動
+	//プレイヤーのバトル時の行動
+	//arg_1 : Delta_time
+	//arg_2 : バトルログのスマートポインタ
+	//arg_3 : 敵のスマートポインタ
+	//arg_4 : 通常攻撃のスマートポインタ
 	void PlayerMoveProcess(float delta_time, Shared<BattleLog>& basttle_log , Shared<Enemy>& enemy, Shared<Nomal_Attack>& nomal_attack);
 
-	bool getPlayerControl()const {
-		return plyControl;
+	//プレイヤーの行動制限のフラグを取得する
+	bool GetPlayerControl()const {
+		return play_control;
 	}
+
+	//プレイヤーの名前をセットする
+	void SetPlayerName(const std::string& new_player_name) {
+		name = new_player_name;
+	}
+
+	//プレイヤーの名前を取得する
+	const std::string& GetPlayerName()const {
+		return name;
+	}
+
+	//プレイヤーのIDを取得する
+	int GetPlayerID()const {
+		return player_id;
+	}
+
+	//プレイヤーのIDをセットする
+	void SetPlayerID(const int new_player_id) {
+		player_id = new_player_id;
+	}
+
+	//プレイヤーのアイコンを取得する
+	int GetPlayerIcon()const {
+		return player_icon;
+	}
+	//プレイヤーの座標をセットする
+	void SetPlayerPosition(const tnl::Vector3& new_pos) {
+		plyer_pos = new_pos;
+		prev_pos = new_pos;
+	}
+
+	//プレイヤーのステータスをロードする
+	void PlyStatusLoad();
+
+	//プレイヤーの画像をセットする
+	void SetPlayerAnimationHdl(const int& ghdl_id, const int& player_id);
+
+	//プレイヤーの動き
+	//arg_1 : delta_time 
+	//arg_2 : 動く速度　
+	//arg_3 : マップの高さ(移動制限の為)
+	void Player_Move(const float& delta_time, const float& velocity, const int& MAPHEIGHT);
+
+	//プレイヤーの描画
+	//arg_1 : カメラ 
+	//arg_2 : プレイヤーのサイズ
+	void Player_draw(const KonCamera& camera, const float& scale);
+
+	//プレイヤーの座標を取得する
+	tnl::Vector3& GetPlayerPos() { return plyer_pos; }
+
+	//プレイヤーの移動前座標を取得する
+	tnl::Vector3& GetPlayerPrevPos() { return prev_pos; }
+
+	//プレイヤーの動きを制御する
+	void PlayerControlChangeFlag() {
+		play_control = !play_control;
+	}
+
+	//プレイヤーのアニメーション処理
+	void PlayerAnimation(const float& delta_time);
+
+	//所持金を取得する
+	int GetPlayerMoney()const { return money; }
+
+	//所持金を追加する
+	void AddPlayerMoney(const int& add_money) {
+		money += add_money;
+	}
+
+	//所持金を減らす
+	void ReducePlayerMoney(const int& reduce_money) {
+		money -= reduce_money;
+	}
+
+	//プレイヤーのサイズを取得する
+	const tnl::Vector2i& GetPlayerSize()const {
+		return CHARASIZE;
+	}
+
+	//プレイヤーのステータス配列を取得する
+	PlayerStatus& GetPlayerStatusSave() {
+		return player_status_save;
+	}
+
+	//プレイヤーにマップの状態をセットする(主にプレイヤーがセーブの際どこに居るか認識する為)
+	void SetPlayerCurentMapMemory(int curent_inmap) {
+		player_curent_map_memory = curent_inmap;
+	}
+
+	//プレイヤーがどのマップの状態にいるか取得する
+	int GetPlayerCurentMapState()const {
+		return player_curent_map_memory;
+	}
+
+	//取得したIDのスキルを追加する
+	//主にセーブやデバックに使用する
+	//arg_1 : スキルID
+	void SaveReadSkill(const int& skill_id);
+
+	//最大レベルを取得する
+	int GetMaxLevel() const {
+		return MAX_LEVEL;
+	}
+
+	//プレイヤーのステータスを他のクラスなどで取得する
+	PlayerStatus GetPlyerStatus(const int& level) const;
+
+	//ステータスをセットする
+	void SetPlayerStatus(const int& level) {
+		player_status_save = GetPlyerStatus(level);
+	}
+
+	//Playerのアニメーションを変化させる
+	void AnimationChange(const int& number) {
+		anim_ctrl_dir = number;
+	}
+
+	//歩数を0にする
+	void StepReset() {
+		numberStep = 0;
+	}
+	//歩数を取得する
+	int GetStep()const {
+		return numberStep;
+	}
+
+	//スキルの配列を取得する
+	const std::vector<Shared<Skill>>& getSkillList() {
+		return player_skill_list;
+	}
+
+	//プレイヤーの死亡処理
+	void DeadPlayerProcess(Shared<BattleLog>& battle_log);
+
+	//プレイヤーの攻撃処理
+	void PlayerAttackProcess(Enemy::EnemyConnection& enemy_status, Shared<BattleLog>& battle_log, Shared<Nomal_Attack>& nomal_attack);
+
+	//スキルをセットする
+	//レベルに応じてスキルを追加する
+	//arg_1 : バトルログのポインタ(主にバトルシーンで取得したというログを流す為)
+	void SkillSet(const Shared<BattleLog>& battle_log);
+
+	//特技を追加する
+	void AddSkill(const Shared<Skill>& skill);
+
+	//セーブロード
+	void PlayerSave();
+	void PlayerLoad();
+
+
+	//プレイヤーの表示フラグを切り替える
+	//プレイヤーを一時的に見えなくする為
+	void PlayerDisplayChange() {
+		player_display_flag = !player_display_flag;
+	}
+
+	//プレイヤーの表示フラグを取得する
+	bool GetPlayerDisplayFlag()const {
+		return player_display_flag;
+	}
+
+	//スキルを全て追加する(デバック用)
+	void DebugAddSkill();
 
 private:
 
 	//---プレイヤー関係---//
 
-	//現在のプレイヤーの状態
-	PlayerState player_state = PlayerState::IDLE;
+	//名前
+	std::string name;
 
-	float first_pos_x = 195;						//ゲームが始まった時のｘ座標
-	float first_pos_y = 312;						//ゲームが始まった時のy座標
-	int Total_Frame = 3;							//プレイヤーの総フレーム(3)
-	int Horizontal_frame = 3;						//プレイヤーの横フレーム(3)
-	int Vertical_frame = 1;							//プレイヤーの縦フレーム(1)
-	int Horizontal_oneframe = 48;					//横方向へ 1フレームあたりの幅(48)
-	int Vertical_oneframe = 48;						//縦方向へ 1フレームあたりの幅(48)
+	//プレイヤーのマックスレベル
+	const int MAX_LEVEL = 20;
+
+	//プレイヤーのID
+	int player_id = 0;
+
+	//現在のプレイヤーの状態
+	PlayerState player_state = PlayerState::CHOICE;
 
 	//plyerの歩数
 	int numberStep = 0;
 
 	//plyerの動きの制御
-	bool plyControl = false;
+	bool play_control = false;
 
 	//playerの移動前座標
 	tnl::Vector3 prev_pos = { 0 ,0,0 };
@@ -231,93 +425,23 @@ private:
 	//プレイヤーのお金
 	int money = 0;
 
-	//ステータスのインデックス
-	int PlyerIndex = 0;
-
 	//ステータス情報
-	PlayerStatus plyerstatusSave;
+	PlayerStatus player_status_save;
 
-	//名前
-	std::string name = "";
+	//プレイヤーのステータス表示や戦闘時のアイコンのハンドル
+	std::string PLAYER_BATTLE_ICON[4] =
+	{
+	 "graphics/Player/player_image_0/Player_Icon_sentou.png",
+	 "graphics/Player/player_image_01/Player_Icon_sentou.png",
+	 "graphics/Player/player_girl_image_02/Player_Icon_sentou.png",
+	 "graphics/Player/player_girl_image_03/Player_Icon_sentou.png"
+	};
 
-	//武器のタイプ(通常攻撃のエフェクトの切り替えの為)
-	int weapon_type = 0;
+	//プレイヤーのステータス表示や戦闘時のアイコン
+	int player_icon = 0;
 
-public:
-	
-	 void SetPlayerPosition(const tnl::Vector3& new_pos) {
-		plyer_pos = new_pos;
-	 }
-
-	//プレイヤーのステータスをロードする
-	void PlyStatusLoad();
-
-	//プレイヤーの画像をセットする
-	void SetPlayerAnimationHdl(int ghdl_id);
-
-	//プレイヤーの動き
-	//引数 : Delta_time , 動く速度　, マップの高さ(移動制限の為)
-	void player_Move(float delta_time, const float& velocity ,const int MAPHEIGHT);
-
-	//プレイヤーの描画
-	//引数 : カメラ , プレイヤーのサイズ
-	void player_draw(const KonCamera& camera, float scale);
-
-	//プレイヤーの座標を取得する
-	tnl::Vector3&  getPlayerPos() { return plyer_pos; }
-
-	//プレイヤーの移動前座標を取得する
-	tnl::Vector3& getPlayerPrevPos(){ return prev_pos; }
-	
-	//プレイヤーの動きを制御する
-	void setPlayerControl() {
-		plyControl = !plyControl;
-	}
-
-
-	//所持金を取得する
-	inline int getPlayerMoney(){ return money; }
-
-	//所持金を追加する
-	inline void AddPlayerMoney(int add_money) {
-		money += add_money;
-	}
-
-	//所持金を減らす
-	inline void ReducePlayerMoney(int reduce_money) {
-		money -= reduce_money;
-	}
-
-	//プレイヤーのサイズを取得する
-	int GetPlayerWidth()const {
-		return CHARASIZE.x;
-	}
-	int GetPlayerHight()const {
-		return CHARASIZE.y;
-	}
-	tnl::Vector2i GetPlayerSize()const {
-		return CHARASIZE;
-	}
-
-	//プレイヤーのステータス配列を取得する
-	PlayerStatus& getPlayerStatusSave(){
-		return plyerstatusSave;
-	}
-
-	//プレイヤーにマップの状態をセットする(主にプレイヤーがセーブの際どこに居るか認識する為)
-	void SetPlayerCurentMapMemory(int curent_inmap) {
-		player_curent_map_memory = curent_inmap;
-	}
-
-	//プレイヤーがどのマップの状態にいるか取得する
-	int GetPlayerCurentMapState()const {
-		return player_curent_map_memory;
-	}
-
-	//スキルを追加する
-	void SaveReadSkill(int skill_id);
-
-private:
+	//スキルのスマートポインタ
+	Shared<Skill>skill = nullptr;
 
 	//アニメーションに使う変数
 	float anim_time_count = 0;
@@ -326,78 +450,26 @@ private:
 	int anim_hdls[DIR_MAX][9];
 
 	//構造体の総数
-	int Ply_Status_Total_num;
+	int player_status_total_num;
 
 	//構造体を格納する配列
-	std::list<PlayerStatus>Ply_Status_Type;
+	std::list<PlayerStatus>player_status_type;
 
 	//csv読み取り用の配列
-	std::vector<std::vector<tnl::CsvCell>>PlyerStatus_Csv_Info;
-
-	//全滅した時に流すSEの音
-	const float annihilation_Time = 3.5f;
+	std::vector<std::vector<tnl::CsvCell>>plyer_status_csv_info;
 
 	//特技用のインベントリ
 	std::vector<Shared<Skill>> player_skill_list;
 
 	//特技の数
-	int SkillNum = 0;
+	int skill_num = 0;
 
 	//プレイヤーに保存しておくマップの状態の情報
 	int player_curent_map_memory = 0;
 
 	//---フラグ関係---//
 
-
-public:
-
-	//プレイヤーのステータスを他のクラスなどで取得する
-	PlayerStatus GetPlyerStatus(int level) const;
-
-	//ステータスをセットする
-	void SetPlayerStatus(int level) {
-		plyerstatusSave = GetPlyerStatus(level);
-	}
-
-	//Playerのアニメーションを変化させる
-	void AnimationChange(int number) {
-		anim_ctrl_dir = number;
-	}
-
-	//歩数を0にする
-	void StepReset() {
-		numberStep = 0;
-	}
-	//歩数を取得する
-	int GetStep() {
-		return numberStep;
-	}
-
-	//スキルの配列を取得する
-	std::vector<Shared<Skill>>& getSkillList() {
-		return player_skill_list;
-	}
-
-	//スキルの個数を取得する
-	int getSkillNum() {
-		return SkillNum;
-	}
-
-	//プレイヤーの死亡処理
-	void DeadPlayerProcess(Shared<BattleLog>& battle_log);
-
-	//プレイヤーの攻撃処理
-	void PlayerAttackProcess(Enemy::EnemyConnection& enemy_status,Shared<BattleLog>& battle_log , Shared<Nomal_Attack>& nomal_attack);
-
-	//スキルをセットする
-	void SkillSet(Shared<BattleLog> battle_log = nullptr);
-
-	//特技を追加する
-	void AddSkill(const Shared<Skill>& skill);
-
-	//セーブロード機能を実験中（のちに追加予定）
-	void PlyerSave();
-	void PlyerLoad();
-
+	//プレイヤーの表示を管理するフラグ
+	bool player_display_flag = true;
 };
 
