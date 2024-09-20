@@ -13,30 +13,28 @@
 //
 //-----------------------------------------------------------------------------------------------------
 
-//class Enemy;
 class MapScene;
 class RusultScene;
 class BattleLog;
 class BaseScene;
-class GameManager;
-class UIManager;
 
-class BattleScene : public  BaseScene{
+class BattleScene final: public  BaseScene{
 
 public:
 
-	BattleScene() {};
-
 	//バトルシーンのコンストラクタ
-	//引数 : arg1 保管する座標 、atg2 バトルの背景 、arg3 エネミー 、arg4 ボスの時はマップ内の為どこのマップにいるかも格納しておく 
-	BattleScene(tnl::Vector3 pos ,int background , Shared<Enemy> enemy ,int inmap_state = 0);
-	virtual~BattleScene()override;
+	//arg1 保管する座標 
+	//atg2 バトルの背景
+	//arg3 エネミーのポインタ 
+	//arg4 ボスの時はマップ内の為どこのマップにいるかも格納しておく 
+	BattleScene(const tnl::Vector3& pos ,const int& background , Shared<Enemy> enemy_pointer ,const int& inmap_state = 0);
+	~BattleScene()override;
 
 	//更新処理
-	virtual void Update(float delta_time)override;
+	void Update(float delta_time)override;
 
 	//描画
-	virtual void Draw()override;
+	void Draw()override;
 
 	//バトルウィンドウの描画
 	void BattleDraw();
@@ -68,7 +66,7 @@ public:
 	//アイテムのドロップ処理
 	void ItemDropProcess(Enemy::EnemyConnection& enemy_);
 
-	//一時的に上がった攻撃力などをリセットする
+	//変動した値をリセットする
 	void BattleBuffResetProcess();
 
 	//武器のタイプをSetする
@@ -77,15 +75,22 @@ public:
 	//逃げるを選択した際の処理
 	void FleeProcess(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemy_ , float delta_time);
 
+	//バトルが終わった後に敵の種類によって処理を変える
+	void BattleEndProcces(const int& enemy_id);
+
+	//限定のボス戦での処理
+	bool CheckRequiredItemEnemyProcess();
 
 	//バトルシーンの状態を管理する
 	enum class BattleState {
-		IDLE,	//バトルが終了した待機状態
-		BATTLE, //戦闘
+		//バトルが終了した待機状態
+		IDLE,	
+		//戦闘
+		BATTLE, 
 	};
 
 	//バトルの状態をセットする
-	void SetBattleState(BattleState newState) {
+	void SetBattleState(const BattleState& newState) {
 		battle_state = newState;
 	}
 
@@ -97,9 +102,6 @@ private:
 	//座標を一時的に保存しておく変数
 	tnl::Vector3 map_pos = {};
 
-	//遅延させる秒数
-	const float Time = 1.0f;
-
 	//逃げれる確率
 	int probability = 50;
 
@@ -107,8 +109,15 @@ private:
 	//これを渡して戦闘終了時にどのマップ内に居るかを判断する
 	int inmap_state_save = 0;
 
-	//最後のボスのID
-	const int LAST_BOSS_ID = 20;
+	//ラスボスを倒した後の座標
+	const tnl::Vector3 FIRST_POS_ = { 195, 312, 0 };
+
+	//バトルシーンの切り替え
+	void BattleSceneUpdate(const float delta_time);
+
+	//敵の攻撃
+	void EnemyTurnProcess();
+
 
 //------------------------------------------------------------------------------------------------------------------------
 //それぞれのフラグ
@@ -136,12 +145,17 @@ private:
 	//アニメーションを流す為のシーケンス
 	bool seqAnimation(float delta_time);
 
+	//シーケンス
 	enum class Sequence {
+		//それぞれのスピードを見極めてターンを決める
 		IDLE,
+		//プレイヤーの行動ターン
 		PLAYERACTION,
+		//エネミーの行動ターン
 		ENEMYACTION
 	};
 
+	//シーケンスの状態
 	Sequence select_sequence = Sequence::IDLE;
 
 	//バトルシーンの状態
@@ -157,8 +171,6 @@ private:
 	Shared<Enemy>enemy = nullptr;
 	//行動を選択するウィンドウ
 	Shared<MenuWindow>select_comand_menu = nullptr;
-	//ウィンドウ
-	Weak<Menu>window_log;
 	//バトルログ
 	Shared<BattleLog>battle_log = nullptr;
 	//攻撃の際のウィンドウ
@@ -189,43 +201,63 @@ private:
 
 	//どの動作を行うかでメニューを決める
 	enum class MenuAction {
+		//最初の選択(たたかう , 道具 , 逃げる)
 		FIRST_ACTION,
+		//たたかうを選んだ時の選択(攻撃 , 特技 , 戻る)
 		FIGHT_ACTION,
+		//道具を選んだ時の選択(道具一覧)
 		ITEM_ACTION,
+		//アイテムを選択した際の使うかどうかの選択
 		ITEM_USE_ACTION,
+		//特技を選択した時の選択(特技一覧)
 		SKILL_ACTION,
 	};
 
+	//今どの状態か
 	MenuAction select_action_menu = MenuAction::FIRST_ACTION;
 
 	//表示させるアイテム数
 	const int ITEMPERPAGE_ = 4;
+
 	//アイテムを表示するy座標
 	const int STARTY = 550;
+
 	//アイテムを表示する際の座標
-	const tnl::Vector2i ITEM_DRAW_POS = { 350 , 540};
+	const tnl::Vector2i ITEM_DRAW_POS = { 360 , 540};
+
 	//アイテムのページ数の描画座標
 	const tnl::Vector2i ITEM_CURENT_PAGE = { 400 , 690};
+
 	//各行の高さ
 	const int LINEHEIGHT = 30;
+
 	//各ページ
 	int currentPage = 0;
+
 	//カーソルのサイズ
 	const float CURSOURSIZE = 0.3f;
+
 	//カーソルのY座標
 	const int CUROURY = 330;
+
 	//アイテムを使う
 	const int ITEMUSE_ = 0;
+
 	//アイテムを使うウィンドウを閉じる
 	const int ITEMUSEMENUCLOSE_ = 1;
+
 	//メニュー選択で攻撃が選択された場合
 	const int ATTACK_ = 0;
+
 	//メニュー選択で道具が選択された場合
 	const int ITEM_ = 1;
+
 	//メニューを選択で逃げるが選択された時
 	const int FLEE_ = 2;
+
 	//攻撃の選択画面で特技が選択された時
 	const int SPECIAL_SKILL_ = 1;
+
 	//選択画面で閉じるが押された時
 	const int MENU_CLOSE_ = 2;
 
@@ -246,9 +278,44 @@ private:
 	const tnl::Vector2i MENU_ITEM_USE_POS = { 600 , 550 };
 	//閉じる
 	const tnl::Vector2i MENU_ITEM_CLOSE = { 600 , 600 };
-//--------------------------------------------------------------------------------------------------------------------------
-//ログ関連
-private:
+
+	//バトルログウィンドウの座標
+	const tnl::Vector2i BATTLE_LOG_WINDOW_POS = { 670, 30 };
+
+	//バトルログウィンドウのサイズ
+	const int BATTLE_LOG_WINDOW_WIDTH = 600;
+	const int BATTLE_LOG_WINDOW_HEIGHT = 180;
+
+	//メニューウィンドウの座標
+	const tnl::Vector2i MENU_WINDOW_POS = { 50, 500 };
+
+	//メニューウィンドウのサイズ
+	const int MENU_WINDOW_WIDTH = 250;
+	const int MENU_WINDOW_HEIGHT = 200;
+
+	//バトルシーンで使うアイテムウィンドウの座標
+	const tnl::Vector2i ITEM_WINDOW_POS = { 300, 500 };
+
+	//バトルシーンで使うアイテムウィンドウのサイズ
+	const int ITEM_WINDOW_WIDTH = 250;
+	const int ITEM_WINDOW_HEIGHT = 215;
+
+	//アイテムを選択した際の使う選択コマンドのウィンドウの座標
+	const tnl::Vector2i SELECT_ITEM_USE_WINDOW_POS = { 550, 500 };
+
+	//スキルウィンドウの座標
+	const tnl::Vector2i SKILL_WINDOW_POS = { 300, 500 };
+
+	//スキルウィンドウのサイズ
+	const int SKILL_WINDOW_WIDTH = 270;
+	const int SKILL_WINDOW_HEIGHT = 215;
+
+	//プレイヤーステータスのウィンドウの座標
+	const tnl::Vector2i PLAYER_STATUS_WINDOW_POS = { 50, 50 };
+
+	//プレイヤーステータスウィンドウのサイズ
+	const int PLAYER_STATUS_WINDOW_WIDTH = 250;
+	const int PLAYER_STATUS_WINDOW_HEIGHT = 250;
 
 //--------------------------------------------------------------------------------------------------------------------------
 //スキル関連
