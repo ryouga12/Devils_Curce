@@ -17,4 +17,5 @@ NPCの名前,現在のシーン,画像1枚目,画像2枚目,画像3枚目,画像4枚目
 王妃,3,graphics/Npc/queen_left.png,graphics/Npc/queen_right.png,graphics/Npc/queen_up.png,graphics/Npc/queen_idle.png
 学者,3,graphics/Npc/scholar_left.png,graphics/Npc/scholar_right.png,graphics/Npc/scholar_up.png,graphics/Npc/scholar_idle.png
 兵士,3,graphics/Npc/soldier_left.png,graphics/Npc/soldier_right.png,graphics/Npc/soldier_up.png,graphics/Npc/soldier_idle.png
-魔王,4,graphics/Npc/maou_left.png,graphics/Npc/maou_right.png,graphics/Npc/maou_up.png,graphics/Npc/maou_idle.png
+魔王,5,graphics/Npc/maou_left.png,graphics/Npc/maou_right.png,graphics/Npc/maou_up.png,graphics/Npc/maou_idle.png
+影の番人,4,graphics/Npc/shadow_monster_left.png,graphics/Npc/shadow_monster_right.png,graphics/Npc/shadow_monster_up.png,graphics/Npc/shadow_monster_idle.png
