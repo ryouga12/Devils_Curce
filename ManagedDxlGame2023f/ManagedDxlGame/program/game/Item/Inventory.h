@@ -7,10 +7,10 @@
 #include"../Skill/Skill.h"
 #include"../../koni_name_space/common/common_value.h"
 
-
 class ItemBase;
-class GameManager;
-class UIManager;
+
+//---------------------------------------------------------------------------------------------------------
+//インベントリを管理するクラス
 
 
 class Inventory final
@@ -18,18 +18,12 @@ class Inventory final
 public:
 
 	Inventory();
-	~Inventory();
+	~Inventory() = default;
 
 	//更新処理
 	void Update(const float& delta_time);
 	//描画処理
 	void draw();
-
-	//内部にItemを20個持つlist
-	std::vector<ItemBase>inventory_list;
-
-	//インベントリの最大数
-	int inventory_max_size_ = 20;
 
 	//アイテムを追加する関数
 	//引数 : arg_1 item_id
@@ -40,6 +34,11 @@ public:
 	//引数 : arg_1 武器のインデックス
 	//引数にインデックスを入れると武器を装備できる
 	void EquipWeapon(const int& weaponIndex);
+
+	//インベントリの最大数を取得する
+	int GetInventoryMaxSize()const {
+		return INVENTORY_MAX_SIZE_;
+	}
 
 	//アイテムの詳細を表示する
 	void ItemDetail();
@@ -71,17 +70,23 @@ public:
 	int GetSkillSelectedIndex()const {
 		return skill_selected_index;
 	}
-	//スキル
 
 	//インベントリの切り替えの為のクラス
 	enum class MenuWindow_I {
 		EMPTY,
+		//最初のメニュー
 		FIRSTMENU,
+		//アイテムメニュー
 		ITEMMENU,
+		//ステータスメニュー
 		STATUSMENU,
+		//アイテム使用する際のメニュー
 		ITEMUSEMENU,
+		//アイテム説明ウィンドウ
 		ITEMDETAILMENU,
+		//スキル表示メニュー
 		SKILLMENU,
+		//スキル説明ウィンドウ
 		SKILLDATAILMENU
 	};
 
@@ -95,38 +100,24 @@ public:
 	//指定したIDのアイテムをインベントリから削除する
 	void InventoryItemRemove(const int& item_id);
 
-private:
-
-	//どのメニューにいるか
-	MenuWindow_I select_menu = MenuWindow_I::EMPTY;
-
-	//攻撃力を一時的に保存する
-	int attack = 0;
-	//防御力を一時的に保存する
-	int defance = 0;
-
-
-public:
+	//アイテムを削除したい武器を装備していた際の処理
+	void DeleteEquipItemProcess();
 
 	//アイテムのメニュー描画
-	//引数  : arg_1 アイテムの座標, 
+	//arg_1 : アイテムの座標, 
 	//arg_2 : ページ数を表示する座標, 
 	//arg_3 : カーソルのX座標 , 
 	//arg_4 : ページ数
 	//バトルシーンやマップシーンでインベントリの座標が違う為使い分ける為
 	void ItemMenu(const tnl::Vector2i& itemDrawPos, const tnl::Vector2i& curentPageText, const int& CousourX, const int& itemParPage);
 
-	//インベントリをを取得する
+	//インベントリの情報をを取得する
 	MenuWindow_I GetSelectMenuNum() { return select_menu; }
 
 	//アイテムの数を減らす
 	void DelateItemNum() {
 		item_num--;
 	}
-
-	//------------------------------------------------------------------------------------------------------------------------
-	//---関数---//
-public:
 
 	//カーソルを上下に動かす関数
 	void CusorMove();
@@ -135,27 +126,49 @@ public:
 	//ページのリセット
 	void CurentPageReset() { curent_page = 0; }
 
+	//Playerが武器を装備した時に一時的に値を保存しておくための変数を取得する
+	int GetEquipAttack()const {
+		return equip_attack;
+	}
+	int GetEquipDefance()const {
+		return equip_defance;
+	}
+
+
+	//武器配列を取得する
+	std::list<ItemBase>& getEquipArray() {
+		return equipped_weapon;
+	}
+
 	//------------------------------------------------------------------------------------------------------------------------
 	//---メニュー---//
 private:
 
 	//メニューを初期化する
 	void InitMenuWinodow();
+
 	//インベントリを閉じている時プレイヤーが動いている時のメニュー表示
 	void Game_Menu();
+
 	//最初のメニュー
 	void First_Menu();
+
 	//プレイヤーのステータスを表示するメニュー
 	void PlyStatusMenu();
+
 	//武器の中の詳細や使うための描画
 	void ItemUseMenu();
+
 	//今どのページにいるか
 	int curent_page = 0;
+
 	//1ページあたりのアイテム数
 	const int ITEMPERPAGE = 5;
+
 	//ユーザーが選択した要素のインデックス
 	//最初は一番上なので0に設定する
 	int selected_index = 0;
+
 	//取得したアイテムのIDを一時的に保持するための変数
 	int selected_item_id = 0;
 
@@ -163,15 +176,25 @@ private:
 	  
 	//最初の番号
 	int start_index = 0;
+
 	//最後の番号
 	int end_index = 0;
 
 private:
 
+	//アイテムを捨てるが選択された時の処理
+	void DisposeItemProcess();
+
+	//どのメニューにいるか
+	MenuWindow_I select_menu = MenuWindow_I::EMPTY;
+
 	//武器の種類
-	enum {
+	enum EquipItem{
+		//素手
 		EMPTY,
+		//武器
 		WEAPON,
+		//防具
 		ARMOR
 	};
 
@@ -189,15 +212,6 @@ private:
 	bool equip_weapon = false;
 	bool equip_armor = false;
 
-	//武器を装備した際の[E]を表示する座標
-	const tnl::Vector2i EQUIPTEXT = { 80 , 100 };
-
-	//現在のページを表示座標
-	const tnl::Vector2i CURENTPAGETEXT = { 100 , 280 };
-
-	//カーソルのサイズ
-	const float CURSORSIZE = 0.3f;
-
 	//Playerが武器を装備した時に一時的に値を保存しておくための変数
 	int equip_attack = 0;
 	int equip_defance = 0;
@@ -205,23 +219,11 @@ private:
 	//それぞれのシーケンスでの処理
 	void swichInventoryUpdate();
 
-	//アイテムやスキルを表示する座標
-	const tnl::Vector2i DRAWPOS = { 110 , 100 };
-
-	//カーソルのx座標
-	const int CURSORX = 70;
-
-	//アイテムのコメント表示座標
-	const tnl::Vector2i ITEMCOMENTPOS = { 630 , 100 };
-
 	//一時的にアイテムであげる為の攻撃力
 	int attack_amount = 0;
 
 	//使用できるアイテムかできないアイテムかのフラグ(主にコメントで使用)
 	bool can_used_item = true;
-
-	//袋の最大ページ数
-	const int ITEM_MAX_PAGE = 4;
 
 	//---ウィンドウの座標関連---//
 
@@ -319,7 +321,7 @@ private:
 	//スキル説明を表示する為のウィンドウの座標
 	const tnl::Vector2i SKILL_DETAIL_WINDOW_POS = { 350 , 50 };
 	//スキル説明を表示する為のウィンドウの幅
-	const int SKILL_DETAIL_WINDOW_WIDTH = 300;
+	const int SKILL_DETAIL_WINDOW_WIDTH = 350;
 	//スキル説明を表示する為のウィンドウの高さ
 	const int SKILL_DETAIL_WINDOW_HEIGHT = 250;
 	//スキルの説明の文字を表示する座標
@@ -332,13 +334,13 @@ private:
 	//戻る為の説明ウィンドウの座標
 	const tnl::Vector2i BUTTON_DETAIL_WINDOW_POS = { 50, 0 };
 	//戻る為の説明ウィンドウのサイズ
-	const int BUTTON_DETAIL_WINDOW_WIDTH = 150;
+	const int BUTTON_DETAIL_WINDOW_WIDTH = 200;
 	const int BUTTON_DETAIL_WINDOW_HEIGHT = 50;
 	//戻るテキストの描画座標
 	const tnl::Vector2i BUTTON_BACK_STRING_POS = { 70, 15 };
 
 
-	//---選択ウィンドウの定数---//
+	//---定数関連---//
 
 	//最初の選択ウィンドウ
 	enum ConstFirstMenu {
@@ -366,21 +368,32 @@ private:
 		ITEMCLOSE
 	};
 
-public:
+	//袋の最大ページ数
+	const int ITEM_MAX_PAGE = 4;
 
-	//Playerが武器を装備した時に一時的に値を保存しておくための変数を取得する
-	int GetEquipAttack()const {
-		return equip_attack;
-	}
-	int GetEquipDefance()const {
-		return equip_defance;
-	}
+	//カーソルのx座標
+	const int CURSORX = 70;
 
+	//武器を装備した際の[E]を表示する座標
+	const tnl::Vector2i EQUIPTEXT = { 80 , 100 };
 
-	//武器配列を取得する
-	std::list<ItemBase>& getEquipArray() {
-		return equipped_weapon;
-	}
+	//現在のページを表示座標
+	const tnl::Vector2i CURENTPAGETEXT = { 100 , 280 };
+
+	//カーソルのサイズ
+	const float CURSORSIZE = 0.3f;
+
+	//アイテムやスキルを表示する座標
+	const tnl::Vector2i DRAWPOS = { 110 , 100 };
+
+	//アイテムのコメント表示座標
+	const tnl::Vector2i ITEMCOMENTPOS = { 630 , 100 };
+
+	//内部にItemを20個持つlist
+	std::vector<ItemBase>inventory_list;
+
+	//インベントリの最大数
+	const int INVENTORY_MAX_SIZE_ = 20;
 
 //------------------------------------------------------------------------------------------------------------------------
 //特技
@@ -399,10 +412,14 @@ private:
 public:
 
 	//特技の描画
-	//引数 : スキルを描画する座標 , ページ数を描画する座標 , カーソルのX座標 , アイテムのページ数
+	//arg_1 : スキルを描画する座標
+	//arg_2 : ページ数を描画する座標
+	//arg_3 : カーソルのX座標
+	//arg_4 : アイテムのページ数
 	void InventorySkill(const tnl::Vector2i& SKILLDRAWPOS, const tnl::Vector2i& CURENTPAGETEXT, const int& COUSOURX, const int& ITEMPARPAGE);
 
 	//特技を使用した時の描画
+	//arg_1 : スキルのインデックス
 	void SkillDetailDraw(const int& skill_index);
 
 	//特技のカーソル

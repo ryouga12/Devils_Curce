@@ -9,19 +9,7 @@ Inventory::Inventory()
 	//メニューの初期化
 	InitMenuWinodow();
 
-	AddInventory(item->GetItemById(21).GetItemId());
-	AddInventory(item->GetItemById(31).GetItemId());
-	AddInventory(item->GetItemById(12).GetItemId());
-	AddInventory(item->GetItemById(36).GetItemId());
-	AddInventory(item->GetItemById(38).GetItemId());
-
 }
-
-Inventory::~Inventory()
-{
-
-}
-
 //更新処理
 void Inventory::Update(const float& delta_time)
 {
@@ -29,7 +17,7 @@ void Inventory::Update(const float& delta_time)
 	swichInventoryUpdate();
 
 	//プレイヤーのステータスの更新処理
-	UIManager::getUIManager()->PlayerStatusBarUpdate(delta_time);
+	UIManager::GetUIManager()->PlayerStatusBarUpdate(delta_time);
 
 }
 
@@ -47,7 +35,7 @@ void Inventory::draw()
 	//選択されたのがアイテムメニューの描画
 	else if (select_menu == MenuWindow_I::ITEMMENU) {
 
-		UIManager::getUIManager()->Menu_Draw("menu_window", MENU_WINDOW_POS.x, MENU_WINDOW_POS.y, MENU_WINDOW_WIDTH, MENU_WINDOW_HEIGHT);
+		UIManager::GetUIManager()->Menu_Draw("menu_window", MENU_WINDOW_POS.x, MENU_WINDOW_POS.y, MENU_WINDOW_WIDTH, MENU_WINDOW_HEIGHT);
 		ItemMenu(DRAWPOS, CURENTPAGETEXT, CURSORX,ITEMPERPAGE);
 	}
 	//選択されたのがプレイヤーの強さメニューの描画
@@ -56,13 +44,13 @@ void Inventory::draw()
 	}
 	//選択されたのがアイテムの詳細メニューの描画
 	else if (select_menu == MenuWindow_I::ITEMUSEMENU) {
-		UIManager::getUIManager()->Menu_Draw("menu_window", MENU_WINDOW_POS.x, MENU_WINDOW_POS.y, MENU_WINDOW_WIDTH, MENU_WINDOW_HEIGHT);
+		UIManager::GetUIManager()->Menu_Draw("menu_window", MENU_WINDOW_POS.x, MENU_WINDOW_POS.y, MENU_WINDOW_WIDTH, MENU_WINDOW_HEIGHT);
 		ItemMenu(DRAWPOS, CURENTPAGETEXT, CURSORX, ITEMPERPAGE);
 		ItemUseMenu();
 	}
 	//アイテムを使用する際のウィンドウのメニューの描画
 	else if (select_menu == MenuWindow_I::ITEMDETAILMENU) {
-		UIManager::getUIManager()->Menu_Draw("menu_window", MENU_WINDOW_POS.x, MENU_WINDOW_POS.y, MENU_WINDOW_WIDTH, MENU_WINDOW_HEIGHT);
+		UIManager::GetUIManager()->Menu_Draw("menu_window", MENU_WINDOW_POS.x, MENU_WINDOW_POS.y, MENU_WINDOW_WIDTH, MENU_WINDOW_HEIGHT);
 		ItemMenu(DRAWPOS, CURENTPAGETEXT, CURSORX, ITEMPERPAGE);
 		ItemUseMenu();
 		ItemDetail();
@@ -70,23 +58,23 @@ void Inventory::draw()
 	//スキル表示用のウィンドウの描画
 	else if (select_menu == MenuWindow_I::SKILLMENU) {
 		// ウィンドウの表示
-		UIManager::getUIManager()->Menu_Draw("menu_window", MENU_WINDOW_POS.x, MENU_WINDOW_POS.y, MENU_WINDOW_WIDTH, MENU_WINDOW_HEIGHT);
+		UIManager::GetUIManager()->Menu_Draw("menu_window", MENU_WINDOW_POS.x, MENU_WINDOW_POS.y, MENU_WINDOW_WIDTH, MENU_WINDOW_HEIGHT);
 		InventorySkill(DRAWPOS , CURENTPAGETEXT , CURSORX ,ITEMPERPAGE);
 
 	}
 	//スキル説明用のウィンドウの描画
 	else if (select_menu == MenuWindow_I::SKILLDATAILMENU) {
 		// ウィンドウの表示
-		UIManager::getUIManager()->Menu_Draw("menu_window",MENU_WINDOW_POS.x, MENU_WINDOW_POS.y, MENU_WINDOW_WIDTH, MENU_WINDOW_HEIGHT);
+		UIManager::GetUIManager()->Menu_Draw("menu_window",MENU_WINDOW_POS.x, MENU_WINDOW_POS.y, MENU_WINDOW_WIDTH, MENU_WINDOW_HEIGHT);
 		InventorySkill(DRAWPOS, CURENTPAGETEXT, CURSORX, ITEMPERPAGE);
 		SkillDetailDraw(skill_selected_index);
 	}
 	//インベントリ使用時に操作説明用の描画
 	if (select_menu != MenuWindow_I::EMPTY) {
 
-		UIManager::getUIManager()->Menu_Draw("menu_window", BUTTON_DETAIL_WINDOW_POS.x, BUTTON_DETAIL_WINDOW_POS.y, BUTTON_DETAIL_WINDOW_WIDTH, BUTTON_DETAIL_WINDOW_HEIGHT);
+		UIManager::GetUIManager()->Menu_Draw("menu_window", BUTTON_DETAIL_WINDOW_POS.x, BUTTON_DETAIL_WINDOW_POS.y, BUTTON_DETAIL_WINDOW_WIDTH, BUTTON_DETAIL_WINDOW_HEIGHT);
 
-		DrawStringEx(BUTTON_BACK_STRING_POS.x, BUTTON_BACK_STRING_POS.y, koni::Color::WHITE, "← キーで戻る");
+		DrawStringEx(BUTTON_BACK_STRING_POS.x, BUTTON_BACK_STRING_POS.y, koni::Color::WHITE, "back space : 戻る");
 	}
 	
 }
@@ -94,7 +82,7 @@ void Inventory::draw()
 //アイテムを追加する
 void Inventory::AddInventory(const int& id)
 {
-	if (inventory_list.size() == inventory_max_size_) return;
+	if (inventory_list.size() == INVENTORY_MAX_SIZE_) return;
 	ItemBase newItem = item->GetItemById(id);
 	inventory_list.emplace_back(newItem);
 	item_num++;
@@ -104,7 +92,7 @@ void Inventory::AddInventory(const int& id)
 void Inventory::EquipWeapon(const int& weaponIndex)
 {
 	//プレイヤーを取得する
-	auto& player = GameManager::getGameManager()->getPlayer();
+	auto& player = GameManager::GetGameManager()->GetPlayer();
 
 	// アイテムがない場合やインデックスが不正な場合は何もせずに関数を終了
 	if (item_num == 0 || weaponIndex < 0 || weaponIndex >= item_num) {
@@ -140,11 +128,9 @@ void Inventory::EquipWeapon(const int& weaponIndex)
 
 	// 新しいアイテムのタイプに応じて装備を切り替える
 	if (selectedItem.GetItemType() == WEAPON) {
-		auto base_attack = player->getPlayerStatusSave().GetBaseAttack();
+		auto base_attack = player->GetPlayerStatusSave().GetBaseAttack();
 		// 装備中の武器を外す
 		if (!equipped_weapon.empty()) {
-			// 装備中の武器の効果を反映から削除する
-			ItemBase equippedWeaponItem = equipped_weapon.back();
 			// 装備中の武器を削除する
 			equipped_weapon.pop_back();
 		}
@@ -152,18 +138,16 @@ void Inventory::EquipWeapon(const int& weaponIndex)
 		// 新しい武器を装備
 		equipped_weapon.push_back(selectedItem);
 		//装備した際にプレイヤーの画像を変える
-		player->SetPlayerAnimationHdl(selectedItem.GetItemWeapontype());
+		player->SetPlayerAnimationHdl(selectedItem.GetItemWeapontype() , player->GetPlayerID());
 		// プレイヤーのステータスに新しい武器の効果を反映
 		equip_weapon = true;
 		equip_attack = selectedItem.GetItemDamage();
-		player->getPlayerStatusSave().SetPlayerAttack(base_attack + equip_attack);
+		player->GetPlayerStatusSave().SetPlayerAttack(base_attack + equip_attack);
 	}
 	else if (selectedItem.GetItemType() == ARMOR) {
-		auto base_defance = player->getPlayerStatusSave().GetBaseDefance();
+		auto base_defance = player->GetPlayerStatusSave().GetBaseDefance();
 		// 装備中の防具を外す
 		if (!equipped_armor.empty()) {
-			// 装備中の防具の効果を反映から削除する
-			ItemBase equippedArmorItem = equipped_armor.back();
 			// 装備中の防具を削除する
 			equipped_armor.pop_back();
 		}
@@ -172,7 +156,7 @@ void Inventory::EquipWeapon(const int& weaponIndex)
 		// プレイヤーのステータスに新しい防具の効果を反映
 		equip_armor = true;
 		equip_defance = selectedItem.GetItemDefance();
-		player->getPlayerStatusSave().SetPlayerDefance(base_defance + equip_defance);
+		player->GetPlayerStatusSave().SetPlayerDefance(base_defance + equip_defance);
 	}
 }
 
@@ -180,7 +164,7 @@ void Inventory::EquipWeapon(const int& weaponIndex)
 void Inventory::ItemDetail()
 {
 	//ウィンドウの描画
-	UIManager::getUIManager()->Menu_Draw("menu_window", ITEM_DETAIL_WINDOW_POS.x, ITEM_DETAIL_WINDOW_POS.y, ITEM_DETAIL_WINDOW_WIDTH, ITEM_DETAIL_WINDOW_HEIGHT);
+	UIManager::GetUIManager()->Menu_Draw("menu_window", ITEM_DETAIL_WINDOW_POS.x, ITEM_DETAIL_WINDOW_POS.y, ITEM_DETAIL_WINDOW_WIDTH, ITEM_DETAIL_WINDOW_HEIGHT);
 
 	//アイテム説明の文字を表示する座標
 	const tnl::Vector2i ITEM_DETAIL = { 630 , 70 };
@@ -210,11 +194,11 @@ void Inventory::ItemCurourIndex(const int& ItemPerPage)
 
 	// 上キーが押されたときの処理
 	//一番上にカーソルがいた場合それ以上にいかないようにする
-	if (curent_page == 0 && selected_index == 0 && tnl::Input::IsKeyDownTrigger(eKeys::KB_UP)) {
+	if (curent_page == 0 && selected_index == 0 && tnl::Input::IsKeyDownTrigger(eKeys::KB_W)) {
 		// 何もしない
 		return;
 	}
-	if (tnl::Input::IsKeyDownTrigger(eKeys::KB_UP)) {
+	if (tnl::Input::IsKeyDownTrigger(eKeys::KB_W)) {
 		if (selected_index % ItemPerPage == 0) {
 			// カーソルがページ内の最上部にいる場合は、一つ上のページの最後の要素を選択
 			if (curent_page > 0) {
@@ -230,8 +214,8 @@ void Inventory::ItemCurourIndex(const int& ItemPerPage)
 	}
 
 	// 下キーが押されたときの処理
-	if (selected_index == inventory_list.size() - 1 && tnl::Input::IsKeyDownTrigger(eKeys::KB_DOWN))return;
-	if (tnl::Input::IsKeyDownTrigger(eKeys::KB_DOWN)) {
+	if (selected_index == inventory_list.size() - 1 && tnl::Input::IsKeyDownTrigger(eKeys::KB_S)) { return; }
+	if (tnl::Input::IsKeyDownTrigger(eKeys::KB_S)) {
 		if ((selected_index + 1) % ItemPerPage == 0) {
 			// カーソルがページ内の最下部にいる場合は、一つ下のページの最初の要素を選択
 			//今の所プレイヤーが持てるインベントリは20で考えている為4ページ分まで開けるようにする
@@ -262,20 +246,20 @@ void Inventory::CusorMove()
 		return;
 	}
 	//カーソルが一番上にいる場合カーソルをさらに上に押してもカーソルを動かさないようにする
-	if (select_cursor == 0 && tnl::Input::IsKeyDownTrigger(eKeys::KB_UP)) 
+	if (select_cursor == 0 && tnl::Input::IsKeyDownTrigger(eKeys::KB_W)) 
 	{
 		return;
 	}
 	//カーソルの動き
-	if (tnl::Input::IsKeyDownTrigger(eKeys::KB_UP)) {
-		SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/cousour_bgm.mp3", DX_PLAYTYPE_BACK);
+	if (tnl::Input::IsKeyDownTrigger(eKeys::KB_W)) {
+		SoundManager::GetSoundManager()->Sound_Play("sound/SoundEffect/cousour_bgm.mp3", DX_PLAYTYPE_BACK);
 		item_num = static_cast<int>(inventory_list.size());
 		select_cursor = (select_cursor + (item_num - 1)) % item_num;
 
 	}
-	else if (tnl::Input::IsKeyDownTrigger(eKeys::KB_DOWN)) {
+	else if (tnl::Input::IsKeyDownTrigger(eKeys::KB_S)) {
 		item_num = static_cast<int>(inventory_list.size());
-		SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/cousour_bgm.mp3", DX_PLAYTYPE_BACK);
+		SoundManager::GetSoundManager()->Sound_Play("sound/SoundEffect/cousour_bgm.mp3", DX_PLAYTYPE_BACK);
 		// カーソルが最後の要素よりも下に移動しようとする場合は、何もせずに処理を終了する
 		if (select_cursor == item_num - 1) {
 			return;
@@ -306,7 +290,7 @@ void Inventory::InitMenuWinodow()
 	first_menu->Open();
 
 	//mapに追加する
-	UIManager::getUIManager()->addMenu("select_answer_window", select_action_menu);
+	UIManager::GetUIManager()->addMenu("select_answer_window", select_action_menu);
 
 	//アイテムウィンドウ内で選択するメニュー
 	MenuWindow::MenuElement_t* select_detail = new MenuWindow::MenuElement_t[]
@@ -326,20 +310,22 @@ void Inventory::InitMenuWinodow()
 void Inventory::Game_Menu()
 {
 	//半透明にする
-	SetDrawBlendMode(DX_BLENDMODE_ALPHA, koni::Numeric::ALPHA_50_PERCENT);
-	UIManager::getUIManager()->Menu_Draw("menu_window", PLAYER_STATUS_WINDOW_POS.x, PLAYER_STATUS_WINDOW_POS.y, PLAYER_STATUS_WINDOW_WIDTH, PLAYER_STATUS_WINDOW_HEIGHT);
-	UIManager::getUIManager()->PlayerStatusDrawWindow();
+	SetDrawBlendMode(DX_BLENDMODE_ALPHA, koni::Numeric::ALPHA_70_PERCENT);
+	UIManager::GetUIManager()->Menu_Draw("menu_window", PLAYER_STATUS_WINDOW_POS.x, PLAYER_STATUS_WINDOW_POS.y, PLAYER_STATUS_WINDOW_WIDTH, PLAYER_STATUS_WINDOW_HEIGHT);
 	//アルファ値を戻す
 	SetDrawBlendMode(DX_BLENDMODE_ALPHA, koni::Numeric::ALPHA_OPAQUE);
 
+	//プレイヤーのステータスの描画
+	UIManager::GetUIManager()->PlayerStatusDrawWindow();
+
 	//プレイヤーを取得する
-	auto& player = GameManager::getGameManager()->getPlayer();
+	auto& player = GameManager::GetGameManager()->GetPlayer();
 
 	//ウィンドウの描画
-	UIManager::getUIManager()->Menu_Draw("menu_window", GOLD_DISPLAY_WINDOW_POS.x, GOLD_DISPLAY_WINDOW_POS.y, GOLD_DISPLAY_WINDOW_WIDTH, GOLD_DISPLAY_WINDOW_HEIGHT);
+	UIManager::GetUIManager()->Menu_Draw("menu_window", GOLD_DISPLAY_WINDOW_POS.x, GOLD_DISPLAY_WINDOW_POS.y, GOLD_DISPLAY_WINDOW_WIDTH, GOLD_DISPLAY_WINDOW_HEIGHT);
 	
 
-	DrawStringEx(GOLD_STRING_POS.x, GOLD_STRING_POS.y, koni::Color::WHITE, "G : %d", player->getPlayerMoney());
+	DrawStringEx(GOLD_STRING_POS.x, GOLD_STRING_POS.y, koni::Color::WHITE, "G : %d", player->GetPlayerMoney());
 
 }
 
@@ -362,6 +348,88 @@ void Inventory::InventoryItemRemove(const int& item_id)
 		inventory_list.erase(itemToRemove);
 		//アイテムの数を減らす
 		--item_num;
+	}
+}
+
+//アイテムを削除する際の武器を装備していた際の処理
+void Inventory::DeleteEquipItemProcess()
+{
+	//アイテムが空の場合処理をとばす
+	if (inventory_list.empty()) { return; }
+
+	//武器を装備していた場合の処理
+	auto itr = equipped_weapon.begin();
+
+	if (itr != equipped_weapon.end()) {
+		//選択されたアイテムを装備していた場合
+		if (inventory_list[selected_index].GetItemId() == (*itr).GetItemId()) {
+
+			auto& player = GameManager::GetGameManager()->GetPlayer();
+
+			//武器の装備を外す
+			equipped_weapon.erase(itr);
+
+			//フラグを切り替える(E文字の表示を行えないようにする為)
+			equip_weapon = false;
+
+			//プレイヤーのステータスを調整する
+			player->GetPlayerStatusSave().SetPlayerAttack(player->GetPlayerStatusSave().GetBaseAttack());
+
+			//プレイヤーの見た目を変更する
+			player->SetPlayerAnimationHdl(Player::PlayerEquipState::BARE_HANDS , player->GetPlayerID());
+		}
+	}
+
+	//防具を装備していた場合の処理
+	auto it = equipped_armor.begin();
+
+	if (it != equipped_armor.end()) {
+		//選択されたアイテムを装備していた場合
+		if (inventory_list[selected_index].GetItemId() == (*it).GetItemId()) {
+
+			auto& player = GameManager::GetGameManager()->GetPlayer();
+
+			//武器の装備を外す
+			equipped_armor.erase(it);
+
+			//フラグを切り替える(E文字の表示を行えないようにする為)
+			equip_armor = false;
+
+			//プレイヤーのステータスを調整する
+			player->GetPlayerStatusSave().SetPlayerDefance(player->GetPlayerStatusSave().GetBaseDefance());
+		}
+	}
+}
+
+//アイテムを捨てるが選択された時の処理
+void Inventory::DisposeItemProcess()
+{
+	//アイテムが空の場合処理をとばす
+	if (inventory_list.empty()) { return; }
+
+	//決定音を鳴らす
+	SoundManager::GetSoundManager()->Sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
+
+	// 選択したアイテムの ID と一致する要素を特定する
+	auto& selected_item = inventory_list[selected_index];
+
+	//アイテムが削除可能であれば
+	if (selected_item.GetEssentialItemsFlag()) {
+
+		//消去したいアイテムを装備していた時の処理
+		DeleteEquipItemProcess();
+
+		//アイテムの選択メニューに戻す
+		//select_menu = MenuWindow_I::ITEMMENU;
+
+		// 選択されたアイテムを削除する
+		inventory_list.erase(inventory_list.begin() + selected_index);
+		item_num--;
+
+		//カーソルとインデックスを最初に戻す
+		SelectedIndexClear();
+		CurentPageReset();
+		CursorReset();
 	}
 }
 
@@ -389,7 +457,7 @@ void Inventory::ItemMenu(const tnl::Vector2i& itemDrawPos, const tnl::Vector2i& 
 
 			// カーソルを描画する位置を決定
 			int cursorY = itemDrawPos.y + Y * (select_cursor % itemParPage);
-			ResourceManager::getResourceManager()->DrawRotaGraphEx("graphics/cur_sannkaku2.png", CousourX, cursorY, CURSORSIZE, 0, true);
+			ResourceManager::GetResourceManager()->DrawRotaGraphEx("graphics/cur_sannkaku2.png", CousourX, cursorY, CURSORSIZE, 0, true);
 		
 			//装備できるアイテムだった場合
 			if (InventoryData.GetItemType() == 1 || InventoryData.GetItemType() == 2) {
@@ -423,10 +491,10 @@ void Inventory::PlyStatusMenu()
 {
 
 	//プレイヤーを取得する
-	auto& player = GameManager::getGameManager()->getPlayer();
+	auto& player = GameManager::GetGameManager()->GetPlayer();
 
 	//ウィンドウの描画
-	UIManager::getUIManager()->Menu_Draw("menu_window", MENU_WINDOW_POS.x, MENU_WINDOW_POS.y, PLAYER_STATUS_GOLD_WINDOW_WIDTH, PLAYER_STATUS_GOLD_WINDOW_HEIGHT);
+	UIManager::GetUIManager()->Menu_Draw("menu_window", MENU_WINDOW_POS.x, MENU_WINDOW_POS.y, PLAYER_STATUS_GOLD_WINDOW_WIDTH, PLAYER_STATUS_GOLD_WINDOW_HEIGHT);
 
 	//強さ文字の座標
 	const tnl::Vector2i PLAYER_STATUS_STRING = { 150 , 70 };
@@ -440,13 +508,13 @@ void Inventory::PlyStatusMenu()
 	// Player クラスのポインターが有効かどうかを確認する
 	if (player) {
 		// Player クラスのポインターを介してステータスを取得する
-		int hp = static_cast<int>(player->getPlayerStatusSave().GetcurentHp());
-		int mp = static_cast<int>(player->getPlayerStatusSave().GetCurentMp());
-		int Attack = player->getPlayerStatusSave().GetAttack();
-		int Defense = player->getPlayerStatusSave().GetDefance();
-		int Level = player->getPlayerStatusSave().GetLevel();
-		int Speed = player->getPlayerStatusSave().GetSpeed();
-		int R_expoint = player->getPlayerStatusSave().GetExpoint();
+		int hp = static_cast<int>(player->GetPlayerStatusSave().GetcurentHp());
+		int mp = static_cast<int>(player->GetPlayerStatusSave().GetCurentMp());
+		int Attack = player->GetPlayerStatusSave().GetAttack();
+		int Defense = player->GetPlayerStatusSave().GetDefance();
+		int Level = player->GetPlayerStatusSave().GetLevel();
+		int Speed = player->GetPlayerStatusSave().GetSpeed();
+		int R_expoint = player->GetPlayerStatusSave().GetExpoint();
 
 		// 取得したステータスを描画する
 		DrawStringEx(PLAYER_STATUS_X, PLAYER_STATUS_Y, koni::Color::WHITE, "HP : %d", hp);
@@ -470,7 +538,7 @@ void Inventory::ItemUseMenu()
 //インベントリの処理
 void Inventory::swichInventoryUpdate()
 {
-	auto& SkillList = GameManager::getGameManager()->getPlayer()->getSkillList();
+	auto& SkillList = GameManager::GetGameManager()->GetPlayer()->getSkillList();
 
 	switch (select_menu)
 	{
@@ -484,7 +552,7 @@ void Inventory::swichInventoryUpdate()
 		//1個目が選択された場合、アイテムを表示する
 		if (first_menu->getSelectNum() == TOOL && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
 			//決定音を鳴らす
-			SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
+			SoundManager::GetSoundManager()->Sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
 			select_menu = MenuWindow_I::ITEMMENU;
 			CursorReset();
 			curent_page = 0;
@@ -493,34 +561,34 @@ void Inventory::swichInventoryUpdate()
 			//2個目が選択された場合、特技を表示する
 		else if (first_menu->getSelectNum() == SKILL && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
 			//決定音を鳴らす
-			SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
+			SoundManager::GetSoundManager()->Sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
 			select_menu = MenuWindow_I::SKILLMENU;
 
 		}
 		//3個目が選択された場合、プレイヤーの強さを表示する
 		else if (first_menu->getSelectNum() == STATUS && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
 			//決定音を鳴らす
-			SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
+			SoundManager::GetSoundManager()->Sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
 			select_menu = MenuWindow_I::STATUSMENU;
 		}
 		//4個目が選択された場合、閉じる
 		else if (first_menu->getSelectNum() == CLOSE && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
 			//決定音を鳴らす
-			SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
+			SoundManager::GetSoundManager()->Sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
 			select_menu = MenuWindow_I::EMPTY;
 			//plyerを動けるようにする
-			if (!GameManager::getGameManager()->getPlayer()->getPlayerControl()) {
-				GameManager::getGameManager()->getPlayer()->setPlayerControl();
+			if (!GameManager::GetGameManager()->GetPlayer()->GetPlayerControl()) {
+				GameManager::GetGameManager()->GetPlayer()->PlayerControlChangeFlag();
 			}
 		
 			}
 
-		//左キーを押すとアイテム使用メニューに戻す
-		else if (tnl::Input::IsKeyDownTrigger(eKeys::KB_LEFT)) {
+		//バックスペースを押すとアイテム使用メニューに戻す
+		else if (tnl::Input::IsKeyDownTrigger(eKeys::KB_BACK)) {
 			select_menu = MenuWindow_I::EMPTY;
 			//plyerを動けるようにする
-			if (!GameManager::getGameManager()->getPlayer()->getPlayerControl()) {
-				GameManager::getGameManager()->getPlayer()->setPlayerControl();
+			if (!GameManager::GetGameManager()->GetPlayer()->GetPlayerControl()) {
+				GameManager::GetGameManager()->GetPlayer()->PlayerControlChangeFlag();
 			}
 		}
 
@@ -532,18 +600,18 @@ void Inventory::swichInventoryUpdate()
 		//Enterキーを押したらItemUseMenuに変更する
 		if (tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
 			//決定音を鳴らす
-			SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
+			SoundManager::GetSoundManager()->Sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
 			select_menu = MenuWindow_I::ITEMUSEMENU;
 		}
-		//左キーを押すとアイテム使用メニューに戻す
-		else if (tnl::Input::IsKeyDownTrigger(eKeys::KB_LEFT)) {
+		//バックスペースを押すとアイテム使用メニューに戻す
+		else if (tnl::Input::IsKeyDownTrigger(eKeys::KB_BACK)) {
 			select_menu = MenuWindow_I::FIRSTMENU;
 		}
 
 		//インデックス操作
 		ItemCurourIndex(ITEMPERPAGE);
 		
-
+		//カーソルの動き
 		CusorMove();
 
 		break;
@@ -551,8 +619,8 @@ void Inventory::swichInventoryUpdate()
 	//アイテム詳細メニューの場合
 	case Inventory::MenuWindow_I::ITEMDETAILMENU:
 
-		//左キーを押すとアイテム使用メニューに戻す
-		if (tnl::Input::IsKeyDownTrigger(eKeys::KB_LEFT)) {
+		//バックスペースを押すとアイテム使用メニューに戻す
+		if (tnl::Input::IsKeyDownTrigger(eKeys::KB_BACK)) {
 			select_menu = MenuWindow_I::ITEMUSEMENU;
 		}
 
@@ -565,9 +633,13 @@ void Inventory::swichInventoryUpdate()
 		if (select_detail_window->getSelectNum() == USE) {
 			if (tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
 				//決定音を鳴らす
-				SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
+				SoundManager::GetSoundManager()->Sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
 				//itemを使用する
 				item->ItemUse(selected_item_id);
+				//カーソルとインデックスを最初に戻す
+				SelectedIndexClear();
+				CurentPageReset();
+				CursorReset();
 			}
 		}
 		//詳細が選択された時
@@ -579,7 +651,7 @@ void Inventory::swichInventoryUpdate()
 			}
 			if (tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
 				//決定音を鳴らす
-				SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
+				SoundManager::GetSoundManager()->Sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
 				select_menu = MenuWindow_I::ITEMDETAILMENU;
 			}
 		}
@@ -587,55 +659,40 @@ void Inventory::swichInventoryUpdate()
 		else if (select_detail_window->getSelectNum() == EQUIP) {
 			if (tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
 				//決定音を鳴らす
-				SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
+				SoundManager::GetSoundManager()->Sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
 				EquipWeapon(selected_index);
 			}
 		}
 		//捨てるが選択された時
 		else if (select_detail_window->getSelectNum() == DISPOSE) {
 			
-			//アイテムが空の場合処理をとばす
-			if (inventory_list.empty()) {
-				return;
-			}
-			//選択してEnterキーを押したら
+			//エンターキーが押された時
 			if (tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
-				//決定音を鳴らす
-				SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
-
-				// 選択したアイテムの ID と一致する要素を特定する
-				auto itemid = inventory_list[selected_index].GetItemId();
-
-				auto itemToRemove = std::find_if(inventory_list.begin(), inventory_list.end(),
-					[itemid](const ItemBase& item) { return item.GetItemId() == itemid; });
-
-				// アイテムが見つかった場合は削除する
-				if (itemToRemove != inventory_list.end()) {
-					inventory_list.erase(itemToRemove);
-					item_num--;
-				}
+				//捨てる処理
+				DisposeItemProcess();
 			}
 		}
 		//閉じるが選択された時
 		else if (select_detail_window->getSelectNum() == ITEMCLOSE) {
 			if (tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
 				//決定音を鳴らす
-				SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
+				SoundManager::GetSoundManager()->Sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
 				select_menu = MenuWindow_I::ITEMMENU;
 			}
 		}
 
-		//左キーを押すとアイテム使用メニューに戻す
-		if (tnl::Input::IsKeyDownTrigger(eKeys::KB_LEFT)) {
+		//バックスペースを押すとアイテム使用メニューに戻す
+		if (tnl::Input::IsKeyDownTrigger(eKeys::KB_BACK)) {
 			select_menu = MenuWindow_I::ITEMMENU;
 		}
 		
 		break;
 
+	//プレイヤーのステータス表示
 	case MenuWindow_I::STATUSMENU:
 
-		//左キーを押すとアイテム使用メニューに戻す
-		if (tnl::Input::IsKeyDownTrigger(eKeys::KB_LEFT)) {
+		//バックスペースを押すとアイテム使用メニューに戻す
+		if (tnl::Input::IsKeyDownTrigger(eKeys::KB_BACK)) {
 			select_menu = MenuWindow_I::FIRSTMENU;
 		}
 
@@ -649,7 +706,7 @@ void Inventory::swichInventoryUpdate()
 		if (!SkillList.empty()) {
 			if (tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
 				//決定音を鳴らす
-				SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
+				SoundManager::GetSoundManager()->Sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
 				select_menu = MenuWindow_I::SKILLDATAILMENU;
 			}
 
@@ -662,8 +719,8 @@ void Inventory::swichInventoryUpdate()
 		//特技のカーソル移動
 		SkillCousorMove();
 
-		//左キーを押すと最初のメニューに戻す
-		if (tnl::Input::IsKeyDownTrigger(eKeys::KB_LEFT)) {
+		//バックスペースを押すと最初のメニューに戻す
+		if (tnl::Input::IsKeyDownTrigger(eKeys::KB_BACK)) {
 			select_menu = MenuWindow_I::FIRSTMENU;
 		}
 
@@ -673,7 +730,7 @@ void Inventory::swichInventoryUpdate()
 	case MenuWindow_I::SKILLDATAILMENU:
 
 		//スキル選択に戻す
-		if (tnl::Input::IsKeyDownTrigger(eKeys::KB_LEFT)) {
+		if (tnl::Input::IsKeyDownTrigger(eKeys::KB_BACK)) {
 			select_menu = MenuWindow_I::SKILLMENU;
 		}
 
@@ -692,7 +749,7 @@ void Inventory::InventorySkill(const tnl::Vector2i& SKILLDRAWPOS, const tnl::Vec
 	int i = 0;
 	int y = 34;
 
-	auto& SkillList = GameManager::getGameManager()->getPlayer()->getSkillList();
+	auto& SkillList = GameManager::GetGameManager()->GetPlayer()->getSkillList();
 
 	//現在のページに基づいて表示するアイテムの範囲を計算
 	start_index = skill_curent_page * ITEMPARPAGE;
@@ -710,7 +767,7 @@ void Inventory::InventorySkill(const tnl::Vector2i& SKILLDRAWPOS, const tnl::Vec
 
 		// カーソルを描画する位置を決定
 		int cursorY = SKILLDRAWPOS.y + y * (skill_cousour % ITEMPARPAGE);
-		ResourceManager::getResourceManager()->DrawRotaGraphEx("graphics/cur_sannkaku2.png", COUSOURX, cursorY, CURSORSIZE, 0, true);
+		ResourceManager::GetResourceManager()->DrawRotaGraphEx("graphics/cur_sannkaku2.png", COUSOURX, cursorY, CURSORSIZE, 0, true);
 
 		++i;
 
@@ -726,10 +783,10 @@ void Inventory::InventorySkill(const tnl::Vector2i& SKILLDRAWPOS, const tnl::Vec
 void Inventory::SkillDetailDraw(const int& skill_index)
 {
 	//スキル配列
-	auto& SkillList = GameManager::getGameManager()->getPlayer()->getSkillList();
+	auto& SkillList = GameManager::GetGameManager()->GetPlayer()->getSkillList();
 
 	//特技説明
-	UIManager::getUIManager()->Menu_Draw("menu_window", SKILL_DETAIL_WINDOW_POS.x, SKILL_DETAIL_WINDOW_POS.y, SKILL_DETAIL_WINDOW_WIDTH, SKILL_DETAIL_WINDOW_HEIGHT);
+	UIManager::GetUIManager()->Menu_Draw("menu_window", SKILL_DETAIL_WINDOW_POS.x, SKILL_DETAIL_WINDOW_POS.y, SKILL_DETAIL_WINDOW_WIDTH, SKILL_DETAIL_WINDOW_HEIGHT);
 
 	//スキル説明の文字用座標
 	const tnl::Vector2i SUKILL_STRING_POS = { 400, 70 };
@@ -759,7 +816,7 @@ void Inventory::SkillDetailDraw(const int& skill_index)
 void Inventory::SkillCousorMove()
 {
 
-	auto& SkillList = GameManager::getGameManager()->getPlayer()->getSkillList();
+	auto& SkillList = GameManager::GetGameManager()->GetPlayer()->getSkillList();
 
 	//スキルがない場合、何もしない
 	if (SkillList.empty())
@@ -767,18 +824,18 @@ void Inventory::SkillCousorMove()
 		return;
 	}
 	//カーソルが一番上にいる場合カーソルをさらに上に押してもカーソルを動かさないようにする
-	if (skill_cousour == 0 && tnl::Input::IsKeyDownTrigger(eKeys::KB_UP))
+	if (skill_cousour == 0 && tnl::Input::IsKeyDownTrigger(eKeys::KB_W))
 	{
 		return;
 	}
 	//カーソルの動き
-	if (tnl::Input::IsKeyDownTrigger(eKeys::KB_UP)) {
-		SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/cousour_bgm.mp3", DX_PLAYTYPE_BACK);
+	if (tnl::Input::IsKeyDownTrigger(eKeys::KB_W)) {
+		SoundManager::GetSoundManager()->Sound_Play("sound/SoundEffect/cousour_bgm.mp3", DX_PLAYTYPE_BACK);
 		skill_cousour = (skill_cousour + (SkillList.size() - 1)) % static_cast<int>(SkillList.size());
 
 	}
-	else if (tnl::Input::IsKeyDownTrigger(eKeys::KB_DOWN)) {
-		SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/cousour_bgm.mp3", DX_PLAYTYPE_BACK);
+	else if (tnl::Input::IsKeyDownTrigger(eKeys::KB_S)) {
+		SoundManager::GetSoundManager()->Sound_Play("sound/SoundEffect/cousour_bgm.mp3", DX_PLAYTYPE_BACK);
 		// カーソルが最後の要素よりも下に移動しようとする場合は、何もせずに処理を終了する
 		if (skill_cousour == SkillList.size() - 1) {
 			return;
@@ -793,15 +850,15 @@ void Inventory::SkillCousorMove()
 void Inventory::SkillCurourIndex(const int& skil_list_perpage)
 {
 
-	auto& SkillList = GameManager::getGameManager()->getPlayer()->getSkillList();
+	auto& SkillList = GameManager::GetGameManager()->GetPlayer()->getSkillList();
 
 	// 上キーが押されたときの処理
-	if (skill_curent_page == 0 && skill_selected_index == 0 && tnl::Input::IsKeyDownTrigger(eKeys::KB_UP)) {
+	if (skill_curent_page == 0 && skill_selected_index == 0 && tnl::Input::IsKeyDownTrigger(eKeys::KB_W)) {
 		// 何もしない
 		return;
 	}
 
-	if (tnl::Input::IsKeyDownTrigger(eKeys::KB_UP)) {
+	if (tnl::Input::IsKeyDownTrigger(eKeys::KB_W)) {
 		if (skill_selected_index % skil_list_perpage == 0) {
 			// カーソルがページ内の最上部にいる場合は、一つ上のページの最後の要素を選択
 			if (skill_curent_page > 0) {
@@ -817,12 +874,12 @@ void Inventory::SkillCurourIndex(const int& skil_list_perpage)
 	}
 
 	// 下キーが押されたときの処理
-	if (skill_selected_index == SkillList.size() - 1 && tnl::Input::IsKeyDownTrigger(eKeys::KB_DOWN)) {
+	if (skill_selected_index == SkillList.size() - 1 && tnl::Input::IsKeyDownTrigger(eKeys::KB_S)) {
 		// 何もしない
 		return;
 	}
 
-	if (tnl::Input::IsKeyDownTrigger(eKeys::KB_DOWN)) {
+	if (tnl::Input::IsKeyDownTrigger(eKeys::KB_S)) {
 		if ((skill_selected_index + 1) % skil_list_perpage == 0) {
 			// カーソルがページ内の最下部にいる場合は、一つ下のページの最初の要素を選択
 			// スキルが持てるインベントリは 20 で考えている為 4 ページ分まで開けるようにする
