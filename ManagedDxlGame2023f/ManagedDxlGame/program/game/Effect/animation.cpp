@@ -24,7 +24,7 @@ Animation::~Animation()
 
 void Animation::play_animation()
 {
-	if (!stop_flag) {
+	if (!m_stop_flag) {
 		m_state = AnimationState::PLAYING;
 	}
 }
