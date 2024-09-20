@@ -1,11 +1,16 @@
 #include "CsvManager.h"
 
-CsvManager* CsvManager::getCsvManager()
+CsvManager* CsvManager::GetCsvManager()
 {
 	static CsvManager* p_instance = nullptr;
 
 	if (!p_instance)p_instance = new CsvManager();
 	return p_instance;
+}
+
+void CsvManager::DelateCsvManager()
+{
+  delete GetCsvManager();
 }
 
 CsvManager::CsvManager()
@@ -77,11 +82,19 @@ void CsvManager::LoadCsv(const BaseScene::SceneState& curent_state)
 		}
 		if (boss_castle_floor_csv.empty()) {
 			//ボスの城の床データ
-			boss_castle_floor_csv = tnl::LoadCsv<int>("csv/boss_castle__floor.csv");
+			boss_castle_floor_csv = tnl::LoadCsv<int>("csv/castle_boss_road__Floor.csv");
 		}
 		if (boss_castle_object_csv.empty()) {
 			//ボスの城のオブジェクトデータ
-			boss_castle_object_csv = tnl::LoadCsv<int>("csv/boss_castle__object.csv");
+			boss_castle_object_csv = tnl::LoadCsv<int>("csv/castle_boss_road__Object.csv");
+		}
+		if (boss_room_floor_csv.empty()) {
+			//ボスの間の床データ
+			boss_room_floor_csv = tnl::LoadCsv<int>("csv/boss_castle__floor.csv");
+		}
+		if (boss_room_object_csv.empty()) {
+			//ボスの間のオブジェクトデータ
+			boss_room_object_csv = tnl::LoadCsv<int>("csv/boss_castle__object.csv");
 		}
 		if (grave_floor_csv.empty()) {
 			//勇者のお墓の床データ

@@ -13,8 +13,8 @@ class CsvManager final {
 
 public:
 
-	static CsvManager* getCsvManager();
-	static void delateCsvManager() { delete getCsvManager(); }
+	static CsvManager* GetCsvManager();
+	static void DelateCsvManager();
 
 	//ワールドマップ全体のマップチップのcsvを取得する
 	std::vector<std::vector<int>> GetWorldMapCsv()const { return world_map_csv; }
@@ -45,6 +45,12 @@ public:
 
 	//城のマップ用のオブジェクトデータのcsvを取得する
 	std::vector<std::vector<int>> GetCastleObjectMapCsv()const { return castle_object_csv; }
+
+	//ボスの間の床データのcsvを取得する　
+	std::vector<std::vector<int>> GetBossRoomFloorCsv()const { return boss_room_floor_csv; }
+
+	//ボスの間のオブジェクトデータ用のcsvを取得する
+	std::vector<std::vector<int>> GetBossRoomObjectCsv()const { return boss_room_object_csv; }
 
 	//ボスの城の床データのcsvを取得する　
 	std::vector<std::vector<int>> GetBossCastleFloorCsv()const { return boss_castle_floor_csv; }
@@ -117,8 +123,14 @@ private:
 	//城のマップオブジェクトデータのロード
 	std::vector<std::vector<int>>castle_object_csv ;
 
+	//ボスの間の床データ
+	std::vector<std::vector<int>>boss_room_floor_csv ;
+
+	//ボスの間のオブジェクトデータ
+	std::vector<std::vector<int>>boss_room_object_csv;
+
 	//ボスの城の床データ
-	std::vector<std::vector<int>>boss_castle_floor_csv ;
+	std::vector<std::vector<int>>boss_castle_floor_csv;
 
 	//ボスの城のオブジェクトデータ
 	std::vector<std::vector<int>>boss_castle_object_csv;
