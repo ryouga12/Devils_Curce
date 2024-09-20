@@ -9,24 +9,10 @@ ResultScene::ResultScene()
 {
 	//現在のシーンをResultSceneに設定
 	curent_scene = SceneState::RESULT;
-
-	risult_menu = std::make_shared<Menu>("graphics/WindowBase_02.png");
-
-	//mapを追加する
-	UIManager::getUIManager()->addMenu("risult_window", risult_menu);
-
-	//enterkeyボタン
-	enter_key = ResourceManager::getResourceManager()->LoadGraphEX("graphics/button_Enter.png");
-
-
-	SoundManager::getSoundManager()->sound_Play("sound/BGM/requiem.mp3", DX_PLAYTYPE_LOOP);
 }
 
 ResultScene::~ResultScene()
 {
-	//サウンドを止める
-	SoundManager::getSoundManager()->StopSound("sound/BGM/requiem.mp3");
-;
 }
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -42,17 +28,17 @@ void ResultScene::Update(float delta_time)
 
 void ResultScene::Draw()
 {
-	/*DrawStringEx(10, 10, -1, "リザルト画面");*/
+	
+	//半透明にする
+	SetDrawBlendMode(DX_BLENDMODE_ALPHA, koni::Numeric::ALPHA_50_PERCENT);
+	//背景描画
+	DrawExtendGraph(0, 0, DXE_WINDOW_WIDTH, DXE_WINDOW_HEIGHT, result_background, TRUE);
+	//アルファ値を戻す
+	SetDrawBlendMode(DX_BLENDMODE_ALPHA, koni::Numeric::ALPHA_OPAQUE);
 
-	SetFontSize(100);
-	DrawStringEx(450 , 200, -1, "全滅した");
-	SetFontSize(16);
+	//エピローグを表示する
+	UIManager::GetUIManager()->StoryDisplay(koni::Color::WHITE);
 
-	risult_menu->Menu_draw(525, 500, 250, 80);
-
-	//リザルトメニューの要素
-	DrawRotaGraph(650, 525, 1, 0, enter_key, true);
-	DrawStringEx(555, 550, 0, "Enterを押してください");
 }
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -60,10 +46,30 @@ void ResultScene::Draw()
 
 bool ResultScene::seqIdle(float delta_time)
 {
-	if (tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
+	//上から少しずつ表示する
+	UIManager::GetUIManager()->StoryDisplayUpdate(delta_time);
 
-		auto mgr = SceneManager::GetInstance();
+	//エピローグをを流しきるか、タブキーを押してスキップしてタイトルシーンに遷移させる
+	if (UIManager::GetUIManager()->StoryDisplayUpdate(delta_time) && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)
+		|| tnl::Input::IsKeyDownTrigger(eKeys::KB_TAB)) {
+
+		auto mgr = SceneManager::GetSceneManager();
 		mgr->changeScene(new (TittleScene));
 	}
+	
 	return true;
+}
+
+bool ResultScene::seqInit(float delta_time)
+{	
+	//背景をロードする
+	result_background = ResourceManager::GetResourceManager()->LoadGraphEX("graphics/haikei/kaidou0331_800b.jpg");
+
+	//ストーリーをロードする
+	UIManager::GetUIManager()->StoryLoad(Story::EPILOGUE);
+
+	//シーケンスを切り替える
+	sequence_.change(&ResultScene::seqIdle);
+
+	return false;
 }

@@ -1,14 +1,19 @@
+//------------------------------------------------------------------------------------------------------------
+//
+//エピローグを流すシーン
+//
+//-------------------------------------------------------------------------------------------------------------
+
 #pragma once
 #include"../Manager/SoundManager.h"
 #include"../Menu/MenuWindow.h"
 #include "../../dxlib_ext/dxlib_ext.h"
 #include"../Manager/SceneManager.h"
+#include"../../koni_name_space/common/common_value.h"
 
-
-class UIManager;
-
-class ResultScene : public BaseScene {
+class ResultScene final : public BaseScene {
 public :
+
 	ResultScene();
 	~ResultScene()override;
 
@@ -17,12 +22,11 @@ public :
 		
 private:
 
-	tnl::Sequence<ResultScene> sequence_ = tnl::Sequence<ResultScene>(this, &ResultScene::seqIdle);
+	tnl::Sequence<ResultScene> sequence_ = tnl::Sequence<ResultScene>(this, &ResultScene::seqInit);
 	bool seqIdle(float delta_time);
-
-	Shared<Menu>risult_menu = nullptr;
-
-	int enter_key = 0;
+	bool seqInit(float delta_time);
 	
+	//リザルト画面の背景
+	int result_background = 0;
 
 };
