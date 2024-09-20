@@ -5,22 +5,50 @@
 #include"../Scene/InMapScene.h"
 #include"../../koni_name_space/common/common_value.h"
 
-class UIManger;
-class GameManager;
+//---------------------------------------------------------------------------------------------------------
+//武器屋を管理するクラス(武器屋での購入や売却などのシステムを担当する)
+
 
 class WeaponShop final{
 public:
 
-	WeaponShop() = default;
+	//武器屋の初期化
+	//arg_1 : InMapSceneのどこにいるのか
+	//どこにいるのかによって武器屋のラインナップを初期化する
 	WeaponShop(const InMapScene::InMapState& curent_inmap_scene);
-	~WeaponShop();
+	~WeaponShop() = default;
 
+	//更新処理
+	void Update(const float delta_time);
+
+	//描画処理
 	void Draw();
 
+	//武器屋の購入か売却なのかを管理する列挙体
+	enum class TransactionType {
+		EMPTY,
+		//購入
+		BUY,
+		//売却
+		SELL
+	};
+
+	//売却時の切り替え
+	enum class SellAction {
+		EMPTY,
+		//売価アイテムの選択
+		SELLITEMSELECT,
+		//売却アイテムの確認
+		SELLITEMCHECK
+	};
+
+
 	//武器の購入処理
-	//引数 : arg_1 プレイヤーのポインタ
 	//武器屋で購入した際のインベントリへの追加とお金の処理
-	void BuyWeapon(const Shared<Player>& player);
+	void BuyWeapon();
+
+	//武器やアイテムの売却
+	void SellItemProcess();
 
 	//武器屋のカーソル処理
 	void WeaponShopCursorMove();
@@ -30,16 +58,43 @@ public:
 	//引数で指定したマップの武器リストを初期化する
 	void WeaponShopInit(const InMapScene::InMapState& curent_inmap_scene);
 
-	//武器の値を他のクラスで使う
-	std::vector<ItemBase>& GetWeaponValue()
-	{
-		return weponList;
+	//武器屋の状態をセットする
+	//プレイヤーが購入か売却のどちらを選んだか
+	void SetWeaponShopTransaction(const TransactionType& new_transaction_type) {
+		curent_transaction_type = new_transaction_type;
 	}
 
-	//武器リストの数を取得する
-	std::vector<ItemBase>& GetWeaponList() {
-		return weponList;
+	//武器屋の状態を取得する
+	TransactionType GetWeapoShopTransaction()const {
+		return curent_transaction_type;
 	}
+
+	//シーケンスの状態を待機に戻す
+	void WeaponShopChangeIdle() {
+
+		tnl_sequence_.change(&WeaponShop::seqIdle);
+
+		//SellActionが選択画面じゃなければ選択画面に戻す
+		if (curent_sell_action != SellAction::SELLITEMSELECT) {
+			curent_sell_action = SellAction::SELLITEMSELECT;
+		}
+	}
+
+//------------------------------------------------------------------------------------------------------------------------
+//ポインタ
+private:
+
+	//シーケンス
+	TNL_CO_SEQUENCE(WeaponShop, &WeaponShop::seqIdle);
+
+	//待機状態(主に購入なのか、売却なのかで処理を切り替える)
+	bool seqIdle(float delta_time);
+
+	//購入シーケンス
+	bool seqBuy(float delta_time);
+
+	//売却シーケンス
+	bool seqSell(float delta_time);
 	
 //------------------------------------------------------------------------------------------------------------------------
 //ポインタ
@@ -47,18 +102,31 @@ private:
 
 	//ウィンドウ
 	Shared<MenuWindow>use_equip = nullptr;
-	Weak<Menu>menuWindow;
+	//アイテム
 	Shared<Item>item_ = nullptr;
 
+	//売却コマンド
+	Shared<MenuWindow>sell_coment_select = nullptr;
+	MenuWindow::MenuElement_t* sell_coment = nullptr;
+
 //------------------------------------------------------------------------------------------------------------------------
-//武器関係
 private:
 
-	//武器が買えたか
-	enum class Buy_Weapon {
+	//武器屋の購入か売却なのかを管理する為の変数
+	TransactionType curent_transaction_type = TransactionType::EMPTY;
+
+	//今売却時のどのアクションを行っているか
+	SellAction curent_sell_action = SellAction::SELLITEMSELECT;
+
+	//武器屋コメント関連
+	enum class WeaponshopComent {
 		ENMPTY,
+		//アイテムが買えた
 		BUY,
+		//アイテムが買えなかった
 		NO,
+		//アイテムを売った
+		SELL
 	};
 
 	//武器の総数
@@ -67,10 +135,7 @@ private:
 	//カーソルの動き
 	int select_cousor = 0;
 
-	//カーソルの座標
-	int cousor_y = 0;
-
-	Buy_Weapon buyWeapon = Buy_Weapon::ENMPTY;
+	WeaponshopComent curent_weapon_shop_coment = WeaponshopComent::ENMPTY;
 
 	//武器を格納する配列
 	std::vector<ItemBase>weponList;
@@ -110,11 +175,26 @@ private:
 	//カーソルの座標
 	const tnl::Vector2i CURSOR_POS = { 70 ,140 };
 
+	//1ページあたりのアイテム数
+	const int ITEMPERPAGE_ = 5;
+
+	//アイテムを表示する座標
+	const tnl::Vector2i ITEM_DRAW_POS = { 110 , 100 };
+
+	//現在のページを表示座標
+	const tnl::Vector2i CURENTPAGETEXT = { 100 , 330 };
+
+	//カーソルのx座標
+	const int CURSORX = 70;
+
+	//武器商人のコメントの座標
+	const tnl::Vector2i ARMSDEALERCOMENT = { 150, 550 };
+
 public:
 
 	//コメントをクリアする
-	void buyComentClear() {
-		buyWeapon =  Buy_Weapon::ENMPTY;
+	void BuyComentClear() {
+		curent_weapon_shop_coment =  WeaponshopComent::ENMPTY;
 	}
 
 
