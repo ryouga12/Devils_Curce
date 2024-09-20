@@ -1,40 +1,33 @@
+//------------------------------------------------------------------------------------------------------------
+//
+//ゲーム内のオブジェクトの基底クラス(PlayerやNpcなど)
+//
+//-------------------------------------------------------------------------------------------------------------
+
 #pragma once
 #include "../../dxlib_ext/dxlib_ext.h"
 #include"../System/Camera.h"
 #include<string>
+#include"../../koni_name_space/common/common_value.h"
 
 class BattleScene;
 class EventManager;
 
-//アニメーションを切り替える秒数
-static const float ChangeAnimationTime = 0.2f;
-//フレーム
-static const int animationFlame = 3;
-
 class Actor {
 public:
 
-	Actor() {};
-	virtual~Actor() {};
+	Actor() = default;
+	virtual~Actor()= default;
 
 	virtual void Update(float delta_time) {};
 	virtual void Draw(const KonCamera& camera) {};
 
-	enum class ActorType {
-		NONE,
-		ENEMY,
-
-	};
 
 	//空のポインタをセットする
 	void SetBattleScene(BattleScene* battle_scene) {
 		battle_scene_ = battle_scene;
 	}
 
-	//バトルシーンのポインタを解放する
-	/*void DeleteBattleScene() {
-		delete battle_scene;
-	}*/
 
 protected:
 	
@@ -42,10 +35,24 @@ protected:
 	//Sheadポインターにする場合、weakポインターにする必要がある
 	BattleScene* battle_scene_ = nullptr;
 
-	//黒
-	const int COLOR_BRACK = 0;
 
-	//白色
-	const int COLOR_WHITE = -1;
+	//---アニメーションで使うフレーム関連---//
+
+	//総フレーム(3)
+	const int TOTAL_FRAME = 3;							
+	//横フレーム(3)
+	const int HORIZONTAL_FRAME = 3;						
+	//縦フレーム(1)
+	const int VERTICAL_FRAME = 1;						
+	//横方向へ 1フレームあたりの幅(48)
+	const int HORIZONTAL_ONEFRAME = 48;					
+	//縦方向へ 1フレームあたりの幅(48)
+	const int VERTICAL_ONEFRAME = 48;					
+
+	//アニメーションを切り替える秒数
+	static constexpr float ChangeAnimationTime = 0.3f;
+	//フレーム
+	static constexpr int animationFlame = 3;
+
 
 };
