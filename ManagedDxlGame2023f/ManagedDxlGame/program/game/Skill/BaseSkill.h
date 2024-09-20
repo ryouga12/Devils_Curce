@@ -1,24 +1,29 @@
+//------------------------------------------------------------------------------------------------------------
+//
+//スキルクラスのベースクラス
+//
+//-------------------------------------------------------------------------------------------------------------
+
+
 #pragma once
 #include "../../dxlib_ext/dxlib_ext.h"
-
-
 
 class BaseSkill {
 
 protected:
 
 	//スキルごとのid
-	int Id = 0;
+	int skill_id = 0;
 	//特技の名前
-	std::string SkillName;
+	std::string skill_name;
 	//特技の威力
-	float Power = 0;
+	float power = 0;
 	//特技の説明
 	std::string description;
 	//特技を使った際の消費Mp
-	int ConsumeMp = 0;
+	int consume_mp = 0;
 	//そのスキルが攻撃系かバフ系か判断する変数
-	int SkillType = 0;
+	int skill_type = 0;
 	
 
 public:
@@ -26,7 +31,6 @@ public:
 	BaseSkill() {}
 
 	//コンストラクタ : ここで名前と威力と特技の説明と特技使用時の消費MPを設定する
-	BaseSkill(int id ,const std::string& _Skillname, float _Power , const std::string& description_ ,int consumeMp , int skilltype) : Id(id), SkillName(_Skillname), Power(_Power), description(description_), ConsumeMp(consumeMp),SkillType(skilltype){}
-
+	BaseSkill(const int& id ,const std::string& _Skillname, const float& _Power , const std::string& description_ ,const int& consumeMp , const int& skilltype) : skill_id(id), skill_name(_Skillname), power(_Power), description(description_), consume_mp(consumeMp),skill_type(skilltype){}
 
 };
