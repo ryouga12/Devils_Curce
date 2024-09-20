@@ -10,15 +10,13 @@
 #include"../Menu/MenuWindow.h"
 #include <unordered_map>
 
-class CsvManager;
-class GameManager;
 
 class UIManager final {
 
 public:
 
-	static UIManager* getUIManager();
-	static void delategetUIManager() { delete getUIManager(); }
+	static UIManager* GetUIManager();
+	static void DeleteGetUIManager();
 
 	//メニューを追加する(主に他の所でウィンドを使い回したい場合に使用)
 	//arg_ : メニューの名前
@@ -26,6 +24,7 @@ public:
 	void addMenu(const std::string& menuName, const std::shared_ptr<Menu>& menu);
 
 	// メニューを取得する
+	//arg_1 : 取得したいメニューの名前
 	std::shared_ptr<Menu> getMenu(const std::string& menuName) {
 
 		auto it = menu_map.find(menuName);
@@ -44,9 +43,6 @@ public:
 	//arg_4 : Menuの幅のサイズ
 	//arg_5 : Menuの縦のサイズ
 	void Menu_Draw(const std::string& menuName, const int& menu_x, const int& menu_y, const int& menu_width, const int& menu_height);
-
-	//武器屋のコメント
-	void armsdealerComentDraw(const int& type);
 
 	//コメントをロードする
 	//arg_1 : コメントの数
@@ -76,6 +72,7 @@ public:
 	void PlayerStatusDrawWindow();
 
 	//セーブした時の文字を表示させる
+	//arg_1 : 表示させたい座標
 	void SaveText(const tnl::Vector2i& text_pos );
 
 	//セーブテキストの表示を切り替える（セーブテキストを表示する）
@@ -117,10 +114,23 @@ public:
 	//ストーリーの文字のロード
 	void StoryLoad(const int& section_type);
 
+	//作成したフォントを取得する
+	//(サイズ80, フォントタイプ : DX_FONTTYPE_EDGE)
+	int GetFontString_80()const { return string_handle_80; }
+
+	//作成したフォントを取得する
+	//(サイズ100, フォントタイプ : DX_FONTTYPE_EDGE)
+	int GetFontString_100()const { return string_handle_100; }
+
+	//作成したフォントを取得する
+	//(サイズ30, フォントタイプ : DX_FONTTYPE_EDGE)
+	int GetFontString_30()const { return string_handle_30; }
+
+
 private:
 
 
-	UIManager() = default;
+	UIManager();
 	~UIManager();
 
 	//メニューを管理するマップ
@@ -135,22 +145,17 @@ private:
 	//ストーリー用のカウント
 	int curent_story = 0;
 
+	//フォント(サイズ80 , フォントタイプ : DX_FONTTYPE_EDGE)
+	int string_handle_80 = 0;
+
+	//フォント(サイズ100 , フォントタイプ : DX_FONTTYPE_EDGE)
+	int string_handle_100 = 0;
+
+	//フォント(サイズ30 , フォントタイプ: DX_FONTTYPE_EDGE)
+	int string_handle_30 = 0;
+
+
 	//---それぞれのコメント---//
-
-	//武器商人のコメントの座標
-	const tnl::Vector2i ARMSDEALERCOMENT = { 150, 550 };
-
-	//武器屋の話しかけたときのコメント
-	const int ARMSDEALER_FIRST_COMET = 0;
-
-	//武器屋の文字の座標
-	const tnl::Vector2i WEAPONSHOP = { 60 , 520 };
-
-	//武器屋の購入コメントの座標
-	const tnl::Vector2i WEAPONSHOP_BUY = { 70, 100 };
-
-	//武器屋のメニューを閉じるコメントの座標
-	const tnl::Vector2i MENU_CLOSE = { 70, 150 };
 
 	//現在のコメント
 	int curent_num = 0;
@@ -166,6 +171,8 @@ private:
 
 	//説明表示を切り替える為のフラグ
 	bool player_detail_window_flag = true;
+
+	//---HP・MPバー関連---//
 
 	// HPバーの現在の長さを保持する変数
 	float current_hp_bar = 0;
@@ -194,6 +201,8 @@ private:
 	// 補間の終了時点でのMPバーの長さを保持する変数
 	float mp_end = 0;
 
+	//---ストーリー(プロローグ・エピローグ)関連---//
+
 	// 現在表示しているコメントのインデックス
 	int current_story_comment_index = 0; 
 	
@@ -204,7 +213,22 @@ private:
 	float story_display_timer = 0.0f; 
 
 	//追加座標
-	const int ADD_OFSET = 50;
+	const int ADD_OFSET = 45;
+
+	//ストーリーを全て表示したら切り替えるフラグ(主に次に進み文字を表示する為)
+	bool story_end_flag = false;
+
+	//Enterキーのボタンを表示する為の座標
+	const tnl::Vector2i ENTER_KEY_POS = { 760 ,630 };
+
+	//Enterキーの表示するための座標
+	const tnl::Vector2i ENTER_KEY_STRING_POS = { 790 , 620};
+
+	//Tabキーのボタンを表示する為の座標
+	const tnl::Vector2i TAB_KEY_POS = {930 , 630 };
+
+	//Tabキーの表示するための座標
+	const tnl::Vector2i TAB_KEY_STRING_POS = { 960 , 620 };
 
 //--------------------------------------------------------------------------------------------------------------
 //UIの説明文用の文字列
@@ -215,5 +239,5 @@ private:
 
 	//バトルシーン用の操作説明
 	std::vector<std::string> battle_operation_instructions
-		= { "操作説明" , "十字キー : カーソルの移動" , "← : 一つ前に戻る","Enter : 決定 , 次に進む" ,"TAB : ウィンドウの表示を切り替える" };
+		= { "操作説明" ,  "W : 上" ,"S : 下", "A : 左" , "D : 右" , "back space : 一つ前に戻る","Enter : 決定 , 次に進む" ,"TAB : ウィンドウの表示を切り替える" };
 };

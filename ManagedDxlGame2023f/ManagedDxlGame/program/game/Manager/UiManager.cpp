@@ -2,12 +2,17 @@
 #include"CsvManager.h"
 #include"GameManager.h"
 
-UIManager* UIManager::getUIManager()
+UIManager* UIManager::GetUIManager()
 {
 	static UIManager* p_instance = nullptr;
 
 	if (!p_instance)p_instance = new UIManager();
 	return p_instance;
+}
+
+void UIManager::DeleteGetUIManager()
+{
+	delete GetUIManager();
 }
 
 void UIManager::addMenu(const std::string& menuName, const std::shared_ptr<Menu>& menu)
@@ -42,29 +47,13 @@ void UIManager::Menu_Draw(const std::string& menuName, const int&  menu_x, const
 
 }
 
-//武器屋のコメント表示
-void UIManager::armsdealerComentDraw(const int& type)
-{
-	//武器屋に最初に話かけたときのコメント
-	if (type == ARMSDEALER_FIRST_COMET) {
-		DrawString(WEAPONSHOP.x, WEAPONSHOP.y, "武器屋", koni::Color::WHITE);
-		DrawStringEx(ARMSDEALERCOMENT.x, ARMSDEALERCOMENT.y, koni::Color::WHITE, "「 いらっしゃい！」");
-		DrawStringEx(WEAPONSHOP_BUY.x, WEAPONSHOP_BUY.y, koni::Color::WHITE, "(1 : 武器を購入する)");
-		DrawStringEx(MENU_CLOSE.x, MENU_CLOSE.y, koni::Color::WHITE, "(0 : メニューを閉じる)");
-	}
-	//なにか買うときのコメント
-	else {
-		DrawStringEx(ARMSDEALERCOMENT.x, ARMSDEALERCOMENT.y, koni::Color::WHITE, "「 何を買うんだい 」");
-	}
-}
-
 //コメントをロードする
 void UIManager::ComentLoad(const int& max_num , const std::string& name)
 {
 	//一度コメントを初期化する
 	coment_.clear();
 
-	auto coment_csv = CsvManager::getCsvManager()->GetComentCsv();
+	auto coment_csv = CsvManager::GetCsvManager()->GetComentCsv();
 
 	for (int i = 1; i < coment_csv.size(); i++) {
 
@@ -88,10 +77,10 @@ void UIManager::ComentDraw(const tnl::Vector2i& coment_pos)
 	DrawStringEx(coment_pos.x, coment_pos.y, koni::Color::WHITE, "%s", coment_[curent_num].c_str());
 
 	//閉じるを表示する座標
-	const int ADD_X = 450;  const int ADD_Y = 50;
+	const int ADD_X = 380;  const int ADD_Y = 50;
 
 	//閉じる文字の描画
-	DrawStringEx(coment_pos.x + ADD_X, coment_pos.y + ADD_Y, koni::Color::WHITE, "(0 : 閉じる)");
+	DrawStringEx(coment_pos.x + ADD_X, coment_pos.y + ADD_Y, koni::Color::WHITE, "(back space : 閉じる)");
 
 }
 
@@ -103,7 +92,7 @@ void UIManager::ComentNextByInput(const int& max_draw_num)
 		//Enterキーを受け付ける
 		if (tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
 			//SEを鳴らす
-			SoundManager::getSoundManager()->sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
+			SoundManager::GetSoundManager()->Sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
 			//数を増やす
 			curent_num++;
 			//カウントを増やす
@@ -135,19 +124,19 @@ void UIManager::PlayerStatusDrawWindow()
 	const int MP_INFO_Y = 250;
 
 	// プレイヤーのステータスを取得する
-	auto& playerStatus = GameManager::getGameManager()->getPlayer()->getPlayerStatusSave();
+	auto& player = GameManager::GetGameManager()->GetPlayer();
 
 	// プレイヤーの画像を描画
-	ResourceManager::getResourceManager()->DrawRotaGraphEx("graphics/Player/Player_Icon_sentou.png", PLAYER_ICON_POS.x, PLAYER_ICON_POS.y, koni::Numeric::SCALE_ONE_THIRTY_F, 0, true);
+	DrawRotaGraph(PLAYER_ICON_POS.x, PLAYER_ICON_POS.y, koni::Numeric::SCALE_ONE_THIRTY_F, 0, player->GetPlayerIcon(), true);
 
 	// HPバーの画像をロード
-	int hpber_hdl = ResourceManager::getResourceManager()->LoadGraphEX("graphics/hpbar.png");
+	int hpber_hdl = ResourceManager::GetResourceManager()->LoadGraphEX("graphics/hpbar.png");
 	// MPバーの画像をロード
-	int mpber_hdl = ResourceManager::getResourceManager()->LoadGraphEX("graphics/mpbar.png");
+	int mpber_hdl = ResourceManager::GetResourceManager()->LoadGraphEX("graphics/mpbar.png");
 
 	// プレイヤーのHPが3割を切った場合、HPバーを赤色に変更
-	if (playerStatus.GetcurentHp() < playerStatus.GetMaxHp() * koni::Numeric::PERCENT_30) {
-		hpber_hdl = ResourceManager::getResourceManager()->LoadGraphEX("graphics/red1_.png");
+	if (player->GetPlayerStatusSave().GetcurentHp() < player->GetPlayerStatusSave().GetMaxHp() * koni::Numeric::PERCENT_30) {
+		hpber_hdl = ResourceManager::GetResourceManager()->LoadGraphEX("graphics/red1_.png");
 	}
 
 	// HPバーを描画
@@ -156,10 +145,10 @@ void UIManager::PlayerStatusDrawWindow()
 	DrawExtendGraph(MP_BAR_POS.x, MP_BAR_POS.y, (MP_BAR_POS.x + static_cast<int>(current_mp_bar)), MP_BAR_POS.y + MP_BAR_HEIGHT, mpber_hdl, true);
 
 	// プレイヤーのHP情報を表示
-	DrawStringEx(PLAYER_INFO_POS.x, PLAYER_INFO_POS.y, koni::Color::WHITE, "Player");
-	DrawStringEx(LEVEL_INFO_POS.x, LEVEL_INFO_POS.y, koni::Color::WHITE, " Lv %d", playerStatus.GetLevel());
-	DrawStringEx(PLAYER_INFO_POS.x, HP_INFO_Y, koni::Color::WHITE, " Hp : %d / %d", playerStatus.GetcurentHp(), playerStatus.GetMaxHp());
-	DrawStringEx(PLAYER_INFO_POS.x, MP_INFO_Y, koni::Color::WHITE, " Mp : %d / %d", playerStatus.GetCurentMp(), playerStatus.GetMaxMp());
+	DrawStringEx(PLAYER_INFO_POS.x, PLAYER_INFO_POS.y, koni::Color::WHITE, "%s" , GameManager::GetGameManager()->GetPlayer()->GetPlayerName());
+	DrawStringEx(LEVEL_INFO_POS.x, LEVEL_INFO_POS.y, koni::Color::WHITE, " Lv %d", player->GetPlayerStatusSave().GetLevel());
+	DrawStringEx(PLAYER_INFO_POS.x, HP_INFO_Y, koni::Color::WHITE, " Hp : %d / %d", player->GetPlayerStatusSave().GetcurentHp(), player->GetPlayerStatusSave().GetMaxHp());
+	DrawStringEx(PLAYER_INFO_POS.x, MP_INFO_Y, koni::Color::WHITE, " Mp : %d / %d", player->GetPlayerStatusSave().GetCurentMp(), player->GetPlayerStatusSave().GetMaxMp());
 }
 
 
@@ -207,9 +196,7 @@ void UIManager::PlayerMoveDetail(const std::vector<std::string>& detail_text)
 		//操作説明文字の座標
 		const tnl::Vector2i MOVE_DETAIL_STRING_POS = { 900, 350 };
 
-		auto menu_window = getMenu("menu_window");
-
-		menu_window->Menu_draw(DETAIL_WINDOW_POS.x, DETAIL_WINDOW_POS.y, DETAIL_WINDOW_WIDTH, DETAIL_WINDOW_HEIGHT);
+		Menu_Draw("menu_window",DETAIL_WINDOW_POS.x, DETAIL_WINDOW_POS.y, DETAIL_WINDOW_WIDTH, DETAIL_WINDOW_HEIGHT);
 
 		for (int i = 0; i < detail_text.size(); i++)
 		{
@@ -222,7 +209,7 @@ void UIManager::PlayerMoveDetail(const std::vector<std::string>& detail_text)
 void UIManager::PlayerStatusBarUpdate(const float delta_time)
 {
 	// プレイヤーのステータスを取得する
-	auto& playerStatus = GameManager::getGameManager()->getPlayer()->getPlayerStatusSave();
+	auto& playerStatus = GameManager::GetGameManager()->GetPlayer()->GetPlayerStatusSave();
 
 	// HPバー最大の長さ
 	int maxHpBar = 200;
@@ -284,6 +271,8 @@ bool UIManager::StoryDisplayUpdate(const float delta_time)
 		// コメントが全て表示されたらtrueを返す
 		if (current_story_comment_index >= story_.size()) {
 			
+			story_end_flag = true;
+
 			return true;
 		}
 	}
@@ -299,9 +288,25 @@ void UIManager::StoryDisplay(const int& font_color)
 	const int STORY_COMENT_X = 100;
 
     for (const auto& comment : displayed_story_coments) {
+
         DrawStringEx(STORY_COMENT_X, y_offset, font_color, "%s", comment.c_str());
         y_offset += ADD_OFSET; // 各コメントの表示位置をずらす
+
     }
+
+	if (story_end_flag) {
+
+		//画像を表示する
+		ResourceManager::GetResourceManager()->DrawRotaGraphEx("graphics/button_Enter.png", ENTER_KEY_POS.x, ENTER_KEY_POS.y, koni::Numeric::SCALE_ONE_F, 0, true);
+
+		DrawStringEx(ENTER_KEY_STRING_POS.x, ENTER_KEY_STRING_POS.y, font_color, "次に進む");
+	}
+
+	//画像を表示する
+	//タブキーでスキップできるようにする為、表示する
+	ResourceManager::GetResourceManager()->DrawRotaGraphEx("graphics/icon146.png", TAB_KEY_POS.x, TAB_KEY_POS.y, koni::Numeric::SCALE_ONE_F, 0, true);
+
+	DrawStringEx(TAB_KEY_STRING_POS.x, TAB_KEY_STRING_POS.y, font_color, "ストーリーをスキップする");
 }
 
 void UIManager::StoryLoad(const int& section_type)
@@ -309,9 +314,10 @@ void UIManager::StoryLoad(const int& section_type)
 	//一度コメントを初期化する
 	displayed_story_coments.clear();
 	current_story_comment_index = 0;
+	story_end_flag = false;
 	story_.clear();
 
-	auto story_csv = CsvManager::getCsvManager()->GetStoryCsv();
+	auto story_csv = CsvManager::GetCsvManager()->GetStoryCsv();
 
 	for (int i = 1; i < story_csv.size(); i++) {
 
@@ -323,10 +329,28 @@ void UIManager::StoryLoad(const int& section_type)
 	}
 }
 
+UIManager::UIManager()
+{
+	//フォントを作成する
+	string_handle_80 = CreateFontToHandle(NULL, koni::Numeric::FONT_SIZE_80, koni::Numeric::FONT_SIZE_10, DX_FONTTYPE_EDGE);
+
+	//フォントを作成する
+	string_handle_100 = CreateFontToHandle(NULL, koni::Numeric::FONT_SIZE_100, koni::Numeric::FONT_SIZE_10, DX_FONTTYPE_EDGE);
+
+	//フォントを作成する
+	string_handle_30 = CreateFontToHandle(NULL, koni::Numeric::FONT_SIZE_30, koni::Numeric::FONT_SIZE_10, DX_FONTTYPE_EDGE);
+}
+
 UIManager::~UIManager()
 {
 	//中のメニューを解放する
 	menu_map.clear();
+
+	// 作成したフォントデータを削除する
+	DeleteFontToHandle(string_handle_80);
+	DeleteFontToHandle(string_handle_100);
+	DeleteFontToHandle(string_handle_30);
+
 }
 
 //void UIManager::IconAnimation()
