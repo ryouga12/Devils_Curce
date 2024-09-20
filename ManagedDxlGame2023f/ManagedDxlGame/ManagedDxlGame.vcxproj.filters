@@ -446,9 +446,6 @@
     <ClInclude Include="program\game\Manager\GameManager.h">
       <Filter>program\[003] game\Manager</Filter>
     </ClInclude>
-    <ClInclude Include="program\game\Object\Player.h">
-      <Filter>program\[003] game\Object</Filter>
-    </ClInclude>
     <ClInclude Include="program\game\Object\Enemy.h">
       <Filter>program\[003] game\Object</Filter>
     </ClInclude>
@@ -526,6 +523,9 @@
     </ClInclude>
     <ClInclude Include="program\koni_name_space\common\common_value.h">
       <Filter>program\[002]koni_name_space\common</Filter>
+    </ClInclude>
+    <ClInclude Include="program\game\Object\Player.h">
+      <Filter>program\[003] game\Object</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
