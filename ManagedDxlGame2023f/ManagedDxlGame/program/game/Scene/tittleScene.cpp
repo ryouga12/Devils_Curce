@@ -94,7 +94,8 @@ void TittleScene::Draw()
 		title_selection->All(MENU_X, MENU_Y, MENU_WIDTH, MENU_HEIGHT);
 		
 		//タイトル文字を表示する
-		DrawStringToHandle(TITTLE_STRING_POS.x, TITTLE_STRING_POS.y, "Devils Curse", koni::Color::WHITE, UIManager::GetUIManager()->GetFontString_80());
+		//DrawStringToHandle(TITTLE_STRING_POS.x, static_cast<int>(title_y), "Devils Curse", koni::Color::WHITE, UIManager::GetUIManager()->GetFontString_80());
+		DrawRotaGraph(TITTLE_STRING_POS.x, static_cast<int>(title_y), koni::Numeric::SCALE_ONE_F, 0, font_hdl, true);
 
 		//上ボタン操作アイコン
 		ResourceManager::GetResourceManager()->DrawRotaGraphEx("graphics/icon_w.png", TOP_BUTTON_POS.x, TOP_BUTTON_POS.y, koni::Numeric::SCALE_ONE_THIRTY_F, 0, true);
@@ -232,17 +233,29 @@ void TittleScene::Draw()
 		//プロローグ
 	case TittleScene::TittleState::PROLOGUE:
 
+		//半透明にする
+		SetDrawBlendMode(DX_BLENDMODE_ALPHA, koni::Numeric::ALPHA_50_PERCENT);
 		//背景描画
 		DrawExtendGraph(0, 0, DXE_WINDOW_WIDTH, DXE_WINDOW_HEIGHT, tittle_ghdl, TRUE);
+		//アルファ値を戻す
+		SetDrawBlendMode(DX_BLENDMODE_ALPHA, koni::Numeric::ALPHA_OPAQUE);
 
 		//ストーリーを描画する
-		UIManager::GetUIManager()->StoryDisplay(koni::Color::BLACK);
+		UIManager::GetUIManager()->StoryDisplay(koni::Color::WHITE);
 
 		break;
 
 	default:
 
 		break;
+	}
+
+	if (warnig_message) {
+
+		//ウィンドウを表示する
+		UIManager::GetUIManager()->GetMenu("menu_window")->Menu_draw(50, 100, 500, 200);
+		//文字を表示する
+		UIManager::GetUIManager()->WarningWindow("ファイルが存在しません。");
 	}
 
 }
@@ -259,6 +272,7 @@ bool TittleScene::seqInit(float delta_time)
 
 		//タイトルの背景の画像を格納する
 		tittle_ghdl = ResourceManager::GetResourceManager()->LoadGraphEX("graphics/tittle_background.png");
+		font_hdl = ResourceManager::GetResourceManager()->LoadGraphEX("graphics/DevilsCurse.png");
 		//handle = ResourceManager::getResourceManager()->LoadGraphEX("graphics/tittle_string.png");
 		//エンターキーの画像を格納する
 		enter_key_hdl = ResourceManager::GetResourceManager()->LoadGraphEX("graphics/button_Enter.png");
@@ -285,7 +299,7 @@ bool TittleScene::seqInit(float delta_time)
 
 	case TittleScene::TittleState::PROLOGUE:
 
-		tittle_ghdl = ResourceManager::GetResourceManager()->LoadGraphEX("graphics/haikei/prologue.png");
+		tittle_ghdl = ResourceManager::GetResourceManager()->LoadGraphEX("graphics/haikei/prologue_.jpg");
 
 		sequence_.change(&TittleScene::seqPrologue);
 
@@ -302,10 +316,25 @@ bool TittleScene::seqInit(float delta_time)
 //タイトル内の更新処理
 bool TittleScene::seqTittle(float delta_time)
 {
+	//---タイトル文字のアニメーション処理---//
+	elapsed_time += delta_time;
+
+	if (elapsed_time < DURATION) {
+
+		//ゆっくり目標に向かって動かす
+		title_y = tnl::SmoothLerp(0.0f, static_cast<float>(TITTLE_STRING_POS.y), DURATION, elapsed_time);
+	}
+
+	//---選択処理---//
+
 	//はじめから始める
-	if (title_selection->getSelectNum() == MenuWindow::Elements::FIRST_ELEMENT && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
-		SceneChange = true;
+	if (title_selection->GetSelectNum() == MenuWindow::Elements::FIRST_ELEMENT && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
+		
 		SoundManager::GetSoundManager()->Sound_Play("sound/SoundEffect/tittle_enter.mp3", DX_PLAYTYPE_BACK);
+
+		//警告文字が表示されている場合、警告文字を消す
+		if (warnig_message) { warnig_message = false; }
+
 		auto mgr = SceneManager::GetSceneManager();
 
 		if (mgr->GetSceneFlag()) {
@@ -319,41 +348,41 @@ bool TittleScene::seqTittle(float delta_time)
 		//イベント関連のフラグをリセットする
 		EventManager::GetEventManager()->EventFlagReset();
 
-	}
-	//続きから始める
-	else if(title_selection->getSelectNum() == MenuWindow::Elements::SECOND_ELEMENT && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)){
-		GameManager::GetGameManager()->GetPlayer()->PlayerLoad();
-		SceneChange = true;
-		SoundManager::GetSoundManager()->Sound_Play("sound/SoundEffect/tittle_enter.mp3", DX_PLAYTYPE_BACK);
-	}
-
-	//1秒間SEを流してから次のシーンへ遷移する
-	if (SceneChange && title_selection->getSelectNum() == MenuWindow::Elements::SECOND_ELEMENT)
-	{
-		GameManager::GetGameManager()->TimeCount(delta_time , koni::Numeric::SECONDS_1_F);
-		sequence_.change(&TittleScene::seqChangeScene);
-		auto mgr = SceneManager::GetSceneManager();
-
-		auto& player = GameManager::GetGameManager()->GetPlayer();
-
-		mgr->changeScene(new InMapScene(player->GetPlayerPos(), static_cast<InMapScene::InMapState>(GameManager::GetGameManager()->GetPlayer()->GetPlayerCurentMapState())));
-
-		//プレイヤーの画像を確定する
-		player->SetPlayerAnimationHdl(Player::PlayerEquipState::BARE_HANDS, player->GetPlayerID());
-
-		//プレイヤーの座標をカメラに保管する
-		GameManager::GetGameManager()->GetCamera()->SavePosition(GameManager::GetGameManager()->GetPlayer()->GetPlayerPos());
-	}
-	else if (SceneChange) {
-
-		GameManager::GetGameManager()->TimeCount(delta_time, koni::Numeric::SECONDS_1_F);
-
 		//キャラメイクに移動させる
 		//まず画像の選択を行ってもらう
 		curent_tittle = TittleState::CHARAIMAGE;
 		sequence_.change(&TittleScene::seqInit);
 
 	}
+	//続きから始める
+	else if(title_selection->GetSelectNum() == MenuWindow::Elements::SECOND_ELEMENT && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)){
+
+		//EnterキーのSEを鳴らす
+		SoundManager::GetSoundManager()->Sound_Play("sound/SoundEffect/tittle_enter.mp3", DX_PLAYTYPE_BACK);
+
+		if (GameManager::GetGameManager()->GetPlayer()->PlayerLoad()) {
+
+			sequence_.change(&TittleScene::seqChangeScene);
+			auto mgr = SceneManager::GetSceneManager();
+
+			auto& player = GameManager::GetGameManager()->GetPlayer();
+
+			mgr->changeScene(new InMapScene(player->GetPlayerPos(), static_cast<InMapScene::InMapState>(GameManager::GetGameManager()->GetPlayer()->GetPlayerCurentMapState())));
+
+			//プレイヤーの画像を確定する
+			player->SetPlayerAnimationHdl(Player::PlayerEquipState::BARE_HANDS, player->GetPlayerID());
+
+			//プレイヤーの座標をカメラに保管する
+			GameManager::GetGameManager()->GetCamera()->SavePosition(GameManager::GetGameManager()->GetPlayer()->GetPlayerPos());
+		}
+		//ファイルがなかった場合、警告を表示する
+		else {
+
+			//警告文字を表示する
+			warnig_message = true;
+		}
+	}
+
 	return false;
 	
 }

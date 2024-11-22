@@ -36,11 +36,21 @@ public:
         PROLOGUE
     };
 
+    //状態を切り替える
     void SetTittleState(TittleState new_tittle) {
         curent_tittle = new_tittle;
     }
 
 private:
+
+    //タイトル文字の座標
+     float title_y = 0.0f;
+     //遅延秒数
+     const float DURATION = 2.0f;
+     //経過時間
+     float elapsed_time = 0.0f;
+     //フォント用の画像ハンドル
+     int font_hdl = 0;
 
     //プレイヤーのキャラメイクで選択できるイメージの列挙体
     enum PlayerImageSelect {
@@ -58,10 +68,10 @@ private:
 
     //キャラメイクで使用する座標
     const tnl::Vector2i PlAYER_IMAGE_SELECT_POS[PLAYER_IMAGE_MAX] = {
-        {300 ,300},
-        {500, 300},
-        {700, 300},
-        {900 ,300},
+        {330 ,300},
+        {530, 300},
+        {730, 300},
+        {930 ,300},
     };
 
     //プレイヤーの画像を表示する為の格納しておく配列
@@ -107,7 +117,7 @@ private:
     const int SELECTION_OFFSET_Y = 50;
 
     //タイトルの文字の座標
-    const tnl::Vector2i TITTLE_STRING_POS = { 380, 200 };
+    const tnl::Vector2i TITTLE_STRING_POS = { 630, 230 };
 
     // タイトル内の状態
     TittleState curent_tittle = TittleState::TITTLE;
@@ -132,7 +142,6 @@ private:
     MenuWindow::MenuElement_t* tittle_selection_coment = nullptr;
 
     // シーンを切り替える
-    bool SceneChange = false;
     bool seqChangeScene(float delta_time) { return true; }
 
     // 初期化シーケンス
