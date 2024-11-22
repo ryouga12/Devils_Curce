@@ -30,6 +30,9 @@ public:
 	BattleScene(const tnl::Vector3& pos ,const int& background , Shared<Enemy> enemy_pointer ,const int& inmap_state = 0);
 	~BattleScene()override;
 
+	//バトルシーンの初期化
+	void InitBattleScene();
+
 	//更新処理
 	void Update(float delta_time)override;
 
@@ -83,10 +86,12 @@ public:
 
 	//バトルシーンの状態を管理する
 	enum class BattleState {
-		//バトルが終了した待機状態
-		IDLE,	
+		//バトルが終了
+		BATTLE_END,
 		//戦闘
-		BATTLE, 
+		BATTLE,
+		//戦闘終了時のシーン遷移の待機状態
+		IDLE
 	};
 
 	//バトルの状態をセットする
@@ -181,6 +186,8 @@ private:
 	Shared<Nomal_Attack>nomal_attack = nullptr;
 	//アイテム
 	Shared<Item>item_ = nullptr;
+	//敵がボスの場合のみ使用するスマートポインタ
+	Weak<BossMonster>boss_monster_;
 	
 	//---ポインタ---//
 
@@ -223,7 +230,10 @@ private:
 	const int STARTY = 550;
 
 	//アイテムを表示する際の座標
-	const tnl::Vector2i ITEM_DRAW_POS = { 360 , 540};
+	const tnl::Vector2i ITEM_DRAW_POS = { 400 , 540};
+
+	//スキルを表示する位置
+	const tnl::Vector2i Skill_DRAW_POS = { 350 , 540 };
 
 	//アイテムのページ数の描画座標
 	const tnl::Vector2i ITEM_CURENT_PAGE = { 400 , 690};
@@ -275,9 +285,9 @@ private:
 	//アイテム使用時のメニューウィンドウ座標
 	
 	//使う
-	const tnl::Vector2i MENU_ITEM_USE_POS = { 600 , 550 };
+	const tnl::Vector2i MENU_ITEM_USE_POS = { 650 , 550 };
 	//閉じる
-	const tnl::Vector2i MENU_ITEM_CLOSE = { 600 , 600 };
+	const tnl::Vector2i MENU_ITEM_CLOSE = { 650 , 600 };
 
 	//バトルログウィンドウの座標
 	const tnl::Vector2i BATTLE_LOG_WINDOW_POS = { 670, 30 };
@@ -297,11 +307,11 @@ private:
 	const tnl::Vector2i ITEM_WINDOW_POS = { 300, 500 };
 
 	//バトルシーンで使うアイテムウィンドウのサイズ
-	const int ITEM_WINDOW_WIDTH = 250;
+	const int ITEM_WINDOW_WIDTH = 300;
 	const int ITEM_WINDOW_HEIGHT = 215;
 
 	//アイテムを選択した際の使う選択コマンドのウィンドウの座標
-	const tnl::Vector2i SELECT_ITEM_USE_WINDOW_POS = { 550, 500 };
+	const tnl::Vector2i SELECT_ITEM_USE_WINDOW_POS = { 600, 500 };
 
 	//スキルウィンドウの座標
 	const tnl::Vector2i SKILL_WINDOW_POS = { 300, 500 };
