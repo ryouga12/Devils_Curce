@@ -17,9 +17,7 @@ void ResourceManager::DelategetResourceManager()
 ResourceManager::~ResourceManager()
 {
 	//画像を消去する
-	for (auto& gh_array : ghmap) {
-		deleteGraphEx(gh_array.first);
-	}
+	ghmap.clear();
 }
 
 //画像を重複して読み込まないようにこれを使う
@@ -41,7 +39,7 @@ int ResourceManager::LoadGraphEX(const std::string& gh)
 }
 
 //保存した画像を消去する
-bool ResourceManager::deleteGraphEx(const std::string& ghpath)
+bool ResourceManager::DeleteGraphEx(const std::string& ghpath)
 {
 	if (auto it = ghmap.find(ghpath); it != ghmap.end()) {
 		if (DeleteGraph(it->second) != -1) {
@@ -62,6 +60,15 @@ bool ResourceManager::deleteGraphEx(const std::string& ghpath)
 	tnl::DebugTrace("\nResourceManagerリソース解放 => %s が見つかりませんでした", ghpath.c_str());
 	return false;
 
+}
+
+//配列内画像を一括で解放する
+void ResourceManager::DeleteGraphAryEx(int gh_ary[] , const int& max_num)
+{
+	for (int i = 0; i < max_num; i++) {
+		DeleteGraph(gh_ary[i]);
+		tnl::DebugTrace("\n Deleted   at [%d]. Pointer value: %p\n", i, gh_ary[i]);
+	}
 }
 
 //ロードした画像を描画する

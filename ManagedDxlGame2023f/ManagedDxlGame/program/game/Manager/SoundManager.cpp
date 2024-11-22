@@ -18,9 +18,7 @@ void SoundManager::DelateSoundManager()
 SoundManager::~SoundManager()
 {
 	//’†‚Ì—v‘f‚ğÁ‹‚·‚é
-	for (auto& sound_array : sound_map) {
-		DeleteSound(sound_array.first);
-	}
+	sound_map.clear();
 }
 
 int SoundManager::LoadSoundBGM(const std::string& bgmFile)

@@ -34,7 +34,12 @@ public:
 	int LoadGraphEX(const std::string&  gh);
 
 	//ロードした画像を消去する
-	bool deleteGraphEx(const std::string& ghpath);
+	bool DeleteGraphEx(const std::string& ghpath);
+
+	//配列内の画像を解放する
+	//arg_1 : ハンドルの配列
+	//arg_2 : ハンドルの数
+	void DeleteGraphAryEx(int gh_ary[], const int& max_num);
 
 	//ロードした画像を描画する
 	//arg_1 : 画像のpath
