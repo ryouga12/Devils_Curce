@@ -358,7 +358,7 @@ void WeaponShop::SellItemProcess()
 	if (curent_sell_action == SellAction::SELLITEMCHECK) {
 
 		//売却が選択されたら
-		if (sell_coment_select->getSelectNum() == MenuWindow::FIRST_ELEMENT
+		if (sell_coment_select->GetSelectNum() == MenuWindow::FIRST_ELEMENT
 			&& tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
 
 			//インベントリが空でないかつ、アイテムが売却可能であれば
@@ -388,7 +388,7 @@ void WeaponShop::SellItemProcess()
 				curent_sell_action = SellAction::SELLITEMSELECT;
 			}
 		}
-		else if (sell_coment_select->getSelectNum() == MenuWindow::SECOND_ELEMENT
+		else if (sell_coment_select->GetSelectNum() == MenuWindow::SECOND_ELEMENT
 			&& tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
 
 			//アイテムの選択画面に戻す

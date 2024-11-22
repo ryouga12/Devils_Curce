@@ -179,7 +179,7 @@ private:
 	const int ITEMPERPAGE_ = 5;
 
 	//アイテムを表示する座標
-	const tnl::Vector2i ITEM_DRAW_POS = { 110 , 100 };
+	const tnl::Vector2i ITEM_DRAW_POS = { 145 , 100 };
 
 	//現在のページを表示座標
 	const tnl::Vector2i CURENTPAGETEXT = { 100 , 330 };
