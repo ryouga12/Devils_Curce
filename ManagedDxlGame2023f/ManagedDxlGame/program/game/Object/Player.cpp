@@ -11,7 +11,7 @@
 #include"../Scene/InMapScene.h"
 
 
-Player::Player() : money(50)
+Player::Player()
 {
 	//csvの読み取り
 	plyer_status_csv_info
@@ -44,9 +44,9 @@ Player::~Player()
 }
 
 //プレイヤーの動き
-//引数 : Delta_time , 動く速度　,　マップの高さ(移動制限の為)
 void Player::Player_Move(const float& delta_time , const float& velocity , const int& MAPHEIGHT)
 {
+	//移動前座標を更新する
 	//prev_pos = plyer_pos;
 
 	if (play_control) {
@@ -226,8 +226,6 @@ void Player::PlyStatusLoad()
 {
 	int max_num = static_cast<int>(plyer_status_csv_info.size());
 
-	player_status_total_num = max_num;
-
 	for (int y = 1; y < max_num; y++) {
 
 		//csvからlevelの取得
@@ -303,7 +301,7 @@ void Player::SaveReadSkill(const int& skill_id )
 
 	// skill_id に一致するスキルを検索
 	auto it = std::find_if(skill_list.begin(), skill_list.end(),
-		[skill_id](const Shared<Skill>& skill) { return skill->getId() == skill_id; });
+		[skill_id](const Shared<Skill>& skill) { return skill->GetId() == skill_id; });
 
 	// スキルが見つかった場合
 	if (it != skill_list.end()) {
@@ -350,7 +348,7 @@ void Player::DeadPlayerProcess(Shared<BattleLog>& battle_log)
 		SoundManager::GetSoundManager()->Sound_Play("sound/SoundEffect/zenmetu.mp3", DX_PLAYTYPE_BACK);
 
 		//バトルを終了させる
-		battle_scene_->SetBattleState(BattleScene::BattleState::IDLE);
+		battle_scene_->SetBattleState(BattleScene::BattleState::BATTLE_END);
 	}
 	else {
 		return;
@@ -551,7 +549,7 @@ void Player::PlayerSave()
 		if (!player_skill_list.empty()) {
 
 			for (int i = 0; i < player_skill_list.size(); i++) {
-				player_skill_list_array.emplace_back(player_skill_list[i]->getId());
+				player_skill_list_array.emplace_back(player_skill_list[i]->GetId());
 			}
 		}
 
@@ -559,6 +557,7 @@ void Player::PlayerSave()
 		bool event_flag_1 = EventManager::GetEventManager()->GetEnemyEventFlag_1();
 		bool event_flag_2 = EventManager::GetEventManager()->GetEnemyEventFlag_2();
 		bool event_flag_3 = EventManager::GetEventManager()->GetEnemyEventFlag_3();
+		bool last_boss_flag = EventManager::GetEventManager()->GetLastBossFlag();
 
 		//プレイヤーのステータスを保存する
 
@@ -594,6 +593,7 @@ void Player::PlayerSave()
 		fwrite(&event_flag_1, sizeof(bool), 1, fp);
 		fwrite(&event_flag_2, sizeof(bool), 1, fp);
 		fwrite(&event_flag_3, sizeof(bool), 1, fp);
+		fwrite(&last_boss_flag, sizeof(bool), 1, fp);
 
 		// 文字列の長さを保存
 		fwrite(&name_length, sizeof(size_t), 1, fp); 
@@ -622,7 +622,7 @@ void Player::PlayerSave()
 }
 
 //ロード
-void Player::PlayerLoad()
+bool Player::PlayerLoad()
 {
 	FILE* fp = nullptr;
 	fopen_s(&fp, "player.bin", "rb");
@@ -648,6 +648,7 @@ void Player::PlayerLoad()
 		bool event_flag_1;
 		bool event_flag_2;
 		bool event_flag_3;
+		bool last_boss_flag;
 
 		// ステータスをロードする
 
@@ -683,6 +684,7 @@ void Player::PlayerLoad()
 		fread(&event_flag_1, sizeof(bool), 1, fp);
 		fread(&event_flag_2, sizeof(bool), 1, fp);
 		fread(&event_flag_3, sizeof(bool), 1, fp);
+		fread(&last_boss_flag, sizeof(bool), 1, fp);
 
 		// プレイヤーの名前をロードする
 		size_t name_length;
@@ -739,6 +741,7 @@ void Player::PlayerLoad()
 		EventManager::GetEventManager()->SetEnemyEventFlag_1(event_flag_1);
 		EventManager::GetEventManager()->SetEnemyEventFlag_2(event_flag_2);
 		EventManager::GetEventManager()->SetEnemyEventFlag_3(event_flag_3);
+		EventManager::GetEventManager()->SetLastBossFlag(last_boss_flag);
 
 
 		// インベントリの要素を格納する
@@ -752,6 +755,18 @@ void Player::PlayerLoad()
 		}
 
 		fclose(fp);
+
+		return true;
+	}
+	//ファイルがない場合、falseを返す。
+	else {
+
+		tnl::DebugTrace("\n------------------------------------------------------------");
+		tnl::DebugTrace("\n ファイルが見つかりません");
+		tnl::DebugTrace("\n------------------------------------------------------------");
+
+		return false;
+
 	}
 }
 
@@ -764,8 +779,28 @@ void Player::DebugAddSkill()
 	//一回のみスキルを追加できる
 	if (debug_skill_count < 1) {
 		for (auto& skill_lists : skill->GetOverallSkills()) {
-			SaveReadSkill(skill_lists->getId());
+			SaveReadSkill(skill_lists->GetId());
 		}
 		debug_skill_count++;
+	}
+
+	EventManager::GetEventManager()->LastBossFlagChange();
+
+}
+
+//選択したスキルを消去する
+void Player::SkillRemove(const int& skill_id)
+{
+	for (auto itr = player_skill_list.begin(); itr != player_skill_list.end();) {
+
+		//選択したスキルが存在していたら
+		if (skill_id == (*itr)->GetId()) {
+			player_skill_list.erase(itr);
+			break;
+		}
+		//見つからなかったらイテレータを進める
+		else {
+			itr++;
+		}
 	}
 }

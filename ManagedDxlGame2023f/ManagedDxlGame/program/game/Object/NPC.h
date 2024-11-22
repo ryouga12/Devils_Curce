@@ -34,10 +34,10 @@ public:
 	//Npcのコンストラクタ 
 	//arg_1  : 名前 
 	//arg_2  : 座標 
-	//arg_ 3 : キャラのサイズ 
+	//arg_3  : キャラのサイズ 
 	//arg_4  : 画像の大きさ 
-	//arg_ 5 : どのアニメーションから始めるか
-	//arg_ 6 : npcのアイコン )
+	//arg_5  : どのアニメーションから始めるか
+	//arg_6  : npcのアイコン 
 	Npc(const std::string& name, const tnl::Vector3& pos ,const int& CHARASIZE, const float& scale , const NPC_ANIMATION& animation_namber , const std::string& npc_icon_image);
 	
 	//当たり判定のないNpc

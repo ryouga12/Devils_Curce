@@ -260,6 +260,9 @@ public:
 	void PlyStatusLoad();
 
 	//プレイヤーの画像をセットする
+	//主にcsvなどに記述してまとめて設定する
+	//arg_1 : 画像のID(装備などで分ける際のID)
+	//arg_2 : プレイヤーのID
 	void SetPlayerAnimationHdl(const int& ghdl_id, const int& player_id);
 
 	//プレイヤーの動き
@@ -373,7 +376,7 @@ public:
 
 	//セーブロード
 	void PlayerSave();
-	void PlayerLoad();
+	bool PlayerLoad();
 
 
 	//プレイヤーの表示フラグを切り替える
@@ -389,6 +392,9 @@ public:
 
 	//スキルを全て追加する(デバック用)
 	void DebugAddSkill();
+
+	//選択したスキルを消去する
+	void SkillRemove(const int& skill_id);
 
 private:
 
@@ -423,7 +429,7 @@ private:
 	tnl::Vector3 plyer_pos = {};
 
 	//プレイヤーのお金
-	int money = 0;
+	int money = 50;
 
 	//ステータス情報
 	PlayerStatus player_status_save;
@@ -448,9 +454,6 @@ private:
 	int anim_ctrl_dir = DIR_DOWN;
 	int anim_ctrl_frame = 0;
 	int anim_hdls[DIR_MAX][9];
-
-	//構造体の総数
-	int player_status_total_num;
 
 	//構造体を格納する配列
 	std::list<PlayerStatus>player_status_type;
