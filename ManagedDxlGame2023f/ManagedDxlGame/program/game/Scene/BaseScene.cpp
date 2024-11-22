@@ -1,6 +1,7 @@
 #include"BaseScene.h"
 #include"../Manager/UiManager.h"
 #include"../Manager/GameManager.h"
+#include"../Item/Inventory.h"
 
 
 void BaseScene::Update(float delta_time)
@@ -16,6 +17,7 @@ void BaseScene::Update(float delta_time)
     else if (tnl::Input::IsKeyDownTrigger(eKeys::KB_0)) {
         GameManager::GetGameManager()->GetPlayer()->DebugAddSkill();
     }
+   
 }
 
 void BaseScene::Draw()
@@ -29,10 +31,20 @@ void BaseScene::Draw()
         player_detail_text = UIManager::GetUIManager()->GetBattlePlayerMoveDetailText();
     }
 
+    //イベント通知用のウィンドウメッセージ
+    UIManager::GetUIManager()->DisplayEventMessage();
+
     //半透明にする
     SetDrawBlendMode(DX_BLENDMODE_ALPHA, koni::Numeric::ALPHA_80_PERCENT);
+
     //操作説明
     UIManager::GetUIManager()->PlayerMoveDetail(player_detail_text);
+
+    //デバック用の文字を表示する
+    UIManager::GetUIManager()->DebugDetailWindow(curent_scene);
+
     //アルファ値を戻す
     SetDrawBlendMode(DX_BLENDMODE_ALPHA, koni::Numeric::ALPHA_OPAQUE);
+
+    
 }

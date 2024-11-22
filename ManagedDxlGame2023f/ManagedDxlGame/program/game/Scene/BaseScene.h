@@ -45,6 +45,8 @@ public:
 
 protected:
 
+    
+
     //ストーリー
     enum Story {    
         //プロローグ
@@ -55,7 +57,10 @@ protected:
 
     SceneState curent_scene = SceneState::TITTLE;
 
-    //Actorリスト
+    //警告用のフラグ
+    bool warnig_message = false;
+
+    //Npcリスト
     std::list<Shared<Npc>>npc_list;
 
     //---mapChip関連の変数---//
@@ -83,6 +88,8 @@ protected:
     //フェードイン時間
     const float FADE_IN_TIME = 1.0f;
 
+    //当たり判定補正値
+    const float HIT_JUDGMENT_CORRECTION_VALUE = 0;
 };
 
 
