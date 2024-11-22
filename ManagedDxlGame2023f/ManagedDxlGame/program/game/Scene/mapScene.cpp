@@ -5,6 +5,8 @@
 #include"../Manager/CsvManager.h"
 #include"battleScene.h"
 #include"../Manager/UiManager.h"
+#include"../Manager/ResourceManager.h"
+#include"../System/Event.h"
 
 //------------------------------------------------------------------------------------------------------------------------
 //初期化　&  解放
@@ -26,6 +28,22 @@ MapScene::MapScene(){
 	//歩数カウントを150から300の値のランダムの数値を入れて確率を変える
 	encounterThreshold = (rand() % 150) + 150;
 
+	//ラスボスを倒していたら船を出現させる
+	if (!EventManager::GetEventManager()->GetLastBossFlag()) {
+
+		//船の座標
+		tnl::Vector3 ship_pos = { 80 , 1028,0 };
+
+		//船のハンドル
+		int ship_hdl = ResourceManager::GetResourceManager()->LoadGraphEX("graphics/Item/ship.png");
+
+		//チップサイズ
+		int ship_chip_size = 64;
+
+		//船を生成する
+		object_ship = std::make_shared<MapChip>(ship_pos, ship_hdl, ship_chip_size);
+	}
+
 	//---マップの高さと幅を決める---//
 	
 	//マップの高さ
@@ -33,7 +51,6 @@ MapScene::MapScene(){
 	//マップの幅
 	map_width = 3200;					
 	
-
 	//イベント関連の初期化
 	EventManager::GetEventManager()->InitEventRelated(npc_list);
 
@@ -43,11 +60,8 @@ MapScene::MapScene(){
 
 MapScene::~MapScene()
 {
-	//マップチップの解放(2096 = マップチップの総数)
-	for (int i = 0; i < 2096; i++) {
-		DeleteGraph(gpc_map_chip_hdls_[i]);
-		tnl::DebugTrace("Deleted  MapChipimage at [%d]. Pointer value: %p\n", i, gpc_map_chip_hdls_[i]);
-	}
+	//マップチップの解放
+	ResourceManager::GetResourceManager()->DeleteGraphAryEx(gpc_map_chip_hdls_, map_chip_all_size_);
 
 	//BGMを止める
 	SoundManager::GetSoundManager()->StopSound("sound/BGM/sfc-harukanaru-daichi.mp3");
@@ -63,12 +77,46 @@ void MapScene::DebugMapScene()
 	//デバック処理
 	if (tnl::Input::IsKeyDownTrigger(eKeys::KB_1)) {
 
+		//シーンマネージャーを取得する
 		auto mgr = SceneManager::GetSceneManager();
 
 		//フラグがfalseの場合trueに変更する(シーンを遷移させる為)
 		if (!mgr->GetSceneFlag()) { mgr->SceneFlagChange(); }
 
+		//シーンを切り替える
 		mgr->changeScene(new ResultScene());
+
+		//イベントマネージャーを取得する
+		auto event_manager = EventManager::GetEventManager();
+
+		//裏ボス出現用のフラグを切り替える
+		event_manager->LastBossFlagChange();
+
+		//プレイヤーの座標を村に移動させる
+		GameManager::GetGameManager()->GetPlayer()->SetPlayerPosition(VILLAGE_POS);
+
+		//イベントを呼び出す
+		Weak save_event = std::make_shared <Event>();
+
+		//セーブを行う
+		save_event.lock()->SaveProcces(static_cast<int>(InMapScene::InMapState::VILLAGE));
+
+		//セーブのテキストを呼ばないようにする
+		UIManager::GetUIManager()->SaveTextFlagChange();
+
+	}
+	else if (tnl::Input::IsKeyDownTrigger(eKeys::KB_2)) {
+
+		//村シーンに切り替える
+		auto mgr = SceneManager::GetSceneManager();
+
+		//フラグがfalseの場合trueに変更する(シーンを遷移させる為)
+		if (!mgr->GetSceneFlag()) { mgr->SceneFlagChange(); }
+
+		mgr->changeScene(new InMapScene(VILLAGE_POS, InMapScene::InMapState::VILLAGE), koni::Numeric::FLOAT_VALUE_01);
+		GameManager::GetGameManager()->GetPlayer()->SetPlayerPosition(VILLAGE_POS);
+		sequence_.change(&MapScene::seqChangeScene);
+
 	}
 	else if (tnl::Input::IsKeyDownTrigger(eKeys::KB_3)) {
 
@@ -78,8 +126,8 @@ void MapScene::DebugMapScene()
 		//フラグがfalseの場合trueに変更する(シーンを遷移させる為)
 		if (!mgr->GetSceneFlag()) { mgr->SceneFlagChange(); }
 
-		mgr->changeScene(new InMapScene(TOWN_POS, InMapScene::InMapState::TOWN), 0.1f);
-		GameManager::GetGameManager()->GetPlayer()->SetPlayerPosition(VILLAGE_POS);
+		mgr->changeScene(new InMapScene(TOWN_POS, InMapScene::InMapState::TOWN),FADE_OUT_TIME);
+		GameManager::GetGameManager()->GetPlayer()->SetPlayerPosition(TOWN_POS);
 		sequence_.change(&MapScene::seqChangeScene);
 
 	}
@@ -91,7 +139,7 @@ void MapScene::DebugMapScene()
 		//フラグがfalseの場合trueに変更する(シーンを遷移させる為)
 		if (!mgr->GetSceneFlag()) { mgr->SceneFlagChange(); }
 
-		mgr->changeScene(new InMapScene(BOSS_CASTLE_POS, InMapScene::InMapState::BOSSCASTLE), 0.1f, 0.8f);
+		mgr->changeScene(new InMapScene(BOSS_CASTLE_POS, InMapScene::InMapState::BOSSCASTLE), FADE_OUT_TIME, koni::Numeric::SECONDS_0_8_F);
 
 		//座標をボスの場所にセットする
 		GameManager::GetGameManager()->GetPlayer()->SetPlayerPosition(BOSS_CASTLE_POS);
@@ -105,7 +153,7 @@ void MapScene::DebugMapScene()
 		//フラグがfalseの場合trueに変更する(シーンを遷移させる為)
 		if (!mgr->GetSceneFlag()) { mgr->SceneFlagChange(); }
 
-		mgr->changeScene(new InMapScene(CASTLE_TOWN_POS, InMapScene::InMapState::CASTLETOWN), 0.1f);
+		mgr->changeScene(new InMapScene(CASTLE_TOWN_POS, InMapScene::InMapState::CASTLETOWN), FADE_OUT_TIME);
 		GameManager::GetGameManager()->GetPlayer()->SetPlayerPosition(CASTLE_TOWN_POS);
 		sequence_.change(&MapScene::seqChangeScene);
 
@@ -118,7 +166,7 @@ void MapScene::DebugMapScene()
 		//フラグがfalseの場合trueに変更する(シーンを遷移させる為)
 		if (!mgr->GetSceneFlag()) { mgr->SceneFlagChange(); }
 
-		mgr->changeScene(new InMapScene(GRAVE_POS, InMapScene::InMapState::GRAVE), 0.1f);
+		mgr->changeScene(new InMapScene(GRAVE_POS, InMapScene::InMapState::GRAVE), FADE_OUT_TIME);
 		GameManager::GetGameManager()->GetPlayer()->SetPlayerPosition(GRAVE_POS);
 		sequence_.change(&MapScene::seqChangeScene);
 
@@ -174,6 +222,7 @@ void MapScene::Update(float delta_time)
 
 void MapScene::Draw()
 {
+
 	//MapChipの描画
 	for (auto& world_map : map_chips) {
 		world_map->Draw(*GameManager::GetGameManager()->GetCamera());
@@ -183,14 +232,26 @@ void MapScene::Draw()
 		world_object->Draw(*GameManager::GetGameManager()->GetCamera());
 	}
 
+	//船の描画
+	if (object_ship) {
+		object_ship->Draw(*GameManager::GetGameManager()->GetCamera());
+	}
+
 	//プレイヤーの描画
 	GameManager::GetGameManager()->GetPlayer()->Player_draw(*GameManager::GetGameManager()->GetCamera(), koni::Numeric::SCALE_ONE_F);
 
 	//インベントリの描画
 	GameManager::GetGameManager()->GetInventory()->draw();
 
+	//イベント時の通知用の文字表示
+	UIManager::GetUIManager()->DisplayEventMessage();
+
 	//共通描画
 	__super::Draw();
+
+	/*DrawStringEx(100, 100, koni::Color::WHITE, "%f", GameManager::GetGameManager()->GetPlayer()->GetPlayerPos().x);
+	DrawStringEx(100, 150, -1, "%f", GameManager::GetGameManager()->GetPlayer()->GetPlayerPos().y);*/
+
 }
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -215,12 +276,12 @@ bool MapScene::seqMove(float delta_time)
 	if (GameManager::GetGameManager()->GetInventory()->GetSelectMenuNum() == Inventory::MenuWindow_I::EMPTY && tnl::Input::IsKeyDownTrigger(eKeys::KB_ESCAPE)
 		&& GameManager::GetGameManager()->GetPlayer()->GetPlayerControl()) {
 			
-			//SEを流す
-			SoundManager::GetSoundManager()->Sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
-			//インベントリを表示する
-			GameManager::GetGameManager()->GetInventory()->InventoryMenuChange(Inventory::MenuWindow_I::FIRSTMENU);
-			//plyerを動けないようにする
-			GameManager::GetGameManager()->GetPlayer()->PlayerControlChangeFlag();
+		//SEを流す
+		SoundManager::GetSoundManager()->Sound_Play("sound/SoundEffect/decision.mp3", DX_PLAYTYPE_BACK);
+		//インベントリを表示する
+		GameManager::GetGameManager()->GetInventory()->InventoryMenuChange(Inventory::MenuWindow_I::FIRSTMENU);
+		//plyerを動けないようにする
+		GameManager::GetGameManager()->GetPlayer()->PlayerControlChangeFlag();
 	}
 
 	//当たり判定
@@ -287,11 +348,14 @@ void MapScene::WorldMapCollision()
 	//ワールドマップにあるオブジェクトのcsv
 	auto world_object_csv = CsvManager::GetCsvManager()->GetWorldMapObjectCsv();
 
+	//プレイヤーの取得
+	auto& player_pointer = GameManager::GetGameManager()->GetPlayer();
+
 	//オブジェクトの当たり判定
 	for (auto& MapChip : map_chip_object) {
 
 		int mapChipValue = static_cast<int>(world_object_csv[static_cast<unsigned>(MapChip->MapChipPos().y / MapChip->GetChipSize().x)][static_cast<unsigned>(MapChip->MapChipPos().x / MapChip->GetChipSize().x)]);
-		if (colisionObjectValues.count(mapChipValue) > 0 && tnl::IsIntersectRect(GameManager::GetGameManager()->GetPlayer()->GetPlayerPos(), GameManager::GetGameManager()->GetPlayer()->GetPlayerSize().x, GameManager::GetGameManager()->GetPlayer()->GetPlayerSize().y, MapChip->MapChipPos(), map_chip_width_, map_chip_height_))
+		if (colisionObjectValues.count(mapChipValue) > 0 && tnl::IsIntersectRect(player_pointer->GetPlayerPos(), player_pointer->GetPlayerSize().x, player_pointer->GetPlayerSize().y, MapChip->MapChipPos(), map_chip_width_, map_chip_height_))
 		{
 			//座標補正
 			tnl::eCorrResRect Object_hit = tnl::CorrectPositionRect(
@@ -302,7 +366,7 @@ void MapScene::WorldMapCollision()
 				GameManager::GetGameManager()->GetPlayer()->GetPlayerPos(),
 				MapChip->MapChipPos(),
 				tnl::eCorrTypeRect::PWRFL_B,
-				tnl::eCorrTypeRect::PWRFL_B , 0);
+				tnl::eCorrTypeRect::PWRFL_B , HIT_JUDGMENT_CORRECTION_VALUE);
 
 		}
 
@@ -327,7 +391,7 @@ void MapScene::WorldMapCollision()
 		const int MAP_CHIP_GRAVE_ENTRANCE = 1247;
 
 		if (ObjectValues.count(mapChipValue) > 0) {
-			int Collision = tnl::IsIntersectRect(GameManager::GetGameManager()->GetPlayer()->GetPlayerPos(), GameManager::GetGameManager()->GetPlayer()->GetPlayerSize().x, GameManager::GetGameManager()->GetPlayer()->GetPlayerSize().y, MapChip->MapChipPos(), map_chip_width_, map_chip_height_);
+			int Collision = tnl::IsIntersectRect(player_pointer->GetPlayerPos(), player_pointer->GetPlayerSize().x, player_pointer->GetPlayerSize().y, MapChip->MapChipPos(), map_chip_width_, map_chip_height_);
 			if (Collision) {
 
 				//オブジェクトに当たった状態でEnterキーを押したら遷移させる
@@ -345,7 +409,7 @@ void MapScene::WorldMapCollision()
 						//プレイヤーを一時的に見えなくする
 						GameManager::GetGameManager()->GetPlayer()->PlayerDisplayChange();
 
-						mgr->changeScene(new InMapScene(VILLAGE_POS, InMapScene::InMapState::VILLAGE), 0.1f);
+						mgr->changeScene(new InMapScene(VILLAGE_POS, InMapScene::InMapState::VILLAGE), FADE_OUT_TIME);
 						GameManager::GetGameManager()->GetPlayer()->SetPlayerPosition(VILLAGE_POS);
 						sequence_.change(&MapScene::seqChangeScene);
 
@@ -364,7 +428,7 @@ void MapScene::WorldMapCollision()
 						//プレイヤーを一時的に見えなくする
 						GameManager::GetGameManager()->GetPlayer()->PlayerDisplayChange();
 
-						mgr->changeScene(new InMapScene(BOSS_CASTLE_POS, InMapScene::InMapState::BOSSCASTLE), 0.1f ,0.8f);
+						mgr->changeScene(new InMapScene(BOSS_CASTLE_POS, InMapScene::InMapState::BOSSCASTLE), FADE_OUT_TIME, koni::Numeric::FLOAT_VALUE_08);
 
 						//座標をボスの場所にセットする
 						GameManager::GetGameManager()->GetPlayer()->SetPlayerPosition(BOSS_CASTLE_POS);
@@ -420,7 +484,7 @@ void MapScene::WorldMapCollision()
 					//プレイヤーを一時的に見えなくする
 					GameManager::GetGameManager()->GetPlayer()->PlayerDisplayChange();
 
-					mgr->changeScene(new InMapScene(TOWN_POS, InMapScene::InMapState::TOWN), 0.1f);
+					mgr->changeScene(new InMapScene(TOWN_POS, InMapScene::InMapState::TOWN), koni::Numeric::SECONDS_0_2_F);
 					GameManager::GetGameManager()->GetPlayer()->SetPlayerPosition(TOWN_POS);
 					sequence_.change(&MapScene::seqChangeScene);
 
@@ -438,7 +502,7 @@ void MapScene::WorldMapCollision()
 					//プレイヤーを一時的に見えなくする
 					GameManager::GetGameManager()->GetPlayer()->PlayerDisplayChange();
 
-					mgr->changeScene(new InMapScene(CASTLE_TOWN_POS, InMapScene::InMapState::CASTLETOWN), 0.1f);
+					mgr->changeScene(new InMapScene(CASTLE_TOWN_POS, InMapScene::InMapState::CASTLETOWN), koni::Numeric::SECONDS_0_2_F);
 					GameManager::GetGameManager()->GetPlayer()->SetPlayerPosition(CASTLE_TOWN_POS);
 					sequence_.change(&MapScene::seqChangeScene);
 
@@ -456,7 +520,7 @@ void MapScene::WorldMapCollision()
 					//プレイヤーを一時的に見えなくする
 					GameManager::GetGameManager()->GetPlayer()->PlayerDisplayChange();
 
-					mgr->changeScene(new InMapScene(GRAVE_POS, InMapScene::InMapState::GRAVE), 0.1f);
+					mgr->changeScene(new InMapScene(GRAVE_POS, InMapScene::InMapState::GRAVE), koni::Numeric::SECONDS_0_2_F);
 					GameManager::GetGameManager()->GetPlayer()->SetPlayerPosition(GRAVE_POS);
 					sequence_.change(&MapScene::seqChangeScene);
 
@@ -466,8 +530,33 @@ void MapScene::WorldMapCollision()
 
 			}
 		}
+		//船の当たり判定
+		//ポインタが存在していたら
+		else if (object_ship) {
 
+			//当たり判定を行う
+			if (tnl::IsIntersectRect(player_pointer->GetPlayerPos(), player_pointer->GetPlayerSize().x, player_pointer->GetPlayerSize().y, object_ship->MapChipPos(), object_ship->GetChipSize().x, object_ship->GetChipSize().y)) {
+
+				//船シーンに入った時の座標
+				const tnl::Vector3 SHIP_POS = {1549 , 501 , 0};
+
+				//船シーンに切り替える
+				auto mgr = SceneManager::GetSceneManager();
+
+				//フラグがfalseの場合trueに変更する(シーンを遷移させる為)
+				if (!mgr->GetSceneFlag()) { mgr->SceneFlagChange(); }
+
+				//プレイヤーを一時的に見えなくする
+				GameManager::GetGameManager()->GetPlayer()->PlayerDisplayChange();
+
+				mgr->changeScene(new InMapScene(SHIP_POS, InMapScene::InMapState::SHIP),koni::Numeric::SECONDS_0_2_F);
+				GameManager::GetGameManager()->GetPlayer()->SetPlayerPosition(SHIP_POS);
+				sequence_.change(&MapScene::seqChangeScene);
+
+			}
+		}
 	}
+
 	//地形の当たり判定
 	for (auto& worldMap_C : map_chips) {
 
