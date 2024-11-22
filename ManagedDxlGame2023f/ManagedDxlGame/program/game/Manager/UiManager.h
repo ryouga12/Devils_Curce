@@ -8,7 +8,9 @@
 #include "../../dxlib_ext/dxlib_ext.h"
 #include"../../koni_name_space/common/common_value.h"
 #include"../Menu/MenuWindow.h"
+#include"../Scene/BaseScene.h"
 #include <unordered_map>
+
 
 
 class UIManager final {
@@ -25,7 +27,7 @@ public:
 
 	// メニューを取得する
 	//arg_1 : 取得したいメニューの名前
-	std::shared_ptr<Menu> getMenu(const std::string& menuName) {
+	std::shared_ptr<Menu> GetMenu(const std::string& menuName) {
 
 		auto it = menu_map.find(menuName);
 
@@ -126,9 +128,27 @@ public:
 	//(サイズ30, フォントタイプ : DX_FONTTYPE_EDGE)
 	int GetFontString_30()const { return string_handle_30; }
 
+	//警告用のUIを表示する
+	//arg_1 : 警告文字
+	void WarningWindow(const std::string& warnig_message);
+
+	//イベント用の文字を表示する(アイテムを使用した際など)
+	void DisplayEventMessage();
+
+	//通知ウィンドウのフラグの切り替え
+	void ToggleAcquisitionWindow() { is_notification_displayed = !is_notification_displayed; }
+
+	//通知ウィンドウの取得
+	bool GetIsNotificationVisible()const { return is_notification_displayed; }
+
+	//通知ウィンドウの表示する文字をセットする
+	void SetDisplayEventMessage(const std::string& new_message) { display_event_message = new_message; }
+
+	//デバック用の操作ウィンドウ
+	//arg_1 : 現在のシーン
+	void DebugDetailWindow(const BaseScene::SceneState& curent_scene_state);
 
 private:
-
 
 	UIManager();
 	~UIManager();
@@ -141,6 +161,12 @@ private:
 
 	//ストリー用の配列
 	std::vector<std::string>story_;
+
+	//ウィンドウの通知フラグ
+	bool is_notification_displayed = false;
+
+	//通知ウィンドウの用の文字変数
+	std::string display_event_message = "";
 
 	//ストーリー用のカウント
 	int curent_story = 0;
@@ -230,6 +256,15 @@ private:
 	//Tabキーの表示するための座標
 	const tnl::Vector2i TAB_KEY_STRING_POS = { 960 , 620 };
 
+	//状況によって攻撃系のアイコンを返す(主にステータスなどのアイコン)
+	int GetStatusAttackIconHdl();
+
+	//状況によって防御系のアイコンを返す(主にステータスなどのアイコン)
+	int GetStatusDefanceIconHdl();
+
+	//エラー値
+	int ERROR_VALUE = -1;
+
 //--------------------------------------------------------------------------------------------------------------
 //UIの説明文用の文字列
 
@@ -239,5 +274,9 @@ private:
 
 	//バトルシーン用の操作説明
 	std::vector<std::string> battle_operation_instructions
-		= { "操作説明" ,  "W : 上" ,"S : 下", "A : 左" , "D : 右" , "back space : 一つ前に戻る","Enter : 決定 , 次に進む" ,"TAB : ウィンドウの表示を切り替える" };
+		= { "操作説明" ,  "W : 上" ,"S : 下", "back space : 一つ前に戻る","Enter : 決定 , 次に進む" ,"TAB : ウィンドウの表示を切り替える" };
+
+	//デバック用の操作説明
+	std::vector<std::string>debug_detail_texts
+		= { "デバック機能" , "1 : エピローグを流す\n (裏ボスを出現させる)" , "2 : 村に移動する" , "3 : 町に移動する" , "4 : ボスの城に移動する" , "5 : 城下町に移動する" ,"6 : 墓に移動する" ,"0 : すべてのスキルを取得する"};
 };

@@ -1,6 +1,7 @@
 #include "UiManager.h"
 #include"CsvManager.h"
 #include"GameManager.h"
+#include"ResourceManager.h"
 
 UIManager* UIManager::GetUIManager()
 {
@@ -145,16 +146,46 @@ void UIManager::PlayerStatusDrawWindow()
 	DrawExtendGraph(MP_BAR_POS.x, MP_BAR_POS.y, (MP_BAR_POS.x + static_cast<int>(current_mp_bar)), MP_BAR_POS.y + MP_BAR_HEIGHT, mpber_hdl, true);
 
 	// プレイヤーのHP情報を表示
-	DrawStringEx(PLAYER_INFO_POS.x, PLAYER_INFO_POS.y, koni::Color::WHITE, "%s" , GameManager::GetGameManager()->GetPlayer()->GetPlayerName());
+	DrawStringEx(PLAYER_INFO_POS.x, PLAYER_INFO_POS.y, koni::Color::WHITE, "%s" , GameManager::GetGameManager()->GetPlayer()->GetPlayerName().c_str());
 	DrawStringEx(LEVEL_INFO_POS.x, LEVEL_INFO_POS.y, koni::Color::WHITE, " Lv %d", player->GetPlayerStatusSave().GetLevel());
 	DrawStringEx(PLAYER_INFO_POS.x, HP_INFO_Y, koni::Color::WHITE, " Hp : %d / %d", player->GetPlayerStatusSave().GetcurentHp(), player->GetPlayerStatusSave().GetMaxHp());
 	DrawStringEx(PLAYER_INFO_POS.x, MP_INFO_Y, koni::Color::WHITE, " Mp : %d / %d", player->GetPlayerStatusSave().GetCurentMp(), player->GetPlayerStatusSave().GetMaxMp());
+
+	//ステータスアイコン(攻撃)
+	const int STATUS_ATTACK_ICON = GetStatusAttackIconHdl();
+	//ステータスアイコン(防御)
+	const int STATUS_DEFANCE_ICON = GetStatusDefanceIconHdl();
+	//ステータスの無効値(上記の定数と比較して値が変動しているかを確認する為)
+	const int STATUS_NON_CHANGE = 0;
+	//ステータスアイコン(攻撃)のx座標オフセット
+	const int STATUS_ATTACK_X_OFFSET = 110;
+	//ステータスアイコン(防御)のx座標オフセット
+	const int STATUS_DEFANCE_X_OFFSET = 160;
+
+	//ステータスが変動していれば
+	if (STATUS_ATTACK_ICON > STATUS_NON_CHANGE) {
+
+		// ステータスのアイコンを描画
+		DrawRotaGraph(PLAYER_ICON_POS.x + STATUS_ATTACK_X_OFFSET, PLAYER_ICON_POS.y, koni::Numeric::SCALE_ONE_F, 0, STATUS_ATTACK_ICON, true);
+
+	}
+	//ステータスが変動していれば
+	if (STATUS_DEFANCE_ICON > STATUS_NON_CHANGE) {
+
+		// ステータスのアイコンを描画
+		DrawRotaGraph(PLAYER_ICON_POS.x + STATUS_DEFANCE_X_OFFSET, PLAYER_ICON_POS.y, koni::Numeric::SCALE_ONE_F, 0, STATUS_DEFANCE_ICON, true);
+
+	}
+
 }
 
 
 //セーブした時の文字を表示させる
 void UIManager::SaveText(const tnl::Vector2i& text_pos)
 {
+	//フレームの最大値
+	const int MAX_FLAME = 60;
+
 	//セーブしている時に
 	if (save_flag) {
 
@@ -164,7 +195,7 @@ void UIManager::SaveText(const tnl::Vector2i& text_pos)
 		DrawStringEx(text_pos.x, text_pos.y, koni::Color::WHITE, "セーブ中です。");
 
 		//フレーム数が60を超えたら
-		if (frame >= 60) {
+		if (frame >= MAX_FLAME) {
 
 			//フラグを切り替える
 			save_flag = false;
@@ -173,7 +204,7 @@ void UIManager::SaveText(const tnl::Vector2i& text_pos)
 
 	}
 	//フレーム数が60を超えてかつフラグが立っていなかったら
-	else if (frame >= 60 && !save_flag) {
+	else if (frame >= MAX_FLAME && !save_flag) {
 
 		//セーブが完了した時のテキストを出す
 		DrawStringEx(text_pos.x, text_pos.y, koni::Color::WHITE , "セーブしました。");
@@ -250,7 +281,7 @@ void UIManager::PlayerStatusBarUpdate(const float delta_time)
 	current_mp_bar = tnl::SmoothLerp(mp_start, mp_end, LERPDURATION, mp_lerp_time, 0);
 }
 
-
+//ストーリーを流す
 bool UIManager::StoryDisplayUpdate(const float delta_time)
 {
 	story_display_timer += delta_time;
@@ -280,6 +311,7 @@ bool UIManager::StoryDisplayUpdate(const float delta_time)
 	return false;
 }
 
+//ストーリーの描画
 void UIManager::StoryDisplay(const int& font_color)
 {
 	// 初期Y座標
@@ -309,6 +341,7 @@ void UIManager::StoryDisplay(const int& font_color)
 	DrawStringEx(TAB_KEY_STRING_POS.x, TAB_KEY_STRING_POS.y, font_color, "ストーリーをスキップする");
 }
 
+//ストーリーをcsvからロードする
 void UIManager::StoryLoad(const int& section_type)
 {
 	//一度コメントを初期化する
@@ -325,6 +358,68 @@ void UIManager::StoryLoad(const int& section_type)
 		if (section_type == std::stoi(story_csv[i][0].c_str())) {
 
 			story_.emplace_back(story_csv[i][1]);
+		}
+	}
+}
+
+//警告用のUIを表示する
+void UIManager::WarningWindow(const std::string& warnig_message)
+{
+	const tnl::Vector2i WARNING_MESSAGE_POS = { 80 , 130 };
+
+	//警告文字を表示する
+	DrawStringEx(WARNING_MESSAGE_POS.x, WARNING_MESSAGE_POS.y, koni::Color::WHITE, "%s" , warnig_message.c_str());
+
+}
+
+//イベント用の文字を表示する(アイテムを使用した際など)
+void UIManager::DisplayEventMessage()
+{
+	//ウィンドウの通知フラグがtrueだったら
+	if (is_notification_displayed) {
+
+		//ウィンドウの座標
+		const tnl::Vector2i DISPLAY_WINDOW_POS = { 50, 500 };
+
+		//ウィンドウの幅と高さ
+		const int DISPLAY_WINDOW_HEIGHT = 200;
+		const int DISPLAY_WINDOW_WIDTH = 700;
+
+		//閉じる文字の座標
+		const tnl::Vector2i DISPLAY_CLOSE_STRING_POS = { 550 , 650 };
+
+		//ウィンドウの表示を行う
+		GetMenu("menu_window")->Menu_draw(DISPLAY_WINDOW_POS.x, DISPLAY_WINDOW_POS.y, DISPLAY_WINDOW_WIDTH, DISPLAY_WINDOW_HEIGHT);
+
+		//文字の表示
+		DrawStringEx(DISPLAY_WINDOW_POS.x + ADD_OFSET, DISPLAY_WINDOW_POS.y + ADD_OFSET, koni::Color::WHITE, "%s", display_event_message.c_str());
+
+		//閉じる文字
+		DrawStringEx(DISPLAY_CLOSE_STRING_POS.x, DISPLAY_CLOSE_STRING_POS.y, koni::Color::WHITE, "back space : 閉じる");
+	}
+}
+
+//デバック用の操作説明
+void UIManager::DebugDetailWindow(const BaseScene::SceneState& curent_scene_state)
+{
+	//ワールドマップにいる時のみ
+	if (curent_scene_state == BaseScene::SceneState::WORLDMAP && player_detail_window_flag) {
+
+		//メニューウィンドウの座標
+		const tnl::Vector2i DETAIL_WINDOW_POS = { 50, 305 };
+
+		//メニューウィンドウのサイズ
+		const int DETAIL_WINDOW_WIDTH = 400;
+		const int DETAIL_WINDOW_HEIGHT = 400;
+
+		//操作説明文字の座標
+		const tnl::Vector2i MOVE_DETAIL_STRING_POS = { 100, 335 };
+
+		Menu_Draw("menu_window", DETAIL_WINDOW_POS.x, DETAIL_WINDOW_POS.y, DETAIL_WINDOW_WIDTH, DETAIL_WINDOW_HEIGHT);
+
+		for (int i = 0; i < debug_detail_texts.size(); i++)
+		{
+			DrawStringEx(MOVE_DETAIL_STRING_POS.x, MOVE_DETAIL_STRING_POS.y + (i * ADD_OFSET), koni::Color::WHITE, "%s", debug_detail_texts[i].c_str());
 		}
 	}
 }
@@ -351,6 +446,123 @@ UIManager::~UIManager()
 	DeleteFontToHandle(string_handle_100);
 	DeleteFontToHandle(string_handle_30);
 
+}
+
+//状況によって防御系のアイコンを返す(主にステータスなどのアイコン)
+int UIManager::GetStatusDefanceIconHdl()
+{
+	//ベースの防御力
+	int player_base_defance = GameManager::GetGameManager()->GetPlayer()->GetPlayerStatusSave().GetBaseDefance();
+
+	//現在の防御力
+	int curent_player_defance = GameManager::GetGameManager()->GetPlayer()->GetPlayerStatusSave().GetDefance();
+
+	//インベントリ
+	auto& inventory = GameManager::GetGameManager()->GetInventory();
+
+	//武器を装備している場合
+	if (!inventory->GetEquipAromorArray().empty()) {
+
+		for (auto& equip_weqpon : inventory->GetEquipAromorArray()) {
+
+			//プレイヤーの防御力が上昇していたら
+			if (player_base_defance + equip_weqpon.GetItemDefance() < curent_player_defance) {
+
+				int status_defance_up_icon = ResourceManager::GetResourceManager()->LoadGraphEX("graphics/State_Icon/status_defance_up.png");
+
+				//ステータスアップのアイコンを返す
+				return status_defance_up_icon;
+			}
+			//プレイヤーの防御力が減少していたら
+			else if ((player_base_defance + equip_weqpon.GetItemDamage()) > curent_player_defance) {
+
+				int status_defance_down_icon = ResourceManager::GetResourceManager()->LoadGraphEX("graphics/State_Icon/status_defance_down.png");
+
+				//ステータスダウンのアイコンを返す
+				return status_defance_down_icon;
+			}
+		}
+	}
+	//装備していなくて攻撃力が上昇してれば
+	else if (player_base_defance < curent_player_defance) {
+
+		int status_defance_up_icon = ResourceManager::GetResourceManager()->LoadGraphEX("graphics/State_Icon/status_defance_up.png");
+
+		//ステータスアップのアイコンを返す
+		return status_defance_up_icon;
+	}
+	//装備していなくて攻撃力が減少していれば
+	else if (player_base_defance > curent_player_defance) {
+
+		int status_defance_down_icon = ResourceManager::GetResourceManager()->LoadGraphEX("graphics/State_Icon/status_defance_down.png");
+
+		//ステータスダウンのアイコンを返す
+		return status_defance_down_icon;
+
+	}
+
+	//処理がうまくいかなかった場合マイナス値を渡す
+	return ERROR_VALUE;
+}
+
+//状況によって攻撃系のアイコンを返す(主にステータスなどのアイコン)
+int UIManager::GetStatusAttackIconHdl()
+{
+
+	//ベースの攻撃力
+	int player_base_attck = GameManager::GetGameManager()->GetPlayer()->GetPlayerStatusSave().GetBaseAttack();
+
+	//攻撃力
+	int curent_player_attack = GameManager::GetGameManager()->GetPlayer()->GetPlayerStatusSave().GetAttack();
+
+	//インベントリ
+	auto& inventory = GameManager::GetGameManager()->GetInventory();
+
+	//武器を装備している場合
+	if (!inventory->GetEquipWeaponArray().empty()) {
+
+		for (auto& equip_weqpon : inventory->GetEquipWeaponArray()) {
+
+			//プレイヤーの攻撃力が上昇していたら
+			if ((player_base_attck + equip_weqpon.GetItemDamage()) < curent_player_attack) {
+
+				int status_attack_up_icon = ResourceManager::GetResourceManager()->LoadGraphEX("graphics/State_Icon/status_attack_up.png");
+
+				//ステータスアップのアイコンを返す
+				return status_attack_up_icon;
+			}
+			//プレイヤーの攻撃力が減少していたら
+			else if ((player_base_attck + equip_weqpon.GetItemDamage()) > curent_player_attack) {
+
+				int status_attack_down_icon = ResourceManager::GetResourceManager()->LoadGraphEX("graphics/State_Icon/status_attack_down.png");
+
+				//ステータスダウンのアイコンを返す
+				return status_attack_down_icon;
+			}
+		}
+	}
+	//装備していなくて攻撃力が上昇してれば
+	else if (player_base_attck < curent_player_attack) {
+
+		int status_attack_up_icon = ResourceManager::GetResourceManager()->LoadGraphEX("graphics/State_Icon/status_attack_up.png");
+
+		//ステータスアップのアイコンを返す
+		return status_attack_up_icon;
+	}
+	//装備していなくて攻撃力が減少していれば
+	else if (player_base_attck > curent_player_attack) {
+
+		int status_attack_down_icon = ResourceManager::GetResourceManager()->LoadGraphEX("graphics/State_Icon/status_attack_down.png");
+
+		//ステータスダウンのアイコンを返す
+		return status_attack_down_icon;
+
+	}
+
+
+	//処理がうまくいかなかった場合マイナス値を渡す
+	return ERROR_VALUE;
+	
 }
 
 //void UIManager::IconAnimation()
