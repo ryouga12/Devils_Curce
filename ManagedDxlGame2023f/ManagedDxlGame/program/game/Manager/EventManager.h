@@ -65,7 +65,13 @@ public:
 		//学者
 		SCHOLAR,			
 		//試練の番人
-		ORDEAL				
+		ORDEAL,		
+		//兵長
+		CORPORAL,
+		//船長
+		PIRATE,
+		//僧侶
+		MONK
 	};
 
 private:
@@ -107,6 +113,12 @@ private:
 	int ordeal_icon_hdl = 0;
 	//影の番人
 	int shadow_icon_hdl = 0;
+	//兵長
+	int corporal_icon_hdl = 0;
+	//船長
+	int pirate_icon_hdl = 0;
+	//僧侶
+	int monk_icon_hdl = 0;
 
 	//どのメニューを開いているか
 	MenuOpen select_menu = MenuOpen::EMPTY;
@@ -166,7 +178,7 @@ public:
 	void NpcSwitchComent(const Shared<WeaponShop>& weapon_shop = nullptr);
 
 	//Npcのそれぞれでの更新処理
-	//arg_1  : 　delta_time 
+	//arg_1  :  delta_time 
 	//arg_2  :　NPCの配列 (配列はそれぞれのNPCの名前を参照して、処理を変える為に使用)
 	//arg_3　:　BaseSceneのポインタ(それぞれのシーケンスに触る為、ポインタを使用する)
 	//arg_4  :　InMapScene内の現在のシーン(今どのシーンにいるか確認する為に使用, セーブする為に使用し、InMapScene内のみで使用)
@@ -243,13 +255,39 @@ public:
 
 	//イベントフラグのリセット
 	void EventFlagReset() {
-		enemy_event_flag_1 = true, enemy_event_flag_2 = true, enemy_event_flag_3 = true;
+		enemy_event_flag_1 = true, enemy_event_flag_2 = true, enemy_event_flag_3 = true; last_boss_flag = true;
 	}
 
 	//試練のボスのコメントフラグのリセット
 	void OrdealComentFlagReset() {
 		ordeal_coment_flag = false;
 	}
+
+	//ラスボスのフラグを切り替える
+	void LastBossFlagChange() {
+		last_boss_flag = !last_boss_flag;
+	}
+
+	//ラスボスのフラグの取得
+	bool GetLastBossFlag()const {
+		return last_boss_flag;
+	}
+
+	//セーブ用(ボスのフラグをセットする)
+	void SetLastBossFlag(const bool boss_flag) {
+		last_boss_flag = boss_flag;
+	}
+
+	//イベントを通知する
+	//主にイベント時に動きを止めてウィンドウを出して知らせる
+	//arg_1 : イベント通知の回数(1回のみ通知する為確認用)
+	//arg_2 : イベント通知用のコメント
+	void EventWindowNotification(const std::string& event_name, const std::string& event_coment);
+
+	//イベント用のフラグを追加する
+	//追加されている物であれば既存のものを渡す
+	//arg_1 : 新しいフラグ
+	bool AddEventFlagMap(const std::string& new_event_flag);
 
 private:
 
@@ -275,6 +313,11 @@ private:
 	//3体目のボス
 	bool enemy_event_flag_3 = true;
 
+	//ラスボスのイベントフラグ
+	bool last_boss_flag = true;
+
+	// イベントごとにフラグを管理する
+	std::map<std::string, bool> event_flag_map; 
 
 //--------------------------------------------------------------------------------------------------------
 //ポインタ

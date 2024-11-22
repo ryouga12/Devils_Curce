@@ -1,4 +1,4 @@
-#include "EventManager.h"
+#include"EventManager.h"
 #include"../Manager/UiManager.h"
 #include"../Manager/SceneManager.h"
 #include"../Scene/BaseScene.h"
@@ -8,6 +8,7 @@
 #include"../Object/NPC.h"
 #include"../Manager/GameManager.h"
 #include"../Manager/ResourceManager.h"
+#include"../Item/Inventory.h"
 
 
 EventManager* EventManager::GetEventManager()
@@ -52,6 +53,9 @@ void EventManager::InitEventRelated(std::list<Shared<Npc>>& npc_list)
 		//他のマップでも同じ名前が存在する為、マップによってアイコンを切り替える
 		for (auto& npc : npc_list) {
 
+			//ポインタが存在しない場合配列を抜ける
+			if (!npc) { break; }
+
 			if (npc->GetNpcName() == "武器商人") {
 
 				//メニューで使うアイコン
@@ -70,71 +74,96 @@ void EventManager::InitEventRelated(std::list<Shared<Npc>>& npc_list)
 			}
 			else if (npc->GetNpcName() == "町長") {
 
+				//メニューで使うアイコン
 				town_herdman_icon_hdl = npc->GetNpcIconImage();
 
 			}
 			else if (npc->GetNpcName() == "宿屋") {
 
+				//メニューで使うアイコン
 				inn_icon_hdl = npc->GetNpcIconImage();
 
 			}
 			else if (npc->GetNpcName() == "魔王") {
 
+				//メニューで使うアイコン
 				boss_icon_hdl = npc->GetNpcIconImage();
 
 			}
 			else if (npc->GetNpcName() == "魔物") {
 
+				//メニューで使うアイコン
 				enemy_icon_hdl = npc->GetNpcIconImage();
 
 			}
 			else if (npc->GetNpcName() == "王") {
 
+				//メニューで使うアイコン
 				king_icon_hdl = npc->GetNpcIconImage();
 
 			}
 			else if (npc->GetNpcName() == "王妃") {
 
+				//メニューで使うアイコン
 				queen_icon_hdl = npc->GetNpcIconImage();
 
 			}
 			else if (npc->GetNpcName() == "女性村人") {
 
+				//メニューで使うアイコン
 				female_resident_icon_hdl = npc->GetNpcIconImage();
-
 
 			}
 			else if (npc->GetNpcName() == "男性村人") {
 
+				//メニューで使うアイコン
 				resident_male_icon_hdl = npc->GetNpcIconImage();
 
 			}
 			else if (npc->GetNpcName() == "男性町民") {
 
+				//メニューで使うアイコン
 				resident_male_icon_hdl = npc->GetNpcIconImage();
 
 			}
 			else if (npc->GetNpcName() == "男性住民") {
 
+				//メニューで使うアイコン
 				resident_male_icon_hdl = npc->GetNpcIconImage();
 
 			}
 			else if (npc->GetNpcName() == "学者") {
 
+				//メニューで使うアイコン
 				scholar_icon_hdl = npc->GetNpcIconImage();
 
 			}
 			else if (npc->GetNpcName() == "兵士") {
 
+				//メニューで使うアイコン
 				resident_male_icon_hdl = npc->GetNpcIconImage();
 
 			}
 			else if (npc->GetNpcName() == "試練の番人") {
 
+				//メニューで使うアイコン
 				ordeal_icon_hdl = npc->GetNpcIconImage();
 			}
 			else if (npc->GetNpcName() == "影の番人") {
+
+				//メニューで使うアイコン
 				shadow_icon_hdl = npc->GetNpcIconImage();
+			}
+			else if (npc->GetNpcName() == "兵長") {
+
+				//メニューで使うアイコン
+				corporal_icon_hdl = npc->GetNpcIconImage();
+			}
+			else if (npc->GetNpcName() == "船長") {
+				pirate_icon_hdl = npc->GetNpcIconImage();
+			}
+			else if (npc->GetNpcName() == "僧侶") {
+				monk_icon_hdl = npc->GetNpcIconImage();
 			}
 		}
 	}
@@ -143,7 +172,7 @@ void EventManager::InitEventRelated(std::list<Shared<Npc>>& npc_list)
 void EventManager::InitMenuEventConnection()
 {
 	//最初の一回だけロードする
-	if (!UIManager::GetUIManager()->getMenu("select_answer_menu")) {
+	if (!UIManager::GetUIManager()->GetMenu("select_answer_menu")) {
 
 		//プレイヤーの選択ウィンドウ内の文字の座標
 		const tnl::Vector2i PLAYER_SELECT_WINDOW_ANSWER_OK_POS = { 100 , 100 };
@@ -198,6 +227,7 @@ void EventManager::NpcSwitchComent(const Shared<WeaponShop>& weapon_shop)
 	//村長
 	case EventManager::NpcMove::HERDMAN:
 
+		//コメントのウィンドウを表示する
 		UIManager::GetUIManager()->Menu_Draw("menu_window", COMENT_WINDOW_POS.x, COMENT_WINDOW_POS.y, COMENT_WINDOW_WIDTH, COMENT_WONDOW_HEIGHT);
 
 		//アイコンを表示する
@@ -211,7 +241,7 @@ void EventManager::NpcSwitchComent(const Shared<WeaponShop>& weapon_shop)
 	//神官
 	case EventManager::NpcMove::PRIEST:
 
-		//メニューのウィンドウを表示する
+		//コメントのウィンドウを表示する
 		UIManager::GetUIManager()->Menu_Draw("menu_window", COMENT_WINDOW_POS.x, COMENT_WINDOW_POS.y, COMENT_WINDOW_WIDTH, COMENT_WONDOW_HEIGHT);
 
 		//アイコンを表示する
@@ -220,7 +250,7 @@ void EventManager::NpcSwitchComent(const Shared<WeaponShop>& weapon_shop)
 		//セーブテキスト
 		UIManager::GetUIManager()->SaveText(SAVE_TEXT_STRING_POS);
 
-		if (player_select_window->getAcrionFlag()) {
+		if (player_select_window->GetAcrionFlag()) {
 			//選択ウィンドウを表示する
 			player_select_window->All(PLAYER_ANSWER_SELECT_WINDOW_POS.x, PLAYER_ANSWER_SELECT_WINDOW_POS.y , PLAYER_ANSWER_SELECT_WINDOW_WIDTH, PLAYER_ANSWER_SELECT_WINDOW_HEIGHT);
 		}
@@ -234,7 +264,7 @@ void EventManager::NpcSwitchComent(const Shared<WeaponShop>& weapon_shop)
 	//武器屋
 	case EventManager::NpcMove::WEAPONSHOP:
 
-		//ウィンドウの描画
+		//コメントのウィンドウの描画
 		UIManager::GetUIManager()->Menu_Draw("menu_window", COMENT_WINDOW_POS.x, COMENT_WINDOW_POS.y, COMENT_WINDOW_WIDTH, COMENT_WONDOW_HEIGHT);
 
 		//武器屋関連の表示
@@ -258,7 +288,7 @@ void EventManager::NpcSwitchComent(const Shared<WeaponShop>& weapon_shop)
 	//影の番人
 	case EventManager::NpcMove::SHADOWENEMY:
 
-		//メニューのウィンドウを表示する
+		//コメントのウィンドウを表示する
 		UIManager::GetUIManager()->Menu_Draw("menu_window", COMENT_WINDOW_POS.x, COMENT_WINDOW_POS.y, COMENT_WINDOW_WIDTH, COMENT_WONDOW_HEIGHT);
 
 		//コメントとアイコン
@@ -268,7 +298,7 @@ void EventManager::NpcSwitchComent(const Shared<WeaponShop>& weapon_shop)
 		UIManager::GetUIManager()->ComentDraw(COMENT_POS);
 
 		//選択ウィンドウを表示する
-		if (player_select_window->getAcrionFlag()) {
+		if (player_select_window->GetAcrionFlag()) {
 			//選択ウィンドウを表示する
 			player_select_window->All(PLAYER_ANSWER_SELECT_WINDOW_POS.x, PLAYER_ANSWER_SELECT_WINDOW_POS.y, PLAYER_ANSWER_SELECT_WINDOW_WIDTH, PLAYER_ANSWER_SELECT_WINDOW_HEIGHT);
 		}
@@ -279,7 +309,7 @@ void EventManager::NpcSwitchComent(const Shared<WeaponShop>& weapon_shop)
 	//ボスモンスター
 	case EventManager::NpcMove::BOSS:
 
-		//メニューのウィンドウを表示する
+		//コメントのウィンドウを表示する
 		UIManager::GetUIManager()->Menu_Draw("menu_window", COMENT_WINDOW_POS.x, COMENT_WINDOW_POS.y, COMENT_WINDOW_WIDTH, COMENT_WONDOW_HEIGHT);
 
 		//コメントとアイコン
@@ -289,7 +319,7 @@ void EventManager::NpcSwitchComent(const Shared<WeaponShop>& weapon_shop)
 		UIManager::GetUIManager()->ComentDraw(COMENT_POS);
 
 		//選択ウィンドウを表示する
-		if (player_select_window->getAcrionFlag()) {
+		if (player_select_window->GetAcrionFlag()) {
 			//選択ウィンドウを表示する
 			player_select_window->All(PLAYER_ANSWER_SELECT_WINDOW_POS.x, PLAYER_ANSWER_SELECT_WINDOW_POS.y, PLAYER_ANSWER_SELECT_WINDOW_WIDTH, PLAYER_ANSWER_SELECT_WINDOW_HEIGHT);
 		}
@@ -300,7 +330,7 @@ void EventManager::NpcSwitchComent(const Shared<WeaponShop>& weapon_shop)
 	//宿屋
 	case  EventManager::NpcMove::INN:
 
-		//メニューのウィンドウを表示する
+		//コメントのウィンドウを表示する
 		UIManager::GetUIManager()->Menu_Draw("menu_window", COMENT_WINDOW_POS.x, COMENT_WINDOW_POS.y, COMENT_WINDOW_WIDTH, COMENT_WONDOW_HEIGHT);
 
 		//コメントとアイコン
@@ -309,7 +339,7 @@ void EventManager::NpcSwitchComent(const Shared<WeaponShop>& weapon_shop)
 		//コメントを表示する
 		UIManager::GetUIManager()->ComentDraw(COMENT_POS);
 
-		if (player_select_window->getAcrionFlag()) {
+		if (player_select_window->GetAcrionFlag()) {
 			//選択ウィンドウを表示する
 			player_select_window->All(PLAYER_ANSWER_SELECT_WINDOW_POS.x, PLAYER_ANSWER_SELECT_WINDOW_POS.y, PLAYER_ANSWER_SELECT_WINDOW_WIDTH, PLAYER_ANSWER_SELECT_WINDOW_HEIGHT);
 		}
@@ -319,6 +349,7 @@ void EventManager::NpcSwitchComent(const Shared<WeaponShop>& weapon_shop)
 	//町長
 	case EventManager::NpcMove::TOWNHERDMAN:
 
+		//コメントのウィンドウを表示する
 		UIManager::GetUIManager()->Menu_Draw("menu_window",COMENT_WINDOW_POS.x, COMENT_WINDOW_POS.y, COMENT_WINDOW_WIDTH, COMENT_WONDOW_HEIGHT);
 
 		//アイコンを表示する
@@ -332,7 +363,7 @@ void EventManager::NpcSwitchComent(const Shared<WeaponShop>& weapon_shop)
 	//敵
 	case EventManager::NpcMove::ENEMY:
 
-		//ウィンドウを表示する
+		//コメントのウィンドウを表示する
 		UIManager::GetUIManager()->Menu_Draw("menu_window", COMENT_WINDOW_POS.x, COMENT_WINDOW_POS.y, COMENT_WINDOW_WIDTH, COMENT_WONDOW_HEIGHT);
 
 		//アイコンを表示する
@@ -342,7 +373,7 @@ void EventManager::NpcSwitchComent(const Shared<WeaponShop>& weapon_shop)
 		UIManager::GetUIManager()->ComentDraw(COMENT_POS);
 
 		//選択ウィンドウを表示する
-		if (player_select_window->getAcrionFlag()) {
+		if (player_select_window->GetAcrionFlag()) {
 			//選択ウィンドウを表示する
 			player_select_window->All(PLAYER_ANSWER_SELECT_WINDOW_POS.x, PLAYER_ANSWER_SELECT_WINDOW_POS.y, PLAYER_ANSWER_SELECT_WINDOW_WIDTH, PLAYER_ANSWER_SELECT_WINDOW_HEIGHT);
 		}
@@ -352,7 +383,7 @@ void EventManager::NpcSwitchComent(const Shared<WeaponShop>& weapon_shop)
 	//王
 	case  EventManager::NpcMove::KING:
 
-		//ウィンドウの表示
+		//コメントのウィンドウの表示
 		UIManager::GetUIManager()->Menu_Draw("menu_window", COMENT_WINDOW_POS.x, COMENT_WINDOW_POS.y, COMENT_WINDOW_WIDTH, COMENT_WONDOW_HEIGHT);
 
 		//アイコンを表示する
@@ -366,7 +397,7 @@ void EventManager::NpcSwitchComent(const Shared<WeaponShop>& weapon_shop)
 	//王妃
 	case  EventManager::NpcMove::QUEEN:
 
-		//ウィンドウの表示
+		//コメントのウィンドウの表示
 		UIManager::GetUIManager()->Menu_Draw("menu_window", COMENT_WINDOW_POS.x, COMENT_WINDOW_POS.y, COMENT_WINDOW_WIDTH, COMENT_WONDOW_HEIGHT);
 
 		//アイコンを表示する
@@ -380,7 +411,7 @@ void EventManager::NpcSwitchComent(const Shared<WeaponShop>& weapon_shop)
 	//女性村人
 	case  EventManager::NpcMove::FEMALE_RESIDENT:
 
-		//ウィンドウの表示
+		//コメントのウィンドウの表示
 		UIManager::GetUIManager()->Menu_Draw("menu_window", COMENT_WINDOW_POS.x, COMENT_WINDOW_POS.y, COMENT_WINDOW_WIDTH, COMENT_WONDOW_HEIGHT);
 
 		//アイコンを表示する
@@ -394,7 +425,7 @@ void EventManager::NpcSwitchComent(const Shared<WeaponShop>& weapon_shop)
 	//男性住人
 	case  EventManager::NpcMove::RESIDENT_MALE:
 
-		//ウィンドウの表示
+		//コメントのウィンドウの表示
 		UIManager::GetUIManager()->Menu_Draw("menu_window", COMENT_WINDOW_POS.x, COMENT_WINDOW_POS.y, COMENT_WINDOW_WIDTH, COMENT_WONDOW_HEIGHT);
 
 		//アイコンを表示する
@@ -408,7 +439,7 @@ void EventManager::NpcSwitchComent(const Shared<WeaponShop>& weapon_shop)
 	//学者
 	case  EventManager::NpcMove::SCHOLAR:
 		
-		//ウィンドウの表示
+		//コメントのウィンドウの表示
 		UIManager::GetUIManager()->Menu_Draw("menu_window", COMENT_WINDOW_POS.x, COMENT_WINDOW_POS.y, COMENT_WINDOW_WIDTH, COMENT_WONDOW_HEIGHT);
 
 		//アイコンを表示する
@@ -419,10 +450,30 @@ void EventManager::NpcSwitchComent(const Shared<WeaponShop>& weapon_shop)
 
 		break;
 
+	//兵長
+	case EventManager::NpcMove::CORPORAL:
+
+		//コメントのウィンドウの表示
+		UIManager::GetUIManager()->Menu_Draw("menu_window", COMENT_WINDOW_POS.x, COMENT_WINDOW_POS.y, COMENT_WINDOW_WIDTH, COMENT_WONDOW_HEIGHT);
+
+		//アイコンを表示する
+		DrawRotaGraph(COMENT_ICON_POS.x, COMENT_ICON_POS.y, koni::Numeric::SCALE_ONE_AND_HALF, 0, corporal_icon_hdl, true);
+
+		//コメントを表示する
+		UIManager::GetUIManager()->ComentDraw(COMENT_POS);
+
+		//選択ウィンドウを表示する
+		if (player_select_window->GetAcrionFlag()) {
+			//選択ウィンドウを表示する
+			player_select_window->All(PLAYER_ANSWER_SELECT_WINDOW_POS.x, PLAYER_ANSWER_SELECT_WINDOW_POS.y, PLAYER_ANSWER_SELECT_WINDOW_WIDTH, PLAYER_ANSWER_SELECT_WINDOW_HEIGHT);
+		}
+
+		break;
+
 	//試練の番人
 	case EventManager::NpcMove::ORDEAL:
 
-		//ウィンドウの表示
+		//コメントのウィンドウの表示
 		UIManager::GetUIManager()->Menu_Draw("menu_window", COMENT_WINDOW_POS.x, COMENT_WINDOW_POS.y, COMENT_WINDOW_WIDTH, COMENT_WONDOW_HEIGHT);
 
 		//アイコンを表示する
@@ -432,7 +483,7 @@ void EventManager::NpcSwitchComent(const Shared<WeaponShop>& weapon_shop)
 		UIManager::GetUIManager()->ComentDraw(COMENT_POS);
 
 		//選択ウィンドウを表示する
-		if (player_select_window->getAcrionFlag()) {
+		if (player_select_window->GetAcrionFlag()) {
 			//選択ウィンドウを表示する
 			player_select_window->All(PLAYER_ANSWER_SELECT_WINDOW_POS.x, PLAYER_ANSWER_SELECT_WINDOW_POS.y, PLAYER_ANSWER_SELECT_WINDOW_WIDTH, PLAYER_ANSWER_SELECT_WINDOW_HEIGHT);
 		}
@@ -441,6 +492,40 @@ void EventManager::NpcSwitchComent(const Shared<WeaponShop>& weapon_shop)
 		if (ordeal_coment_flag) {
 			DrawStringEx(EVENT_NOT_STRING_POS.x, EVENT_NOT_STRING_POS.y, koni::Color::WHITE, "お前には資格が無いようだ");
 		}
+
+		break;
+
+	//船長
+	case EventManager::NpcMove::PIRATE:
+
+		//コメントのウィンドウの表示
+		UIManager::GetUIManager()->Menu_Draw("menu_window", COMENT_WINDOW_POS.x, COMENT_WINDOW_POS.y, COMENT_WINDOW_WIDTH, COMENT_WONDOW_HEIGHT);
+
+		//アイコンを表示する
+		DrawRotaGraph(COMENT_ICON_POS.x, COMENT_ICON_POS.y, koni::Numeric::SCALE_ONE_AND_HALF, 0, pirate_icon_hdl, true);
+
+		//コメントを表示する
+		UIManager::GetUIManager()->ComentDraw(COMENT_POS);
+
+		//選択ウィンドウを表示する
+		if (player_select_window->GetAcrionFlag()) {
+			//選択ウィンドウを表示する
+			player_select_window->All(PLAYER_ANSWER_SELECT_WINDOW_POS.x, PLAYER_ANSWER_SELECT_WINDOW_POS.y, PLAYER_ANSWER_SELECT_WINDOW_WIDTH, PLAYER_ANSWER_SELECT_WINDOW_HEIGHT);
+		}
+
+		break;
+
+	//僧侶
+	case  EventManager::NpcMove::MONK:
+
+		//コメントのウィンドウの表示
+		UIManager::GetUIManager()->Menu_Draw("menu_window", COMENT_WINDOW_POS.x, COMENT_WINDOW_POS.y, COMENT_WINDOW_WIDTH, COMENT_WONDOW_HEIGHT);
+
+		//アイコンを表示する
+		DrawRotaGraph(COMENT_ICON_POS.x, COMENT_ICON_POS.y, koni::Numeric::SCALE_ONE_AND_HALF, 0, monk_icon_hdl, true);
+
+		//コメントを表示する
+		UIManager::GetUIManager()->ComentDraw(COMENT_POS);
 
 		break;
 
@@ -482,6 +567,12 @@ void EventManager::NpcEventUpdate(float delta_time, const std::list<Shared<Npc>>
 	const int BOSS_COMENT_MAX_NUM = 4;
 	//影の番人
 	const int SHADOW_ENEMY_COMENT_MAX = 2;
+	//兵長
+	const int CORPORAL_COMENT_MAX = 2;
+	//船長
+	const int PIRATE_COMENT_MAX = 4;
+	//僧侶
+	const int MONK_COMENT_MAX = 1;
 		
 	//シーンマネージャーのポインタ
 	auto mgr = SceneManager::GetSceneManager();
@@ -513,7 +604,7 @@ void EventManager::NpcEventUpdate(float delta_time, const std::list<Shared<Npc>>
 			PlayerAnswerSelect(npc_list , curent_map_scene ,curent_inmap_scene);
 
 			//フラグがfalseの場合
-			if (!player_select_window->getAcrionFlag() && event_npc_flag) {
+			if (!player_select_window->GetAcrionFlag() && event_npc_flag) {
 				//ウィンドウの処理を受け付けるようにする
 				player_select_window->IsActiveChangeFlag();
 			}
@@ -531,7 +622,7 @@ void EventManager::NpcEventUpdate(float delta_time, const std::list<Shared<Npc>>
 			PlayerAnswerSelect(npc_list, curent_map_scene);
 
 			//フラグがfalseの場合
-			if (!player_select_window->getAcrionFlag() && event_npc_flag) {
+			if (!player_select_window->GetAcrionFlag() && event_npc_flag) {
 				//ウィンドウの処理を受け付けるようにする
 				player_select_window->IsActiveChangeFlag();
 			}
@@ -552,7 +643,7 @@ void EventManager::NpcEventUpdate(float delta_time, const std::list<Shared<Npc>>
 			PlayerAnswerSelect(npc_list , curent_map_scene);
 
 			//フラグがfalseの場合
-			if (!player_select_window->getAcrionFlag() && event_npc_flag) {
+			if (!player_select_window->GetAcrionFlag() && event_npc_flag) {
 				//ウィンドウの処理を受け付けるようにする
 				player_select_window->IsActiveChangeFlag();
 			}
@@ -574,7 +665,7 @@ void EventManager::NpcEventUpdate(float delta_time, const std::list<Shared<Npc>>
 			PlayerAnswerSelect(npc_list , curent_map_scene);
 
 			//フラグがfalseの場合
-			if (!player_select_window->getAcrionFlag()&& event_npc_flag) {
+			if (!player_select_window->GetAcrionFlag()&& event_npc_flag) {
 				//ウィンドウの処理を受け付けるようにする
 				player_select_window->IsActiveChangeFlag();
 			}
@@ -600,7 +691,7 @@ void EventManager::NpcEventUpdate(float delta_time, const std::list<Shared<Npc>>
 			PlayerAnswerSelect(npc_list , curent_map_scene);
 
 			//フラグがfalseの場合
-			if (!player_select_window->getAcrionFlag() && event_npc_flag) {
+			if (!player_select_window->GetAcrionFlag() && event_npc_flag) {
 				//ウィンドウの処理を受け付けるようにする
 				player_select_window->IsActiveChangeFlag();
 			}
@@ -648,6 +739,7 @@ void EventManager::NpcEventUpdate(float delta_time, const std::list<Shared<Npc>>
 
 		break;
 
+	//墓の番人
 	case EventManager::NpcMove::ORDEAL:
 
 		//コメントを表示する
@@ -657,12 +749,58 @@ void EventManager::NpcEventUpdate(float delta_time, const std::list<Shared<Npc>>
 			PlayerAnswerSelect(npc_list, curent_map_scene);
 
 			//フラグがfalseの場合
-			if (!player_select_window->getAcrionFlag() && event_npc_flag) {
+			if (!player_select_window->GetAcrionFlag() && event_npc_flag) {
 				//ウィンドウの処理を受け付けるようにする
 				player_select_window->IsActiveChangeFlag();
 			}
 			
 		}
+
+		break;
+
+	//兵長
+	case EventManager::NpcMove::CORPORAL:
+
+		//コメントを表示する
+		if (function_npc->ComentEventChange(CORPORAL_COMENT_MAX)) {
+
+			//選択処理 & 敵との会話処理
+			PlayerAnswerSelect(npc_list, curent_map_scene);
+
+			//フラグがfalseの場合
+			if (!player_select_window->GetAcrionFlag() && event_npc_flag) {
+				//ウィンドウの処理を受け付けるようにする
+				player_select_window->IsActiveChangeFlag();
+			}
+
+		}
+
+		break;
+
+	//船長
+	case EventManager::NpcMove::PIRATE:
+
+		//コメントを表示する
+		if (function_npc->ComentEventChange(PIRATE_COMENT_MAX)) {
+
+			//選択処理 & 敵との会話処理
+			PlayerAnswerSelect(npc_list, curent_map_scene);
+
+			//フラグがfalseの場合
+			if (!player_select_window->GetAcrionFlag() && event_npc_flag) {
+				//ウィンドウの処理を受け付けるようにする
+				player_select_window->IsActiveChangeFlag();
+			}
+
+		}
+
+		break;
+
+	//僧侶
+	case EventManager::NpcMove::MONK:
+
+		//コメントを表示する
+		ComentEvent(curent_map_scene, MONK_COMENT_MAX, npc_list);
 
 		break;
 
@@ -675,15 +813,15 @@ void EventManager::NpcEventUpdate(float delta_time, const std::list<Shared<Npc>>
 void EventManager::PlayerAnswerSelect(const std::list<Shared<Npc>>& npc_list , BaseScene* curent_map_scene , const int& inmap_curent_state)
 {
 	//プレイヤーがはいを選択したら
-	if (player_select_window->getSelectNum() == MenuWindow::Elements::FIRST_ELEMENT && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)
-		&& player_select_window->getAcrionFlag())
+	if (player_select_window->GetSelectNum() == MenuWindow::Elements::FIRST_ELEMENT && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)
+		&& player_select_window->GetAcrionFlag())
 	{
 		//NPCのによってそれぞれ処理を変える
 		ProcessNpcEventByType(npc_list , curent_map_scene , inmap_curent_state);
 	}
 	//プレイヤーがいいえを選択したら
-	else if (player_select_window->getSelectNum() == MenuWindow::Elements::SECOND_ELEMENT && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)
-		&& player_select_window->getAcrionFlag())
+	else if (player_select_window->GetSelectNum() == MenuWindow::Elements::SECOND_ELEMENT && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)
+		&& player_select_window->GetAcrionFlag())
 	{
 		player_select_window->IsActiveChangeFlag();
 		event_npc_flag = false;
@@ -737,7 +875,7 @@ void EventManager::ProcessNpcEventByType(const std::list<Shared<Npc>>& npc_list,
 			function_npc->EventSelectProcces(npc_list_->GetNpcName(), boss_background_hdl, boss_id, "sound/BGM/town_bgm.mp3", "sound/BGM/tyubosu.mp3", static_cast<int>(InMapScene::InMapState::TOWN));
 
 			//処理を受け付けないようにする
-			if (player_select_window->getAcrionFlag()) { player_select_window->IsActiveChangeFlag(); }
+			if (player_select_window->GetAcrionFlag()) { player_select_window->IsActiveChangeFlag(); }
 
 			event_npc_flag = false;
 
@@ -754,7 +892,7 @@ void EventManager::ProcessNpcEventByType(const std::list<Shared<Npc>>& npc_list,
 			function_npc->EventSelectProcces(npc_list_->GetNpcName(), boss_background_hdl, boss_id, "sound/BGM/maou_bgm_castle.mp3", "sound/BGM/battle-dark.mp3", static_cast<int>(InMapScene::InMapState::BOSSCASTLE));
 
 			//処理を受け付けないようにする
-			if (player_select_window->getAcrionFlag()) { player_select_window->IsActiveChangeFlag(); }
+			if (player_select_window->GetAcrionFlag()) { player_select_window->IsActiveChangeFlag(); }
 
 			event_npc_flag = false;
 
@@ -771,7 +909,7 @@ void EventManager::ProcessNpcEventByType(const std::list<Shared<Npc>>& npc_list,
 			function_npc->EventSelectProcces(npc_list_->GetNpcName(), boss_background_hdl, boss_id, "sound/BGM/maou_bgm_castle.mp3", "sound/BGM/maou_sentou_bgm.mp3" , static_cast<int>(InMapScene::InMapState::BOSSROOM));
 
 			//処理を受け付けないようにする
-			if (player_select_window->getAcrionFlag()) { player_select_window->IsActiveChangeFlag(); }
+			if (player_select_window->GetAcrionFlag()) { player_select_window->IsActiveChangeFlag(); }
 
 			event_npc_flag = false;
 
@@ -791,7 +929,7 @@ void EventManager::ProcessNpcEventByType(const std::list<Shared<Npc>>& npc_list,
 				function_npc->EventSelectProcces(npc_list_->GetNpcName(), boss_background_hdl, boss_id, "sound/BGM/grave.mp3", "sound/BGM/ordeal_battle.mp3",static_cast<int>(InMapScene::InMapState::GRAVE));
 
 				//処理を受け付けないようにする
-				if (player_select_window->getAcrionFlag()) { player_select_window->IsActiveChangeFlag(); }
+				if (player_select_window->GetAcrionFlag()) { player_select_window->IsActiveChangeFlag(); }
 
 				event_npc_flag = false;
 
@@ -805,14 +943,99 @@ void EventManager::ProcessNpcEventByType(const std::list<Shared<Npc>>& npc_list,
 				break;
 			}
 		}
+		//兵長
+		else if (npc_list_->GetNpcName() == "兵長") {
+
+			//ボスのID
+			boss_id = 29;
+
+			//ボスシーンでの背景をロードする
+			boss_background_hdl = ResourceManager::GetResourceManager()->LoadGraphEX("graphics/haikei/castle_back.png");
+
+			//バトル処理を呼び出す
+			function_npc->EventSelectProcces(npc_list_->GetNpcName(), boss_background_hdl, boss_id, "sound/BGM/castle.mp3", "sound/BGM/corporal_battle.mp3", static_cast<int>(InMapScene::InMapState::CASTLE));
+
+			//処理を受け付けないようにする
+			if (player_select_window->GetAcrionFlag()) { player_select_window->IsActiveChangeFlag(); }
+
+			event_npc_flag = false;
+		}
+		//船長
+		else if (npc_list_->GetNpcName() == "船長") {
+
+			//ボスのID
+			boss_id = 30;
+
+			//ボスシーンでの背景をロードする
+			boss_background_hdl = ResourceManager::GetResourceManager()->LoadGraphEX("graphics/haikei/sea.jpg");
+
+			//バトル処理を呼び出す
+			function_npc->EventSelectProcces(npc_list_->GetNpcName(), boss_background_hdl, boss_id, "sound/BGM/ship.mp3", "sound/BGM/pirate.mp3", static_cast<int>(InMapScene::InMapState::SHIP));
+
+			//処理を受け付けないようにする
+			if (player_select_window->GetAcrionFlag()) { player_select_window->IsActiveChangeFlag(); }
+
+			event_npc_flag = false;
+
+		}
 	}
 
+}
+
+//イベントを通知する
+void EventManager::EventWindowNotification(const std::string& event_name , const std::string& event_coment)
+{
+	// 通知済みならリターン
+	if (event_flag_map[event_name]) { return; }
+
+	auto curent_inventry_state = GameManager::GetGameManager()->GetInventory()->GetSelectMenuNum();
+		
+	// 通知ウィンドウが立っていてかつ、インベントリが開かれていない時
+	if (UIManager::GetUIManager()->GetIsNotificationVisible() &&
+		curent_inventry_state == Inventory::MenuWindow_I::EMPTY) {
+
+		//プレイヤーを取得する
+		auto player = GameManager::GetGameManager()->GetPlayer();
+
+		//プレイヤーを動けなくする
+		if (player->GetPlayerControl()) {
+			player->PlayerControlChangeFlag();
+		}
+		//プレイヤーが動けない状態でBackSpaceを押すと通知ウィンドウを閉じてプレイヤーを動けるようにする
+		if (tnl::Input::IsKeyDownTrigger(eKeys::KB_BACK)&& !player->GetPlayerControl()) {
+			UIManager::GetUIManager()->ToggleAcquisitionWindow();
+			player->PlayerControlChangeFlag();
+		}
+
+		//通知ウィンドウを表示する
+		UIManager::GetUIManager()->SetDisplayEventMessage(event_coment);
+		if (UIManager::GetUIManager()->GetIsNotificationVisible()) {
+			UIManager::GetUIManager()->ToggleAcquisitionWindow();
+		}
+	}
+}
+
+//イベント用のフラグを追加する
+bool EventManager::AddEventFlagMap(const std::string& new_event_flag)
+{
+	//イベント名を探す
+	auto it = event_flag_map.find(new_event_flag);
+
+	//マップ内にすでに存在していれば
+	if (it != event_flag_map.end()) {
+		return event_flag_map[new_event_flag];
+	}
+	//なければ新しく追加して返す
+	else {
+		bool event_flag = false;
+		event_flag_map.insert(std::make_pair(new_event_flag, event_flag));
+	}
 }
 
 //コメントを表示する
 void EventManager::ComentEvent(BaseScene* curent_scene, const int& coment_max, const std::list<Shared<Npc>>& npc_list)
 {
-	std::vector<std::string> npc_names = { "村長", "町長", "王", "王妃", "女性村人","男性村人","男性町民","男性住民","学者" };
+	std::vector<std::string> npc_names = { "村長", "町長", "王", "王妃", "女性村人","男性村人","男性町民","男性住民","学者","僧侶"};
 
 	//空じゃ無ければ
 	if (!npc_list.empty()) {
