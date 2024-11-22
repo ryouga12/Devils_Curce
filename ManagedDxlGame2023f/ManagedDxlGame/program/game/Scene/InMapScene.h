@@ -33,7 +33,9 @@ public:
 		//ボスの間
 		BOSSROOM,		
 		//墓
-		GRAVE				
+		GRAVE,
+		//船の中
+		SHIP
 	};
 
 	InMapScene() = default;
@@ -79,6 +81,9 @@ public:
 
 	//墓シーンの初期化
 	void InitGraveScene();
+
+	//船シーンの初期化
+	void InitShipScene();
 	
 	//メニューウィンドウの生成
 	void InitMenuWindow();
@@ -155,8 +160,10 @@ private:
 	const tnl::Vector3 CASTLE_EXIT_POS = { 1114 , 100 , 0 };	
 
 	//勇者の墓から出た時の座標
-	const tnl::Vector3 GRAVE_EXIT_POS = { 2625 , 98 , 0 };													
+	const tnl::Vector3 GRAVE_EXIT_POS = { 2625 , 98 , 0 };		
 
+	//船から出たときの座標
+	const tnl::Vector3 SHIP_EXIT_POS = { 138 , 1032 , 0 };
 
 	//村シーンでの当たり判定
 	void VillageCollision();
@@ -178,6 +185,9 @@ private:
 
 	//勇者の墓シーンの当たり判定
 	void GraveSceneCollision();
+
+	//船に入った際の当たり判定
+	void ShipCollision();
 
 //------------------------------------------------------------------------------------------------------------------------
 //---ポインタ---//
@@ -229,6 +239,14 @@ private:
 	//当たり判定のないNpc
 	Shared<Npc>ordeal_npc = nullptr;
 
+	//兵長
+	Shared<Npc>corporal_npc = nullptr;
+
+	//船長
+	Shared<Npc>pirate_npc = nullptr;
+
+	//僧侶(ラスボス後)
+	Shared<Npc>monk_npc = nullptr;
 
 	//---メニュー関連---//
 
@@ -302,6 +320,10 @@ private:
 	//---村長---//
 	const tnl::Vector3 HERDMAN_POS = { 1375, 760, 0 };
 
+	//---僧侶---//
+	const tnl::Vector3 MONK_POS = { 909,235,0 };
+
+
 	//---武器商人---//
 	
 	//村
@@ -366,7 +388,8 @@ private:
 	const tnl::Vector3 SOLDIER_POS = { 972, 1060, 0 };
 	//兵士二人目
 	const tnl::Vector3 SECOND_SOLDIER_POS = { 1265, 1063, 0 };
-
+	//兵長
+	const tnl::Vector3 CORPORAL_POS = { 1957 , 1531 , 0 };
 
 //------------------------------------------------------------------------------------------------------------------------
 //メニュー関連座標系

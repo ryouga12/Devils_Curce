@@ -23,14 +23,11 @@ InMapScene::InMapScene(const tnl::Vector3& firstPos, const InMapState& inmap_sta
 
 InMapScene::~InMapScene()
 {
-	//マップチップの解放(2096 = マップチップの総数)
-	for (int i = 0; i < map_chip_all_size_; i++) {
-		DeleteGraph(gpc_map_chip_hdls_[i]);
-		tnl::DebugTrace("\n Deleted  MapChipimage at [%d]. Pointer value: %p\n", i, gpc_map_chip_hdls_[i]);
-	}
+	//マップチップの解放
+	ResourceManager::GetResourceManager()->DeleteGraphAryEx(gpc_map_chip_hdls_ , map_chip_all_size_);
 }
 
-//初期化
+//村の初期化
 void InMapScene::InitVillageScene()
 {
 	//武器関連の初期化
@@ -53,14 +50,24 @@ void InMapScene::InitVillageScene()
 	if (!resident_male_npc) {
 		resident_male_npc = std::make_shared<Npc>("男性村人", MALE_VILLAGERS_POS, NPC_CHIP_SIZE, koni::Numeric::SCALE_ONE_AND_HALF, Npc::NPC_ANIMATION::NPC_DIR_DOWN, "graphics/Npc/male_villagers_icon.png");
 	}
+	//ラスボスを倒していたら
+	if (!monk_npc && !EventManager::GetEventManager()->GetLastBossFlag()) {
 
+		//僧侶を出現させる
+		monk_npc = std::make_shared<Npc>("僧侶", MONK_POS, NPC_CHIP_SIZE, koni::Numeric::SCALE_ONE_AND_HALF, Npc::NPC_ANIMATION::NPC_DIR_DOWN, "graphics/Npc/monk_icon.png");
+		
+		//イベントを通知する
+		EventManager::GetEventManager()->EventWindowNotification("裏ボスイベント", "最近遭難してきた僧侶がいるらしい");
+
+	}
 
 	//アクターリストにNPCを追加する
-	npc_list.emplace_back(armsdealer_npc);
-	npc_list.emplace_back(herdman_npc);
-	npc_list.emplace_back(priest_npc);
-	npc_list.emplace_back(female_resident_npc);
-	npc_list.emplace_back(resident_male_npc);
+	if (armsdealer_npc) { npc_list.emplace_back(armsdealer_npc); }
+	if (herdman_npc) { npc_list.emplace_back(herdman_npc); }
+	if (priest_npc) { npc_list.emplace_back(priest_npc); }
+	if (female_resident_npc) { npc_list.emplace_back(female_resident_npc); }
+	if (resident_male_npc) { npc_list.emplace_back(resident_male_npc); }
+	if (monk_npc) { npc_list.emplace_back(monk_npc); }
 
 	//soundManagerの初期化
 	SoundManager::GetSoundManager()->Sound_Play("sound/BGM/tasogare.mp3", DX_PLAYTYPE_LOOP);
@@ -68,7 +75,6 @@ void InMapScene::InitVillageScene()
 	//マップチップのロード
 	//村用のマップチップをロードする
 	mapChip_Loding(CsvManager::GetCsvManager()->GetVillagMapCsv(), CsvManager::GetCsvManager()->GetVillagMapObjectCsv());
-
 }
 
 //ボスの城シーンの初期化
@@ -128,7 +134,7 @@ void InMapScene::InitBossRoomScene()
 	}
 
 	//アクターリストにNPCを追加する
-	npc_list.emplace_back(boss_npc);
+	if (boss_npc) { npc_list.emplace_back(boss_npc); }
 
 	//マップチップのロード
 	//ダンジョン用のマップチップをロードする
@@ -179,14 +185,12 @@ void InMapScene::InitTownScene()
 		resident_male_npc = std::make_shared<Npc>("男性町民", TOWNS_PEOPLE_POS, NPC_CHIP_SIZE, koni::Numeric::SCALE_ONE_AND_HALF, Npc::NPC_ANIMATION::NPC_DIR_DOWN, "graphics/Npc/male_villagers_icon.png");
 	}
 
-
 	//アクターリストにNPCを追加する
-	npc_list.emplace_back(armsdealer_npc);
-	npc_list.emplace_back(herdman_npc);
-	npc_list.emplace_back(inn_npc);
-	npc_list.emplace_back(resident_male_npc);
-
-
+	if(armsdealer_npc) { npc_list.emplace_back(armsdealer_npc); }
+	if(herdman_npc){npc_list.emplace_back(herdman_npc);}
+	if(inn_npc){npc_list.emplace_back(inn_npc);}
+	if(resident_male_npc) {npc_list.emplace_back(resident_male_npc);}
+	
 	//soundManagerの初期化
 	//町のBGMを流す
 	SoundManager::GetSoundManager()->Sound_Play("sound/BGM/town_bgm.mp3", DX_PLAYTYPE_LOOP);
@@ -249,10 +253,10 @@ void InMapScene::InitCastleTownScene()
 	}
 
 	//アクターリストにNPCを追加する
-	npc_list.emplace_back(armsdealer_npc);
-	npc_list.emplace_back(inn_npc);
-	npc_list.emplace_back(priest_npc);
-	npc_list.emplace_back(resident_male_npc);
+	if(armsdealer_npc) { npc_list.emplace_back(armsdealer_npc); }
+	if(inn_npc){npc_list.emplace_back(inn_npc);}
+	if(priest_npc){npc_list.emplace_back(priest_npc);}
+	if(resident_male_npc){npc_list.emplace_back(resident_male_npc);}
 
 	//soundManagerの初期化
 	//城下町のBGMを流す
@@ -268,16 +272,21 @@ void InMapScene::InitCastleScene()
 	map_chips.clear();
 	map_chip_object.clear();
 
-	//男性住人のポインタを解放する
-	//同じポインタで違う住人を城と城下町で出現させる為一度解放する
-	if (resident_male_npc) { resident_male_npc.reset(); }
+	//城下町から来た場合の初期化
+	if (!SceneManager::GetSceneManager()->GetSceneFlag()) 
+	{
+		//男性住人のポインタを解放する
+		//同じポインタで違う住人を城と城下町で出現させる為一度解放する
+		if (resident_male_npc) { resident_male_npc.reset(); }
 
-	//プレイヤーの位置を変える
-	GameManager::GetGameManager()->GetPlayer()->SetPlayerPosition(CASTLE_FIRST_POS);
+		//プレイヤーの位置を変える
+		GameManager::GetGameManager()->GetPlayer()->SetPlayerPosition(CASTLE_FIRST_POS);
 
-	//カメラ位置も変更する
-	GameManager::GetGameManager()->GetCamera()->SavePosition(GameManager::GetGameManager()->GetPlayer()->GetPlayerPos());
-	GameManager::GetGameManager()->GetCamera()->SetTargetPos();
+		//カメラ位置も変更する
+		GameManager::GetGameManager()->GetCamera()->SavePosition(GameManager::GetGameManager()->GetPlayer()->GetPlayerPos());
+		GameManager::GetGameManager()->GetCamera()->SetTargetPos();
+
+	}
 
 	//王
 	if (!king_npc) {
@@ -298,13 +307,18 @@ void InMapScene::InitCastleScene()
 	if (!second_soldier_npc) {
 		second_soldier_npc = std::make_shared<Npc>("兵士", SECOND_SOLDIER_POS, NPC_CHIP_SIZE, koni::Numeric::SCALE_ONE_AND_HALF, Npc::NPC_ANIMATION::NPC_DIR_DOWN, "graphics/Npc/soldier_icon.png");
 	}
+	//兵長
+	if (!corporal_npc) {
+		corporal_npc = std::make_shared<Npc>("兵長", CORPORAL_POS, NPC_CHIP_SIZE, koni::Numeric::SCALE_ONE_AND_HALF, Npc::NPC_ANIMATION::NPC_DIR_LEFT, "graphics/Npc/corporal_npc_icon.png");
+	}
 
 	//アクターリストにNPCを追加する
-	npc_list.emplace_back(king_npc);
-	npc_list.emplace_back(queen_npc);
-	npc_list.emplace_back(resident_male_npc);
-	npc_list.emplace_back(soldier_npc);
-	npc_list.emplace_back(second_soldier_npc);
+	if(king_npc) { npc_list.emplace_back(king_npc); }
+	if(queen_npc){npc_list.emplace_back(queen_npc);}
+	if(resident_male_npc){npc_list.emplace_back(resident_male_npc);}
+	if(soldier_npc){npc_list.emplace_back(soldier_npc);}
+	if(second_soldier_npc){npc_list.emplace_back(second_soldier_npc);}
+	if(corporal_npc){npc_list.emplace_back(corporal_npc);}
 
 
 	//soundManagerの初期化
@@ -326,7 +340,7 @@ void InMapScene::InitGraveScene()
 			ordeal_npc = std::make_shared<Npc>("試練の番人", "graphics/Npc/ordeal_icon.png");
 		}
 
-		npc_list.emplace_back(ordeal_npc);
+		if (ordeal_npc) { npc_list.emplace_back(ordeal_npc); }
 	}
 
 	//soundManagerの初期化
@@ -336,6 +350,27 @@ void InMapScene::InitGraveScene()
 	//マップチップのロード
 	mapChip_Loding(CsvManager::GetCsvManager()->GetGraveFloorCsv(), CsvManager::GetCsvManager()->GetGraveObjectCsv());
 
+}
+
+//船シーンの初期化
+void InMapScene::InitShipScene()
+{
+	//船長の座標
+	tnl::Vector3 PIRATE_POS = { 911 , 130 , 0 };
+
+	//船長
+	if (!pirate_npc) {
+		pirate_npc = std::make_shared<Npc>("船長", PIRATE_POS, NPC_CHIP_SIZE, koni::Numeric::SCALE_ONE_AND_HALF, Npc::NPC_ANIMATION::NPC_DIR_DOWN, "graphics/Npc/pirate_icon.png");
+	}
+
+	if (pirate_npc) { npc_list.emplace_back(pirate_npc); }
+
+	//soundManagerの初期化
+	//船のBGMを流す
+	SoundManager::GetSoundManager()->Sound_Play("sound/BGM/ship.mp3", DX_PLAYTYPE_LOOP);
+
+	//マップチップのロード
+	mapChip_Loding(CsvManager::GetCsvManager()->GetShipFloorCsv(), CsvManager::GetCsvManager()->GetShipObjectCsv());
 }
 
 
@@ -436,6 +471,18 @@ void InMapScene::InitInMapScene()
 
 		//勇者の墓シーンの初期化
 		InitGraveScene();
+
+		break;
+
+	//船
+	case InMapScene::InMapState::SHIP:
+
+		//マップの高さとマップの幅を決める
+		map_height = 945;
+		map_width = 1600;
+
+		//船シーンの初期化
+		InitShipScene();
 
 		break;
 
@@ -557,6 +604,14 @@ void InMapScene::Draw()
 	InMapSceneDraw();
 
 	__super::Draw();
+
+	//当たり判定のあるアイテムの描画
+	//配列が空じゃ無かったら
+	if (!GameManager::GetGameManager()->GetCollisionItemAry().empty()) {
+		for (auto& collision_item : GameManager::GetGameManager()->GetCollisionItemAry()) {
+			collision_item->Draw(*GameManager::GetGameManager()->GetCamera());
+		}
+	}
 }
 
 //それぞれの描画処理
@@ -584,11 +639,14 @@ void InMapScene::InMapSceneDraw()
 	//インベントリの描画
 	GameManager::GetGameManager()->GetInventory()->draw();
 
+	//イベント時の通知用の文字表示
+	UIManager::GetUIManager()->DisplayEventMessage();
+
 	//それぞれのシーケンスでの描画
 	switchSequenceDraw();
 
-	/*DrawStringEx(100, 100, koni::Color::WHITE, "%f", GameManager::getGameManager()->getPlayer()->getPlayerPos().x);
-	DrawStringEx(100, 150, -1, "%f", GameManager::getGameManager()->getPlayer()->getPlayerPos().y);*/
+	/*DrawStringEx(100, 100, koni::Color::WHITE, "%f", GameManager::GetGameManager()->GetPlayer()->GetPlayerPos().x);
+	DrawStringEx(100, 150, -1, "%f", GameManager::GetGameManager()->GetPlayer()->GetPlayerPos().y);*/
 
 }
 
@@ -628,7 +686,7 @@ void InMapScene::InMapSceneExitProcess(const float delta_time)
 	if (curent_inmap_scene == InMapState::VILLAGE) {
 
 		//プレイヤーのサイズ
-		auto player_size = GameManager::GetGameManager()->GetPlayer()->GetPlayerSize();
+		auto& player_size = GameManager::GetGameManager()->GetPlayer()->GetPlayerSize();
 
 		//プレイヤーの移動制限
 		if (GameManager::GetGameManager()->GetPlayer()->GetPlayerPos().y < static_cast<float>(player_size.y / 2)) {
@@ -672,6 +730,9 @@ void InMapScene::InMapSceneExitProcess(const float delta_time)
 		//NPCを一度初期化する
 		npc_list.clear();
 
+		//マップチップの画像の解放
+		ResourceManager::GetResourceManager()->DeleteGraphAryEx(gpc_map_chip_hdls_, map_chip_all_size_);
+
 		return ;
 
 	}
@@ -705,6 +766,10 @@ void InMapScene::InMapSceneExitProcess(const float delta_time)
 		//NPCを一度初期化する
 		npc_list.clear();
 
+		//マップチップの画像の解放
+		//一度マップチップを解放する為画像も解放する
+		ResourceManager::GetResourceManager()->DeleteGraphAryEx(gpc_map_chip_hdls_, map_chip_all_size_);
+
 		//初期化させて城シーンに移行させる
 		sequence_.change(&InMapScene::seqInit);
 
@@ -737,6 +802,10 @@ void InMapScene::InMapSceneExitProcess(const float delta_time)
 		//勇者の墓の場合
 		else if (curent_inmap_scene == InMapState::GRAVE) {
 			SoundManager::GetSoundManager()->StopSound("sound/BGM/grave.mp3");
+		}
+		//船の場合
+		else if (curent_inmap_scene == InMapState::SHIP) {
+			SoundManager::GetSoundManager()->StopSound("sound/BGM/ship.mp3");
 		}
 
 		//移動のSEを流す
@@ -859,6 +928,10 @@ bool InMapScene::seqChangeScene(float delta_time)
 	else if (curent_inmap_scene == InMapState::GRAVE) {
 		GameManager::GetGameManager()->GetPlayer()->SetPlayerPosition(GRAVE_EXIT_POS);
 	}
+	//船
+	else if (curent_inmap_scene == InMapState::SHIP) {
+		GameManager::GetGameManager()->GetPlayer()->SetPlayerPosition(SHIP_EXIT_POS);
+	}
 
 	return false;
 }
@@ -875,7 +948,7 @@ bool InMapScene::seqMenuOpen(float delta_time)
 
 	//武器の購入コマンドが買うか売るを選択した場合、武器屋シーケンスに移行する
 	//買うを選択した場合
-	if (EventManager::GetEventManager()->GetSelectMenu() == EventManager::MenuOpen::WEAPONSHOP && weapon_shop_coment_select->getSelectNum() == MenuWindow::Elements::FIRST_ELEMENT
+	if (EventManager::GetEventManager()->GetSelectMenu() == EventManager::MenuOpen::WEAPONSHOP && weapon_shop_coment_select->GetSelectNum() == MenuWindow::Elements::FIRST_ELEMENT
 		&& tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
 
 		//シーケンスを武器屋シーケンスに切り替える
@@ -887,7 +960,7 @@ bool InMapScene::seqMenuOpen(float delta_time)
 		return false;
 	}
 	//売るを選択した場合
-	else if (EventManager::GetEventManager()->GetSelectMenu() == EventManager::MenuOpen::WEAPONSHOP && weapon_shop_coment_select->getSelectNum() == MenuWindow::Elements::SECOND_ELEMENT
+	else if (EventManager::GetEventManager()->GetSelectMenu() == EventManager::MenuOpen::WEAPONSHOP && weapon_shop_coment_select->GetSelectNum() == MenuWindow::Elements::SECOND_ELEMENT
 		&& tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
 
 		//シーケンスを武器屋シーケンスに切り替える
@@ -899,7 +972,7 @@ bool InMapScene::seqMenuOpen(float delta_time)
 		return false;
 	}
 	//閉じるを押したら動けるようにする
-	else if (EventManager::GetEventManager()->GetSelectMenu() == EventManager::MenuOpen::WEAPONSHOP && weapon_shop_coment_select->getSelectNum() == MenuWindow::Elements::THERD_ELEMENT) {
+	else if (EventManager::GetEventManager()->GetSelectMenu() == EventManager::MenuOpen::WEAPONSHOP && weapon_shop_coment_select->GetSelectNum() == MenuWindow::Elements::THERD_ELEMENT) {
 
 		if (tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
 
@@ -910,13 +983,13 @@ bool InMapScene::seqMenuOpen(float delta_time)
 	}
 
 	//話すコマンド
-	if (EventManager::GetEventManager()->GetSelectMenu() == EventManager::MenuOpen::EMPTY && dia_log_coment_select->getSelectNum() == 0 || EventManager::GetEventManager()->GetSelectMenu() == EventManager::MenuOpen::BOSS
-		&& dia_log_coment_select->getSelectNum() == MenuWindow::Elements::FIRST_ELEMENT) {
+	if (EventManager::GetEventManager()->GetSelectMenu() == EventManager::MenuOpen::EMPTY && dia_log_coment_select->GetSelectNum() == 0 || EventManager::GetEventManager()->GetSelectMenu() == EventManager::MenuOpen::BOSS
+		&& dia_log_coment_select->GetSelectNum() == MenuWindow::Elements::FIRST_ELEMENT) {
 		if(tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)){
 			sequence_.change(&InMapScene::seqNpc);
 		}
 	}
-	else if (dia_log_coment_select->getSelectNum() == MenuWindow::Elements::SECOND_ELEMENT && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
+	else if (dia_log_coment_select->GetSelectNum() == MenuWindow::Elements::SECOND_ELEMENT && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
 
 		//シーケンスを切り替える
 		sequence_.change(&InMapScene::seqMove);
@@ -1074,6 +1147,10 @@ void InMapScene::mapChip_collision()
 	else if (curent_inmap_scene == InMapState::GRAVE) {
 		GraveSceneCollision();
 	}
+	//現在のシーンが船のシーンだったら
+	else if (curent_inmap_scene == InMapState::SHIP) {
+		ShipCollision();
+	}
 }
 
 //村シーンでの当たり判定
@@ -1101,7 +1178,7 @@ void InMapScene::VillageCollision()
 				player->GetPlayerPos(),
 				mapChip->MapChipPos(),
 				tnl::eCorrTypeRect::PWRFL_B,
-				tnl::eCorrTypeRect::PWRFL_B , 0);
+				tnl::eCorrTypeRect::PWRFL_B , HIT_JUDGMENT_CORRECTION_VALUE);
 
 			//武器屋
 			const int MAP_CHIP_WEAPONSHOP = 510;
@@ -1137,7 +1214,7 @@ void InMapScene::VillageCollision()
 				player->GetPlayerPos(),
 				npc_->GetNpcPos(),
 				tnl::eCorrTypeRect::PWRFL_B,
-				tnl::eCorrTypeRect::PWRFL_B, 0);
+				tnl::eCorrTypeRect::PWRFL_B, HIT_JUDGMENT_CORRECTION_VALUE);
 
 			//村長
 			if (collison != tnl::eCorrResRect::LEFT && npc_->GetNpcName() == "村長") {
@@ -1145,7 +1222,7 @@ void InMapScene::VillageCollision()
 				if (tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
 
 					//アニメーションを下にする
-					herdman_npc->SetNpcAnimation(static_cast<Npc::NPC_ANIMATION>(collison));
+					npc_->SetNpcAnimation(static_cast<Npc::NPC_ANIMATION>(collison));
 
 					//1からコメントを流す
 					UIManager::GetUIManager()->ComentClear();
@@ -1157,7 +1234,7 @@ void InMapScene::VillageCollision()
 					const int HERDMAN_COMENT_MAX = 9;
 
 					//コメント用の配列を初期化する
-					UIManager::GetUIManager()->ComentLoad(HERDMAN_COMENT_MAX, herdman_npc->GetNpcName());
+					UIManager::GetUIManager()->ComentLoad(HERDMAN_COMENT_MAX, npc_->GetNpcName());
 
 					//状態を切り替える
 					EventManager::GetEventManager()->SetMenuNpc(EventManager::MenuOpen::EMPTY);
@@ -1174,7 +1251,7 @@ void InMapScene::VillageCollision()
 				if (tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)) {
 
 					//アニメーションを切り替える
-					priest_npc->SetNpcAnimation(static_cast<Npc::NPC_ANIMATION>(collison));
+					npc_->SetNpcAnimation(static_cast<Npc::NPC_ANIMATION>(collison));
 
 					//1からコメントを流す
 					UIManager::GetUIManager()->ComentClear();
@@ -1191,7 +1268,7 @@ void InMapScene::VillageCollision()
 					const int PRIEST_COMENT_MAX = 3;
 
 					//コメント用の配列を初期化する
-					UIManager::GetUIManager()->ComentLoad(PRIEST_COMENT_MAX, priest_npc->GetNpcName());
+					UIManager::GetUIManager()->ComentLoad(PRIEST_COMENT_MAX, npc_->GetNpcName());
 
 					//状態を切り替える
 					EventManager::GetEventManager()->SetMenuNpc(EventManager::MenuOpen::EMPTY);
@@ -1203,7 +1280,7 @@ void InMapScene::VillageCollision()
 			else if (tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN) && npc_->GetNpcName() == "女性村人") {
 
 				//アニメーションを切り替える
-				female_resident_npc->SetNpcAnimation(static_cast<Npc::NPC_ANIMATION>(collison));
+				npc_->SetNpcAnimation(static_cast<Npc::NPC_ANIMATION>(collison));
 
 				//1からコメントを流す
 				UIManager::GetUIManager()->ComentClear();
@@ -1220,7 +1297,7 @@ void InMapScene::VillageCollision()
 				const int FEMALE_RESIDENT_COMENT_MAX = 3;
 
 				//コメント用の配列を初期化する
-				UIManager::GetUIManager()->ComentLoad(FEMALE_RESIDENT_COMENT_MAX, female_resident_npc->GetNpcName());
+				UIManager::GetUIManager()->ComentLoad(FEMALE_RESIDENT_COMENT_MAX, npc_->GetNpcName());
 
 				//状態を切り替える
 				EventManager::GetEventManager()->SetMenuNpc(EventManager::MenuOpen::EMPTY);
@@ -1230,9 +1307,8 @@ void InMapScene::VillageCollision()
 			//男性村人
 			else if (tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN) && npc_->GetNpcName() == "男性村人") {
 
-
 				//アニメーションを切り替える
-				resident_male_npc->SetNpcAnimation(static_cast<Npc::NPC_ANIMATION>(collison));
+				npc_->SetNpcAnimation(static_cast<Npc::NPC_ANIMATION>(collison));
 
 				//1からコメントを流す
 				UIManager::GetUIManager()->ComentClear();
@@ -1249,12 +1325,41 @@ void InMapScene::VillageCollision()
 				const int RESIDENT_MALE_COMENT_MAX = 3;
 
 				//コメント用の配列を初期化する
-				UIManager::GetUIManager()->ComentLoad(RESIDENT_MALE_COMENT_MAX, resident_male_npc->GetNpcName());
+				UIManager::GetUIManager()->ComentLoad(RESIDENT_MALE_COMENT_MAX, npc_->GetNpcName());
 
 				//状態を切り替える
 				EventManager::GetEventManager()->SetMenuNpc(EventManager::MenuOpen::EMPTY);
 				EventManager::GetEventManager()->SetNpcComent(EventManager::NpcMove::RESIDENT_MALE);
 				sequence_.change(&InMapScene::seqMenuOpen);
+			}
+			//僧侶
+			else if (tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN) && npc_->GetNpcName() == "僧侶") {
+
+				//アニメーションを切り替える
+				npc_->SetNpcAnimation(static_cast<Npc::NPC_ANIMATION>(collison));
+
+				//1からコメントを流す
+				UIManager::GetUIManager()->ComentClear();
+
+				//カウントをリセットする
+				UIManager::GetUIManager()->CountReset();
+
+				//イベントフラグがfalseの場合フラグを切り替える
+				if (!EventManager::GetEventManager()->GetEventFlag()) {
+					EventManager::GetEventManager()->EventFlagChange();
+				}
+
+				//ロードするコメントの数
+				const int MONK_COMENT_MAX = 3;
+
+				//コメント用の配列を初期化する
+				UIManager::GetUIManager()->ComentLoad(MONK_COMENT_MAX, npc_->GetNpcName());
+
+				//状態を切り替える
+				EventManager::GetEventManager()->SetMenuNpc(EventManager::MenuOpen::EMPTY);
+				EventManager::GetEventManager()->SetNpcComent(EventManager::NpcMove::MONK);
+				sequence_.change(&InMapScene::seqMenuOpen);
+
 			}
 		}
 	}
@@ -1282,7 +1387,7 @@ void InMapScene::TownCollision()
 				player->GetPlayerPos(),
 				map_chip_collision->MapChipPos(),
 				tnl::eCorrTypeRect::PWRFL_B,
-				tnl::eCorrTypeRect::PWRFL_B, 0);
+				tnl::eCorrTypeRect::PWRFL_B, HIT_JUDGMENT_CORRECTION_VALUE);
 
 
 			//武器屋のマップチップ
@@ -1343,7 +1448,7 @@ void InMapScene::TownCollision()
 				player->GetPlayerPos(),
 				npc_->GetNpcPos(),
 				tnl::eCorrTypeRect::PWRFL_B,
-				tnl::eCorrTypeRect::PWRFL_B, 0);
+				tnl::eCorrTypeRect::PWRFL_B, HIT_JUDGMENT_CORRECTION_VALUE);
 
 			//町長
 			if (tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN) && npc_->GetNpcName() == "町長") {
@@ -1457,7 +1562,7 @@ void InMapScene::BossCastleCollision()
 				player->GetPlayerPos(),
 				map_chip_collision->MapChipPos(),
 				tnl::eCorrTypeRect::PWRFL_B,
-				tnl::eCorrTypeRect::PWRFL_B, 0);
+				tnl::eCorrTypeRect::PWRFL_B, HIT_JUDGMENT_CORRECTION_VALUE);
 
 
 		}
@@ -1477,7 +1582,7 @@ void InMapScene::BossCastleCollision()
 			player->GetPlayerPos(),
 			shadow_npc->GetNpcPos(),
 			tnl::eCorrTypeRect::PWRFL_B,
-			tnl::eCorrTypeRect::PWRFL_B, 0);
+			tnl::eCorrTypeRect::PWRFL_B, HIT_JUDGMENT_CORRECTION_VALUE);
 
 		//影の番人
 		if (tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN) && shadow_npc) {
@@ -1532,7 +1637,7 @@ void InMapScene::BossRoomCollision()
 				player->GetPlayerPos(),
 				map_chip_collision->MapChipPos(),
 				tnl::eCorrTypeRect::PWRFL_B,
-				tnl::eCorrTypeRect::PWRFL_B, 0);
+				tnl::eCorrTypeRect::PWRFL_B, HIT_JUDGMENT_CORRECTION_VALUE);
 		}
 	}
 
@@ -1549,7 +1654,7 @@ void InMapScene::BossRoomCollision()
 			player->GetPlayerPos(),
 			boss_npc->GetNpcPos(),
 			tnl::eCorrTypeRect::PWRFL_B,
-			tnl::eCorrTypeRect::PWRFL_B, 0);
+			tnl::eCorrTypeRect::PWRFL_B, HIT_JUDGMENT_CORRECTION_VALUE);
 
 		//当たっているときにEnterキーを押したらバトルシーンに遷移させる
 		//今後セリフも追加予定
@@ -1602,7 +1707,7 @@ void InMapScene::CastleTownCollision()
 				player->GetPlayerPos(),
 				map_chip_collision->MapChipPos(),
 				tnl::eCorrTypeRect::PWRFL_B,
-				tnl::eCorrTypeRect::PWRFL_B, 0);
+				tnl::eCorrTypeRect::PWRFL_B, HIT_JUDGMENT_CORRECTION_VALUE);
 
 			//武器屋のマップチップ
 			const int CASTLE_TOWN_MAPCHIP_WEAPON_SHOP = 674;
@@ -1660,7 +1765,7 @@ void InMapScene::CastleTownCollision()
 				player->GetPlayerPos(),
 				npc_->GetNpcPos(),
 				tnl::eCorrTypeRect::PWRFL_B,
-				tnl::eCorrTypeRect::PWRFL_B, 0);
+				tnl::eCorrTypeRect::PWRFL_B, HIT_JUDGMENT_CORRECTION_VALUE);
 
 			if (collision != tnl::eCorrResRect::UP && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)
 				&&npc_->GetNpcName() == "神官") {
@@ -1745,7 +1850,7 @@ void InMapScene::CastleCollision()
 				player->GetPlayerPos(),
 				map_chip_collision->MapChipPos(),
 				tnl::eCorrTypeRect::PWRFL_B,
-				tnl::eCorrTypeRect::PWRFL_B, 0);
+				tnl::eCorrTypeRect::PWRFL_B, HIT_JUDGMENT_CORRECTION_VALUE);
 		}
 	}
 
@@ -1866,6 +1971,37 @@ void InMapScene::CastleCollision()
 			//シーケンスを切り替える
 			sequence_.change(&InMapScene::seqMenuOpen);
 			}
+
+			//兵長
+			else if (tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN) && npc_->GetNpcName() == "兵長") {
+
+				//アニメーションを変更する
+				npc_->SetNpcAnimation(static_cast<Npc::NPC_ANIMATION>(collision));
+
+				//1からコメントを流す
+				UIManager::GetUIManager()->ComentClear();
+
+				//カウントをリセットする
+				UIManager::GetUIManager()->CountReset();
+
+				//イベントフラグがfalseの場合フラグを切り替える
+				if (!EventManager::GetEventManager()->GetEventFlag()) {
+					EventManager::GetEventManager()->EventFlagChange();
+				}
+
+				//ロードするコメントの数
+				const int CORPORAL_COMENT_MAX = 4;
+
+				//コメント用の配列を初期化する
+				UIManager::GetUIManager()->ComentLoad(CORPORAL_COMENT_MAX, corporal_npc->GetNpcName());
+
+				//状態を切り替える
+				EventManager::GetEventManager()->SetMenuNpc(EventManager::MenuOpen::EMPTY);
+				EventManager::GetEventManager()->SetNpcComent(EventManager::NpcMove::CORPORAL);
+
+				//シーケンスを切り替える
+				sequence_.change(&InMapScene::seqMenuOpen);
+			}
 		}
 	}
 }
@@ -1895,7 +2031,7 @@ void InMapScene::GraveSceneCollision()
 				player->GetPlayerPos(),
 				mapChip->MapChipPos(),
 				tnl::eCorrTypeRect::PWRFL_B,
-				tnl::eCorrTypeRect::PWRFL_B);
+				tnl::eCorrTypeRect::PWRFL_B , HIT_JUDGMENT_CORRECTION_VALUE);
 
 			//墓のマップチップ
 			const int MAP_CHIP_GRAVE = 1694;
@@ -1929,6 +2065,83 @@ void InMapScene::GraveSceneCollision()
 				//コメント用の配列を初期化する
 				UIManager::GetUIManager()->ComentLoad(ORDEAL_COMENT_MAX, ordeal_npc->GetNpcName());
 
+				sequence_.change(&InMapScene::seqMenuOpen);
+
+			}
+		}
+	}
+}
+
+//船内の当たり判定
+void InMapScene::ShipCollision()
+{
+	auto& player = GameManager::GetGameManager()->GetPlayer();
+
+	//ブロックと衝突判定 & 補正
+	//ゲームループ内での当たり判定のチェック]
+	for (auto& mapChip : map_chip_object) {
+
+
+		int mapChipValue = map_csv_objct_[static_cast<unsigned>(mapChip->MapChipPos().y / mapChip->GetChipSize().y)][static_cast<unsigned>(mapChip->MapChipPos().x / mapChip->GetChipSize().x)];
+
+		//マップチップの当たり判定
+		if (tnl::IsIntersectRect(player->GetPlayerPos(), player->GetPlayerSize().x, player->GetPlayerSize().y, mapChip->MapChipPos(), map_chip_width_, map_chip_height_)) {
+
+			//座標補正
+			tnl::eCorrResRect collision = tnl::CorrectPositionRect(
+				player->GetPlayerPrevPos(),
+				mapChip->MapChipPos(),
+				player->GetPlayerSize(),
+				mapChip->GetChipSize(),
+				player->GetPlayerPos(),
+				mapChip->MapChipPos(),
+				tnl::eCorrTypeRect::PWRFL_B,
+				tnl::eCorrTypeRect::PWRFL_B , HIT_JUDGMENT_CORRECTION_VALUE);
+		}
+	}
+
+	for (auto& npc_ : npc_list) {
+
+		//船長
+		if (tnl::IsIntersectRect(player->GetPlayerPos(), player->GetPlayerSize().x, player->GetPlayerSize().y, npc_->GetNpcPos(), npc_->GetNpcSizeWidth(), npc_->GetNpcSizeHegiht())) {
+
+			//座標補正
+			tnl::eCorrResRect collision = tnl::CorrectPositionRect(
+				player->GetPlayerPrevPos(),
+				npc_->GetNpcPos(),
+				player->GetPlayerSize(),
+				npc_->GetNpcCharaChip(),
+				player->GetPlayerPos(),
+				npc_->GetNpcPos(),
+				tnl::eCorrTypeRect::PWRFL_B,
+				tnl::eCorrTypeRect::PWRFL_B, 0);
+
+			if (collision != tnl::eCorrResRect::UP && tnl::Input::IsKeyDownTrigger(eKeys::KB_RETURN)
+				&& npc_->GetNpcName() == "船長") {
+
+				//アニメーションを切り替える
+				npc_->SetNpcAnimation(static_cast<Npc::NPC_ANIMATION>(collision));
+
+				//1からコメントを流す
+				UIManager::GetUIManager()->ComentClear();
+
+				//カウントをリセットする
+				UIManager::GetUIManager()->CountReset();
+
+				//イベントフラグがfalseの場合フラグを切り替える
+				if (!EventManager::GetEventManager()->GetEventFlag()) {
+					EventManager::GetEventManager()->EventFlagChange();
+				}
+
+				//ロードするコメントの数
+				const int PIRATE_COMENT_MAX = 6;
+
+				//コメント用の配列を初期化する
+				UIManager::GetUIManager()->ComentLoad(PIRATE_COMENT_MAX, npc_->GetNpcName());
+
+				//状態を切り替える
+				EventManager::GetEventManager()->SetMenuNpc(EventManager::MenuOpen::EMPTY);
+				EventManager::GetEventManager()->SetNpcComent(EventManager::NpcMove::PIRATE);
 				sequence_.change(&InMapScene::seqMenuOpen);
 
 			}
