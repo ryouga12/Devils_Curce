@@ -114,7 +114,7 @@ void MenuWindow::All(const int& menu_x, const int& menu_y, const int& menu_width
 }
 
 //カーソル制御
-void MenuWindow::SetSelectCousourMove()
+void MenuWindow::SelectCousourMoveFlagChange()
 {
 	//フラグを反転する
 	manage_select_flag = !manage_select_flag;

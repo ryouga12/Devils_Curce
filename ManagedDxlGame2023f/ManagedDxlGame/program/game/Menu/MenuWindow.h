@@ -83,17 +83,17 @@ public:
 	void All(const int& menu_x, const int& menu_y, const int& menu_width, const int& menu_height);
 
 	//選択番号を取得する
-	int getSelectNum() { return Select_Num;}
+	int GetSelectNum() { return Select_Num;}
 
 	//カーソルを制御する
-	void SetSelectCousourMove();
+	void SelectCousourMoveFlagChange();
 
 	//カーソルの制御フラグを取得する
-	bool getSelectCursour(){
+	bool GetSelectCursour(){
 		return manage_select_flag;
 	}
 
-	bool getAcrionFlag() { return is_active; }
+	bool GetAcrionFlag() { return is_active; }
 
 	//処理を受け付けるようにする
 	void IsActiveChangeFlag() { is_active = !is_active; }
