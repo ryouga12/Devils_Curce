@@ -50,6 +50,11 @@ public:
 		return essential_items_flag;
 	}
 
+	//アイコンを取得する
+	const std::string& GetItemIcon()const {
+		return itemes_icon;
+	}
+
 	
 	//武器のタイプをセットする
 	int GetItemWeapontype()const {
@@ -101,6 +106,10 @@ public:
 	void SetEssentialItemsFlag(const int& new_flag) {
 		essential_items_flag = new_flag;
 	}
+	//アイコンをセットする
+	void SetItemIcon(const std::string& new_icon) {
+		itemes_icon = new_icon;
+	}
 
 
 private:
@@ -127,4 +136,6 @@ private:
 	std::string epic_correction;
 	//そのアイテムは特別なアイテムか(主にイベントアイテムなど売却できないアイテムなど)
 	bool essential_items_flag = false;
+	//アイテムのアイコン
+	std::string itemes_icon;
 };
