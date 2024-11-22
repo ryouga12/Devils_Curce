@@ -1,4 +1,5 @@
 #include "CsvManager.h"
+#include"EventManager.h"
 
 CsvManager* CsvManager::GetCsvManager()
 {
@@ -104,6 +105,14 @@ void CsvManager::LoadCsv(const BaseScene::SceneState& curent_state)
 			//勇者のお墓のオブジェクトのデータ
 			grave_object_csv = tnl::LoadCsv<int>("csv/grave__Object.csv");
 		}
+		if (ship_floor_csv.empty() && !EventManager::GetEventManager()->GetLastBossFlag()) {
+			//船の床データ
+			ship_floor_csv = tnl::LoadCsv<int>("csv/ship__floor.csv");
+		}
+		if (ship_object_csv.empty() && !EventManager::GetEventManager()->GetLastBossFlag()) {
+			//船のオブジェクト床データ
+			ship_object_csv = tnl::LoadCsv<int>("csv/ship__object.csv");
+		}
 	}
 	//現在のシーンがワールドマップだったら
 	else if (curent_state == BaseScene::SceneState::WORLDMAP) {
@@ -117,4 +126,7 @@ void CsvManager::LoadCsv(const BaseScene::SceneState& curent_state)
 			world_object_csv = tnl::LoadCsv<int>("csv/world_map_object.csv");
 		}
 	}
+
+	//当たり判定のあるアイテムのロードを行う
+	collision_items_data_csv = tnl::LoadCsv<tnl::CsvCell>("csv/collision_items_data.csv");
 }

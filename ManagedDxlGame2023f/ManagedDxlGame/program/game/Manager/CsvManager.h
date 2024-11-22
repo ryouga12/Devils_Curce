@@ -64,6 +64,12 @@ public:
 	//勇者のお墓のオブジェクトデータ用のcsvを取得する
 	std::vector<std::vector<int>> GetGraveObjectCsv()const { return grave_object_csv; }
 
+	//船の床データ用のcsvを取得する
+	std::vector<std::vector<int>> GetShipFloorCsv()const { return ship_floor_csv; }
+
+	//船のオブジェクトデータ用のcsvを取得する
+	std::vector<std::vector<int>> GetShipObjectCsv()const { return ship_object_csv; }
+
 	//プレイヤーのステータス用のcsvを取得する
 	std::vector<std::vector<tnl::CsvCell>>GetPlayerStatusCsv()const { return PlyerStatus_Csv_Info; }
 
@@ -84,6 +90,9 @@ public:
 
 	//ストーリー用のcsvを取得する
 	std::vector<std::vector<std::string>>GetStoryCsv()const { return story_csv; }
+
+	//当たり判定のあるアイテムデータのcsvを取得する
+	std::vector<std::vector<tnl::CsvCell>>GetCollisonItemsDataCsv()const { return collision_items_data_csv; }
 
 	//csvをロードする
 	void LoadCsv(const BaseScene::SceneState& curent_state);
@@ -141,6 +150,13 @@ private:
 	//勇者の墓のオブジェクトデータ
 	std::vector<std::vector<int>>grave_object_csv;
 
+	//船用の床データ
+	std::vector<std::vector<int>>ship_floor_csv;
+
+	//船用のオブジェクトデータ
+	std::vector<std::vector<int>>ship_object_csv;
+
+
 	//プレイヤーのステータスデータ
 	std::vector<std::vector<tnl::CsvCell>>PlyerStatus_Csv_Info;
 
@@ -161,4 +177,8 @@ private:
 
 	//ストーリー用のcsv
 	std::vector<std::vector<std::string>>story_csv;
+
+	//当たり判定のあるアイテム用のcsvデータ
+	std::vector<std::vector<tnl::CsvCell>>collision_items_data_csv;
+
 };
