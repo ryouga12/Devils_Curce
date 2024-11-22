@@ -28,6 +28,7 @@ public:
 	Skill() = default;
 
 	//スキルクラスのコンストラクタ
+	//ぞれぞれのステータスを初期化してアニメーションのポインタを生成する
 	//arg_1 : ID 
 	//arg_2 : 名前 
 	//arg_3 : 攻撃力 
@@ -68,19 +69,45 @@ public:
 
 	//スキルを使った時のMp処理
 	virtual void SkillMpConsume(Player::PlayerStatus& playerStatus);
+
+	//誰が使っているのか
+	enum class SkillUserType {
+		PLAYER,
+		ENEMY
+	};
+
+	//属性値
+	enum class SkillAttribute {
+
+		//炎
+		FIRE,
+		//水
+		WATER,
+		//雷
+		THUNDER,
+		//闇
+		DARK,
+		//無属性
+		NON_ATTRIBUTE,
+		//風
+		WIND
+
+	};
 	
 	//Idを取得する
-	int getId() const { return skill_id; }
+	int GetId() const { return skill_id; }
 	//スキルの名前を取得する
-	std::string getName() const { return skill_name; }
+	std::string GetName() const { return skill_name; }
 	//スキルの詳細を取得する
-	std::string getDescription() const { return description; }
+	std::string GetDescription() const { return description; }
 	//スキルのダメージを取得する
-	float getSkillPower() { return power; }
+	float GetSkillPower() const { return power; }
 	//スキルの必要Mpを取得する
-	int getSkillConsumeMp()const { return consume_mp; }
+	int GetSkillConsumeMp()const { return consume_mp; }
 	//スキルのタイプを取得する
-	int getSkillType()const{return skill_type;}
+	int GetSkillType()const{return skill_type;}
+	//スキルの属性値を取得する
+	SkillAttribute GetSkillAttribute()const { return skill_curent_attribute; }
 
 	//全体のスキルを格納する
 	void AddSkillList();
@@ -97,6 +124,9 @@ private:
 	std::vector<Shared<Skill>>skill_list;
 
 protected:
+
+	//誰がスキルを使っているのか
+	SkillUserType curnet_user_type = SkillUserType::PLAYER;
 
 	//エフェクト用のアニメーション
 	Shared<Animation>Effect_Animation = nullptr;
@@ -146,7 +176,9 @@ protected:
 	//エフェクトの遅延秒数
 	//通常は8秒に設定(技によって切り替える)
 	int effect_delay = 8;
-
+	
+	//スキルの属性値
+	SkillAttribute skill_curent_attribute;
 };
 
 //通常攻撃
@@ -180,13 +212,33 @@ private:
 class FlameSlash final  : public Skill {
 public:
 
-	FlameSlash();
+	//火炎斬りのコンストラクタ
+	//arg_1 : 誰がスキルを使うのか
+	//スキルの所持者によって処理を変える為
+	FlameSlash(const SkillUserType& user_type = SkillUserType::PLAYER);
 	~FlameSlash()override{}
 
 	//火炎斬りを使った時の処理
 	void SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemyStatus_ , const Shared<BattleLog>& battle_log)override;
 
+	//プレイヤーが火炎斬りを使った場合
+	void PlayerSkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemyStatus_, const Shared<BattleLog>& battle_log);
 	
+	//エネミーがスキルを使った場合
+	void EnemySkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemyStatus_, const Shared<BattleLog>& battle_log);
+};
+
+//大火炎斬り
+class GreatFlameSlash final : public Skill {
+public:
+
+	GreatFlameSlash();
+	~GreatFlameSlash()override = default;
+
+	//大火炎斬りを使った時の処理
+	void SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemyStatus_, const Shared<BattleLog>& battle_log)override;
+
+
 };
 
 //ファイアストーム
@@ -229,11 +281,41 @@ public:
 class WaterBlade : public Skill {
 public:
 
-	WaterBlade();
+	//arg_1 : 誰がスキルを使うのか
+	//スキルの所持者によって処理を変える為
+	WaterBlade(const SkillUserType& user_type = SkillUserType::PLAYER);
 	~WaterBlade()override {};
 
 	//ウォーターブレードを使った時の処理
 	void SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemyStatus_, const Shared<BattleLog>& battle_log)override;
+
+	//プレイヤーがウォーターブレードを使った場合
+	void PlayerSkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemyStatus_, const Shared<BattleLog>& battle_log);
+
+	//エネミーがスキルを使った場合
+	void EnemySkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemyStatus_, const Shared<BattleLog>& battle_log);
+
+};
+
+//ウォーターフォージ 
+//ウォーターブレードの進化技
+class WaterForge : public Skill {
+public:
+
+	//arg_1 : 誰がスキルを使うのか
+	//スキルの所持者によって処理を変える為
+	WaterForge(const SkillUserType& user_type = SkillUserType::PLAYER);
+	~WaterForge()override = default;
+
+	//ウォーターフォージ を使った時の処理
+	void SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemyStatus_, const Shared<BattleLog>& battle_log)override;
+
+	//プレイヤーがウォーターフォージ を使った場合
+	void PlayerSkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemyStatus_, const Shared<BattleLog>& battle_log);
+
+	//エネミーがスキルを使った場合
+	void EnemySkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemyStatus_, const Shared<BattleLog>& battle_log);
+
 };
 
 //プリザード
@@ -253,11 +335,19 @@ public:
 class ThunderBolt final : public Skill {
 public:
 
-	ThunderBolt();
+	//arg_1 : 誰がスキルを使うのか
+	//スキルの所持者によって処理を変える為
+	ThunderBolt(const SkillUserType& user_type = SkillUserType::PLAYER);
 	~ThunderBolt()override {}
 
 	//サンダーボルト使った時の処理
 	void SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemyStatus_ , const Shared<BattleLog>& battle_log)override;
+
+	//プレイヤーがサンダーボルト使った場合
+	void PlayerSkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemyStatus_, const Shared<BattleLog>& battle_log);
+
+	//エネミーがスキルを使った場合
+	void EnemySkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemyStatus_, const Shared<BattleLog>& battle_log);
 
 };
 
@@ -500,5 +590,17 @@ public:
 
 	//冥府の光を使った時の処理
 	void SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemyStatus_, const Shared<BattleLog>& battle_log)override;
+
+};
+
+//黄泉の雨
+class RainOfHell : public Skill {
+public:
+
+	RainOfHell();
+	~RainOfHell()override = default;
+
+	//黄泉の雨を使った時の処理
+	void SkillUse(Enemy::EnemyConnection& enemyStatus, const Shared<BattleLog>& battle_log)override;
 
 };

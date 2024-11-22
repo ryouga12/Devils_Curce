@@ -73,7 +73,8 @@ void Skill::AddSkillList()
 //ランダムファクターの値を設定する
 void Skill::initializeRandomFactor()
 {
-	// 現在の時刻をシードとしてランダムエンジンを初期化
+	//ランダムエンジンを初期化
+	//毎回違う値をなるべく出したい為、現在時刻で初期化する
 	std::default_random_engine generator(static_cast<unsigned int>(std::time(nullptr)));
 
 	// 0.95 から 1.05 の範囲で一様に分布するランダム値を生成
@@ -83,6 +84,7 @@ void Skill::initializeRandomFactor()
 	random_factor = distribution(generator);
 }
 
+//軽減率を計算する
 void Skill::PlayerReductionRate(float& damage)
 {
 	// プレイヤーのレベルを取得
@@ -100,7 +102,7 @@ void Skill::PlayerReductionRate(float& damage)
 
 void Skill::CheckEpicWeapon(float& damage , Enemy::EnemyConnection& enemyStatus_)
 {
-	auto weapon_array = GameManager::GetGameManager()->GetInventory()->getEquipArray();
+	auto& weapon_array = GameManager::GetGameManager()->GetInventory()->GetEquipWeaponArray();
 
 	// Epic属性のチェック
 	bool isEpic = false;
@@ -127,7 +129,8 @@ Nomal_Attack::Nomal_Attack(int weapon_type): Skill(0, "攻撃", 1, "通常攻撃",0 , 
 	//エフェクトの縦のサイズ
 	effect_height_size = 120;
 
-
+	//属性値を設定する
+	skill_curent_attribute = SkillAttribute::NON_ATTRIBUTE;
 
 	//武器の種類によってアニメーションを変える
 	switch (weapon_type)
@@ -262,7 +265,7 @@ void Nomal_Attack::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConn
 	auto PlayerAttack = playerStatus.GetAttack();
 	auto EnemyDefance = enemyStatus_.GetEnemyDefance();
 	auto player_level = playerStatus.GetLevel();
-	auto weapon_array = GameManager::GetGameManager()->GetInventory()->getEquipArray();
+	auto& weapon_array = GameManager::GetGameManager()->GetInventory()->GetEquipWeaponArray();
 	auto& player_name = GameManager::GetGameManager()->GetPlayer()->GetPlayerName();
 
 	//スケーリングファクターの値を設定する
@@ -277,19 +280,19 @@ void Nomal_Attack::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConn
 	// ダメージを計算する（スケーリングファクターとランダムファクターを適用）
 	float damage = static_cast<float>(((PlayerAttack / static_cast<float>(koni::Numeric::DIVIDER_TWO) - EnemyDefance / static_cast<float>(koni::Numeric::DIVIDER_FOUR)) * power) * scaling_factor * random_factor);
 
+	//特殊武器かを確認してもし特殊武器だった場合補正をかける
+	CheckEpicWeapon(damage, enemyStatus_);
+
 	// ダメージが0を下回ったら1にする
 	if (damage <= 0) {
 		damage = 1;
 	}
-
-	//特殊武器かを確認してもし特殊武器だった場合補正をかける
-	CheckEpicWeapon(damage, enemyStatus_);
-
+	
 	// 敵のHPを減らす
 	enemyStatus_.SetEnemyHp(enemyStatus_.GetEnemyHp() - static_cast<int>(damage));
 
 	// 戦闘ログにダメージ結果を出力
-	const std::string log = player_name + "は" + enemyStatus_.GetEnemyString() + "に" + std::to_string(static_cast<int>(damage)) + "のダメージを与えた";
+	const std::string log = player_name + "は" + enemyStatus_.GetEnemyName() + "に" + std::to_string(static_cast<int>(damage)) + "のダメージを与えた";
 	battle_log->AddLog(log);
 
 	// SEを流す
@@ -303,8 +306,18 @@ void Nomal_Attack::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConn
 //------------------------------------------------------------------------------------------------------------------------------
 
 //火炎斬り
-FlameSlash::FlameSlash() : Skill(1, "火炎斬り", 1.5f, "炎の力をまとった攻撃",2 , AttackType)
+FlameSlash::FlameSlash(const SkillUserType& user_type) : Skill(1, "火炎斬り", 1.5f, "炎の力をまとった攻撃",2 , AttackType)
 {
+	//もし使っているものがエネミーだったら威力を2.5倍にする
+	if (SkillUserType::ENEMY == user_type) { power = koni::Numeric::SCALE_DOUBLE_AND_HALF; }
+
+	//現在のタイプを設定する
+	//ここでプレイヤーかエネミーかを切り替える
+	curnet_user_type = user_type;
+
+	//属性値を設定する
+	skill_curent_attribute = SkillAttribute::FIRE;
+
 	//エフェクトの幅の数
 	effect_width_num = 5;
 
@@ -327,6 +340,35 @@ FlameSlash::FlameSlash() : Skill(1, "火炎斬り", 1.5f, "炎の力をまとった攻撃",2 ,
 //火炎斬りを使った時の処理
 void FlameSlash::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemyStatus_ , const Shared<BattleLog>& battle_log)
 {
+	//スキルを使ったのがプレイヤーだった場合
+	if (curnet_user_type == SkillUserType::PLAYER) {
+		PlayerSkillUse(playerStatus, enemyStatus_ , battle_log);
+	}
+	//敵だった場合
+	else if(curnet_user_type == SkillUserType::ENEMY){
+		EnemySkillUse(playerStatus, enemyStatus_, battle_log);
+	}
+	//設定できてなかった場合エラーを吐かせる
+	else {
+
+		//ログにエラーを吐かせる
+		battle_log->AddLog("キャラクターが設定できていません");
+
+		tnl::DebugTrace("\n------------------------------------------------------------");
+		tnl::DebugTrace("\n キャラクターが設定できていません");
+		tnl::DebugTrace("\n------------------------------------------------------------");
+	}
+
+	//SEを流す
+	SoundManager::GetSoundManager()->Sound_Play("sound/SoundEffect/FlameSlash.mp3", DX_PLAYTYPE_BACK);
+
+	//ボリュームを変える
+	SoundManager::GetSoundManager()->ChangeSoundVolume(koni::Numeric::VOLUME_70_PERCENT, "sound/SoundEffect/FlameSlash.mp3");
+}
+
+//プレイヤーがスキルを使った場合の処理
+void FlameSlash::PlayerSkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemyStatus_, const Shared<BattleLog>& battle_log)
+{
 	auto PlayerAttack = playerStatus.GetAttack();
 	auto EnemyDefance = enemyStatus_.GetEnemyDefance();
 	auto EnemyFireResist = enemyStatus_.GetFireResist();
@@ -345,7 +387,7 @@ void FlameSlash::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnec
 	initializeRandomFactor();
 
 	// 攻撃力から防御力を引いて基本ダメージを計算
-	float baseDamage = static_cast<float>(((PlayerAttack - EnemyDefance)* power) * scaling_factor * random_factor);
+	float baseDamage = static_cast<float>(((PlayerAttack - EnemyDefance) * power) * scaling_factor * random_factor);
 
 	// ダメージが負の値にならないようにする
 	if (baseDamage <= 0) {
@@ -371,23 +413,147 @@ void FlameSlash::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnec
 	battle_log->AddLog(log);
 	log = player_name + "は火の力を纏い攻撃した!";
 	battle_log->AddLog(log);
-	log = enemyStatus_.GetEnemyString() + "に" + std::to_string(static_cast<int>(damage)) + "のダメージを与えた";
+	log = enemyStatus_.GetEnemyName() + "に" + std::to_string(static_cast<int>(damage)) + "のダメージを与えた";
 	battle_log->AddLog(log);
+}
 
-	//SEを流す
-	SoundManager::GetSoundManager()->Sound_Play("sound/SoundEffect/FlameSlash.mp3", DX_PLAYTYPE_BACK);
+//エネミーがスキルを使った場合
+void FlameSlash::EnemySkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemyStatus_, const Shared<BattleLog>& battle_log)
+{
+	auto EnemyAttack = enemyStatus_.GetEnemyAttack();
+	auto PlayerDefance = playerStatus.GetDefance();
+	auto& player_name = GameManager::GetGameManager()->GetPlayer()->GetPlayerName();
 
-	//ボリュームを変える
-	SoundManager::GetSoundManager()->ChangeSoundVolume(koni::Numeric::VOLUME_70_PERCENT, "sound/SoundEffect/FlameSlash.mp3");
+	//プレイヤーが死んでいたら処理をとばす
+	if (enemyStatus_.GetEnemyHp() <= 0) { return; }
 
+	//ランダム値を決める
+	initializeRandomFactor();
+
+	// 攻撃力から防御力を引いてダメージを計算
+	float damage = (EnemyAttack / static_cast<float>(koni::Numeric::DIVIDER_TWO) * power) - PlayerDefance / static_cast<float>(koni::Numeric::DIVIDER_FOUR);
+
+	//プレイヤーのレベルによる軽減率の計算
+	PlayerReductionRate(damage);
+
+	// ダメージが負の値にならないようにする
+	if (damage <= 0) {
+		damage = 1;
+	}
+
+	//プレイヤーのHpを減らす
+	playerStatus.SetPlayerCurentHp(static_cast<int>(playerStatus.GetcurentHp() - damage));
+
+	//バトルログを流す
+	std::string log = enemyStatus_.GetEnemyName() + "が" + skill_name + "を使用しました。";
+	battle_log->AddLog(log);
+	log = enemyStatus_.GetEnemyName() + "は火の力を纏い攻撃した!";
+	battle_log->AddLog(log);
+	log =  player_name + "に" + std::to_string(static_cast<int>(damage)) + "のダメージを与えた";
+	battle_log->AddLog(log);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------
+//大火炎斬り
 
+GreatFlameSlash::GreatFlameSlash() : Skill(42, "大火炎斬り", 2.2f, "業火の力をまとった攻撃\n\n相手の半減耐性の影響を受けない", 5, AttackType)
+{
+	//属性値を設定する
+	skill_curent_attribute = SkillAttribute::FIRE;
+
+	//エフェクトの幅の数
+	effect_width_num = 5;
+
+	//エフェクトの高さの数 
+	effect_height_num = 4;
+
+	//エフェクトのフレームの合計
+	effect_frame_all_num = effect_width_num * effect_height_num;
+
+	//エフェクトの幅のサイズ
+	effect_width_size = 192;
+
+	//エフェクトの縦のサイズ
+	effect_height_size = 192;
+
+	//遅延時間を変更する
+	effect_delay = 3;
+
+	//アニメーションを作成する
+	Effect_Animation = std::make_shared<Animation>("graphics/Effect/GreatFlameSlash.png", effect_pos.x, effect_pos.y, effect_width_num, effect_height_num, effect_width_size, effect_height_size, effect_frame_all_num, effect_delay);
+
+}
+
+void GreatFlameSlash::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemyStatus_, const Shared<BattleLog>& battle_log)
+{
+	auto PlayerAttack = playerStatus.GetAttack();
+	auto EnemyDefance = enemyStatus_.GetEnemyDefance();
+	auto EnemyFireResist = enemyStatus_.GetFireResist();
+	auto player_level = playerStatus.GetLevel();
+	auto& player_name = GameManager::GetGameManager()->GetPlayer()->GetPlayerName();
+
+	//敵が死んでいたら処理をとばす
+	if (enemyStatus_.GetEnemyHp() <= 0) { return; }
+
+	//エネミーの火属性耐性が半減だった場合、属性耐性を1に戻す
+	//半減耐性を通常耐性にする
+	if (EnemyFireResist == koni::Numeric::SCALE_HALF_F) { EnemyFireResist = koni::Numeric::SCALE_ONE_F; }
+
+	//スケーリングファクターの値を設定する
+	//プレイヤーの現在レベルに応じて威力を設定する
+	//プレイヤーのレベルが上がった際にそれを実感してもらう為
+	scaling_factor = 1 + static_cast<float>(player_level) / MAX_LEVEL;
+
+	//ランダム値を決める
+	initializeRandomFactor();
+
+	// 攻撃力から防御力を引いて基本ダメージを計算
+	float baseDamage = static_cast<float>(((PlayerAttack - EnemyDefance) * power) * scaling_factor * random_factor);
+
+	// ダメージが負の値にならないようにする
+	if (baseDamage <= 0) {
+		baseDamage = 1;
+	}
+
+	// 属性攻撃力による補正を加える
+	float damage = baseDamage * EnemyFireResist;
+
+	// ダメージが負の値にならないようにする
+	if (damage <= 0) {
+		damage = 1;
+	}
+
+	//特殊武器かを確認してもし特殊武器だった場合補正をかける
+	CheckEpicWeapon(damage, enemyStatus_);
+
+	//敵のHpを減らす
+	enemyStatus_.SetEnemyHp(static_cast<int>(enemyStatus_.GetEnemyHp() - damage));
+
+	//バトルログを流す
+	std::string log = player_name + "が" + skill_name + "を使用しました。";
+	battle_log->AddLog(log);
+	log = player_name + "は業火を纏って攻撃した!";
+	battle_log->AddLog(log);
+	log = enemyStatus_.GetEnemyName() + "に" + std::to_string(static_cast<int>(damage)) + "のダメージを与えた";
+	battle_log->AddLog(log);
+
+	//SEを流す
+	SoundManager::GetSoundManager()->Sound_Play("sound/SoundEffect/se_greatflameslash.mp3", DX_PLAYTYPE_BACK);
+
+	//ボリュームを変える
+	SoundManager::GetSoundManager()->ChangeSoundVolume(koni::Numeric::VOLUME_80_PERCENT, "sound/SoundEffect/se_greatflameslash.mp3");
+
+}
+
+
+//------------------------------------------------------------------------------------------------------------------------------
 //ファイアーストーム
 
 FireStorm::FireStorm():Skill(19, "ファイアーストーム", 1.8f, "炎の渦で攻撃する", 3, AttackType)
 {
+	//属性値を設定する
+	skill_curent_attribute = SkillAttribute::FIRE;
+
 	//エフェクトの幅の数
 	effect_width_num = 5;
 
@@ -453,7 +619,7 @@ void FireStorm::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnect
 	battle_log->AddLog(log);
 	log = player_name + "は炎の渦を作り出した!";
 	battle_log->AddLog(log);
-	log = enemyStatus_.GetEnemyString() + "に" + std::to_string(static_cast<int>(damage)) + "のダメージを与えた";
+	log = enemyStatus_.GetEnemyName() + "に" + std::to_string(static_cast<int>(damage)) + "のダメージを与えた";
 	battle_log->AddLog(log);
 
 	//SEを流す
@@ -464,11 +630,13 @@ void FireStorm::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnect
 }
 
 //------------------------------------------------------------------------------------------------------------------------------
-
 //インフェルノ
 
 Inferno::Inferno() : Skill(22, "インフェルノ", 2.5f, "炎の業火で攻撃する", 8, AttackType)
 {
+	//属性値を設定する
+	skill_curent_attribute = SkillAttribute::FIRE;
+
 	//エフェクトの幅の数
 	effect_width_num = 5;
 
@@ -533,7 +701,7 @@ void Inferno::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnectio
 	battle_log->AddLog(log);
 	log = player_name + "が燃え盛る炎を解き放ち、全てを焼き尽くした！";
 	battle_log->AddLog(log);
-	log = enemyStatus_.GetEnemyString() + "に" + std::to_string(static_cast<int>(damage)) + "のダメージを与えた";
+	log = enemyStatus_.GetEnemyName() + "に" + std::to_string(static_cast<int>(damage)) + "のダメージを与えた";
 	battle_log->AddLog(log);
 
 	//SEを流す
@@ -548,6 +716,9 @@ void Inferno::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnectio
 //アイスブラスト
 IceBlast::IceBlast():Skill(2, "アイスブラスト", 1.8f, "氷属性の爆発魔法", 3 , AttackType)
 {
+	//属性値を設定する
+	skill_curent_attribute = SkillAttribute::WATER;
+
 	//座標を変える
 	effect_pos.y = 360;
 
@@ -612,7 +783,7 @@ void IceBlast::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnecti
 	battle_log->AddLog(log);
 	log = player_name + "は小さな冷気の塊を作り出し爆発させた!";
 	battle_log->AddLog(log);
-	log = enemyStatus_.GetEnemyString() + "に" + std::to_string(static_cast<int>(damage)) + "のダメージを与えた";
+	log = enemyStatus_.GetEnemyName() + "に" + std::to_string(static_cast<int>(damage)) + "のダメージを与えた";
 	battle_log->AddLog(log);
 
 	//SEを流す
@@ -624,11 +795,19 @@ void IceBlast::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnecti
 }
 
 //------------------------------------------------------------------------------------------------------------------------------
-
 //ウォーターブレード
 
-WaterBlade::WaterBlade() : Skill(23, "ウォーターブレード", 1.5f, "水を纏い攻撃する", 3, AttackType)
+WaterBlade::WaterBlade(const SkillUserType& user_type) : Skill(23, "ウォーターブレード", 1.5f, "水を纏い攻撃する", 3, AttackType)
 {
+	//もし使っているものがエネミーだったら威力を2.0倍にする
+	if (SkillUserType::ENEMY == user_type) { power = koni::Numeric::SCALE_DOUBLE_F; }
+
+	//属性値を設定する
+	skill_curent_attribute = SkillAttribute::WATER;
+
+	//スキルの所持者を設定する
+	curnet_user_type = user_type;
+
 	//座標を変える
 	effect_pos.y = 380;
 
@@ -654,6 +833,36 @@ WaterBlade::WaterBlade() : Skill(23, "ウォーターブレード", 1.5f, "水を纏い攻撃す
 }
 
 void WaterBlade::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemyStatus_, const Shared<BattleLog>& battle_log)
+{
+	//スキルを使ったのがプレイヤーだった場合
+	if (curnet_user_type == SkillUserType::PLAYER) {
+		PlayerSkillUse(playerStatus, enemyStatus_, battle_log);
+	}
+	//敵だった場合
+	else if (curnet_user_type == SkillUserType::ENEMY) {
+		EnemySkillUse(playerStatus, enemyStatus_, battle_log);
+	}
+	//設定できてなかった場合エラーを吐かせる
+	else {
+
+		//ログにエラーを吐かせる
+		battle_log->AddLog("キャラクターが設定できていません");
+
+		tnl::DebugTrace("\n------------------------------------------------------------");
+		tnl::DebugTrace("\n キャラクターが設定できていません");
+		tnl::DebugTrace("\n------------------------------------------------------------");
+	}
+
+	//SEを流す
+	SoundManager::GetSoundManager()->Sound_Play("sound/SoundEffect/swingdown.mp3", DX_PLAYTYPE_BACK);
+
+	//ボリュームを変える
+	SoundManager::GetSoundManager()->ChangeSoundVolume(koni::Numeric::VOLUME_70_PERCENT, "sound/SoundEffect/swingdown.mp3");
+
+}
+
+//プレイヤーがウォーターブレードを使った場合
+void WaterBlade::PlayerSkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemyStatus_, const Shared<BattleLog>& battle_log)
 {
 	auto PlayerAttack = playerStatus.GetAttack();
 	auto EnemyDefance = enemyStatus_.GetEnemyDefance();
@@ -699,23 +908,225 @@ void WaterBlade::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnec
 	battle_log->AddLog(log);
 	log = player_name + "は水の力を纏い攻撃した!";
 	battle_log->AddLog(log);
-	log = enemyStatus_.GetEnemyString() + "に" + std::to_string(static_cast<int>(damage)) + "のダメージを与えた";
+	log = enemyStatus_.GetEnemyName() + "に" + std::to_string(static_cast<int>(damage)) + "のダメージを与えた";
 	battle_log->AddLog(log);
-
-	//SEを流す
-	SoundManager::GetSoundManager()->Sound_Play("sound/SoundEffect/swingdown.mp3", DX_PLAYTYPE_BACK);
-
-	//ボリュームを変える
-	SoundManager::GetSoundManager()->ChangeSoundVolume(koni::Numeric::VOLUME_70_PERCENT, "sound/SoundEffect/swingdown.mp3");
 
 }
 
-//------------------------------------------------------------------------------------------------------------------------------
+//エネミーがスキルを使った場合
+void WaterBlade::EnemySkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemyStatus_, const Shared<BattleLog>& battle_log)
+{
+	//エネミーの攻撃力
+	auto EnemyAttack = enemyStatus_.GetEnemyAttack();
+	//プレイヤーの防御力
+	auto PlayerDefance = playerStatus.GetDefance();
+	//プレイヤーの名前
+	auto& player_name = GameManager::GetGameManager()->GetPlayer()->GetPlayerName();
 
+
+	//プレイヤーが死んでいたら処理をとばす
+	if (enemyStatus_.GetEnemyHp() <= 0) { return; }
+
+	//ランダム値を決める
+	initializeRandomFactor();
+
+	// 攻撃力から防御力を引いてダメージを計算
+	float damage = (EnemyAttack / static_cast<float>(koni::Numeric::DIVIDER_TWO) * power) - PlayerDefance / static_cast<float>(koni::Numeric::DIVIDER_FOUR);
+
+	//プレイヤーのレベルによる軽減率の計算
+	PlayerReductionRate(damage);
+
+	// ダメージが負の値にならないようにする
+	if (damage <= 0) {
+		damage = 1;
+	}
+
+	//プレイヤーのHpを減らす
+	playerStatus.SetPlayerCurentHp(static_cast<int>(playerStatus.GetcurentHp() - damage));
+
+	//バトルログを流す
+	std::string log = enemyStatus_.GetEnemyName() + "が" + skill_name + "を使用しました。";
+	battle_log->AddLog(log);
+	log = enemyStatus_.GetEnemyName() + "は水の力を纏い攻撃した!";
+	battle_log->AddLog(log);
+	log = player_name + "に" + std::to_string(static_cast<int>(damage)) + "のダメージを与えた";
+	battle_log->AddLog(log);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------
+//ウォーターフォージ 
+
+
+WaterForge::WaterForge(const SkillUserType& user_type) : Skill(43, "ウォーターフォージ ", 2.3f, "水の斬撃が相手を襲う\n\n抜群の敵により多くのダメージを与えられる", 6, AttackType)
+{
+	//スキルの所持者を設定する
+	curnet_user_type = user_type;
+
+	//属性値を設定する
+	skill_curent_attribute = SkillAttribute::WATER;
+
+	//エフェクトの幅の数
+	effect_width_num = 5;
+
+	//エフェクトの高さの数 
+	effect_height_num = 4;
+
+	//エフェクトのフレームの合計
+	effect_frame_all_num = effect_width_num * effect_height_num;
+
+	//エフェクトの幅のサイズ
+	effect_width_size = 192;
+
+	//エフェクトの縦のサイズ
+	effect_height_size = 192;
+
+	//遅延秒数を変更する
+	effect_delay = 4;
+
+	//アニメーションを生成する
+	Effect_Animation = std::make_shared<Animation>("graphics/Effect/NeptuneSpiral.png", effect_pos.x, effect_pos.y, effect_width_num, effect_height_num, effect_width_size, effect_width_size, effect_frame_all_num, effect_delay);
+
+}
+
+//ウォーターフォージを使った場合
+void WaterForge::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemyStatus_, const Shared<BattleLog>& battle_log)
+{
+	//スキルを使ったのがプレイヤーだった場合
+	if (curnet_user_type == SkillUserType::PLAYER) {
+		PlayerSkillUse(playerStatus, enemyStatus_, battle_log);
+	}
+	//敵だった場合
+	else if (curnet_user_type == SkillUserType::ENEMY) {
+		EnemySkillUse(playerStatus, enemyStatus_, battle_log);
+	}
+	//設定できてなかった場合エラーを吐かせる
+	else {
+
+		//ログにエラーを吐かせる
+		battle_log->AddLog("キャラクターが設定できていません");
+
+		tnl::DebugTrace("\n------------------------------------------------------------");
+		tnl::DebugTrace("\n キャラクターが設定できていません");
+		tnl::DebugTrace("\n------------------------------------------------------------");
+	}
+
+	//SEを流す
+	SoundManager::GetSoundManager()->Sound_Play("sound/SoundEffect/ice_blast.mp3", DX_PLAYTYPE_BACK);
+
+	//ボリュームを変える
+	SoundManager::GetSoundManager()->ChangeSoundVolume(koni::Numeric::VOLUME_70_PERCENT, "sound/SoundEffect/ice_blast.mp3");
+
+}
+
+//プレイヤーが使った場合
+void WaterForge::PlayerSkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemyStatus_, const Shared<BattleLog>& battle_log)
+{
+	auto PlayerAttack = playerStatus.GetAttack();
+	auto EnemyDefance = enemyStatus_.GetEnemyDefance();
+	auto EnemyIceResist = enemyStatus_.GetIceResist();
+	auto player_level = playerStatus.GetLevel();
+	auto& player_name = GameManager::GetGameManager()->GetPlayer()->GetPlayerName();
+
+	//敵が死んでいたら処理をとばす
+	if (enemyStatus_.GetEnemyHp() <= 0) { return; }
+
+	//もし敵の氷耐性が弱点だった場合、1.5倍から1.8倍に変更する
+	if (EnemyIceResist == koni::Numeric::SCALE_ONE_AND_HALF) { EnemyIceResist = koni::Numeric::SCALE_ONE_EIGHT_F; }
+
+	//スケーリングファクターの値を設定する
+	//プレイヤーの現在レベルに応じて威力を設定する
+	//プレイヤーのレベルが上がった際にそれを実感してもらう為
+	scaling_factor = 1 + static_cast<float>(player_level) / MAX_LEVEL;
+
+	//ランダム値を決める
+	initializeRandomFactor();
+
+	// 攻撃力から防御力を引いて基本ダメージを計算
+	float baseDamage = static_cast<float>(((PlayerAttack - EnemyDefance) * power) * scaling_factor * random_factor);
+
+	// ダメージが負の値にならないようにする
+	if (baseDamage <= 0) {
+		baseDamage = 1;
+	}
+
+	// 属性攻撃力による補正を加える
+	float damage = baseDamage * EnemyIceResist;
+
+	// ダメージが負の値にならないようにする
+	if (damage <= 0) {
+		damage = 1;
+	}
+
+	//特殊武器かを確認してもし特殊武器だった場合補正をかける
+	CheckEpicWeapon(damage, enemyStatus_);
+
+	//敵のHpを減らす
+	enemyStatus_.SetEnemyHp(static_cast<int>(enemyStatus_.GetEnemyHp() - damage));
+
+	//バトルログを流す
+	std::string log = player_name + "が" + skill_name + "を使用しました。";
+	battle_log->AddLog(log);
+	log = "渦巻く水流が敵を包み込み、水の斬撃が飛び交う";
+	battle_log->AddLog(log);
+	log = enemyStatus_.GetEnemyName() + "に" + std::to_string(static_cast<int>(damage)) + "のダメージを与えた";
+	battle_log->AddLog(log);
+}
+
+//エネミーが使った場合
+void WaterForge::EnemySkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemyStatus_, const Shared<BattleLog>& battle_log)
+{
+	//エネミーの攻撃力
+	auto EnemyAttack = enemyStatus_.GetEnemyAttack();
+	//プレイヤーの防御力
+	auto PlayerDefance = playerStatus.GetDefance();
+	//プレイヤーの名前
+	auto& player_name = GameManager::GetGameManager()->GetPlayer()->GetPlayerName();
+	//エネミーのベースの防御力
+	static int enemy_base_defance = enemyStatus_.GetEnemyDefance();
+
+
+	//プレイヤーが死んでいたら処理をとばす
+	if (enemyStatus_.GetEnemyHp() <= 0) { return; }
+
+	//ランダム値を決める
+	initializeRandomFactor();
+
+	// 攻撃力から防御力を引いてダメージを計算
+	float damage = (EnemyAttack / static_cast<float>(koni::Numeric::DIVIDER_TWO) * power) - PlayerDefance / static_cast<float>(koni::Numeric::DIVIDER_FOUR);
+
+	//プレイヤーのレベルによる軽減率の計算
+	PlayerReductionRate(damage);
+
+	// ダメージが負の値にならないようにする
+	if (damage <= 0) {
+		damage = 1;
+	}
+
+	//プレイヤーのHpを減らす
+	playerStatus.SetPlayerCurentHp(static_cast<int>(playerStatus.GetcurentHp() - damage));
+
+	//敵の防御力を5%上昇させる(調整予定)
+	auto enemy_defance_percentage = enemy_base_defance * koni::Numeric::PERCENT_5;
+	//現在の防御力から＋で防御力を上昇させる
+	enemyStatus_.SetEnemyDefance(enemyStatus_.GetEnemyDefance() + static_cast<int>(enemy_defance_percentage));
+
+	//バトルログを流す
+	std::string log = enemyStatus_.GetEnemyName() + "が" + skill_name + "を使用しました。";
+	battle_log->AddLog(log);
+	log = enemyStatus_.GetEnemyName() + "が無数の水の斬撃を作り出した！敵の防御力が少し上昇した";
+	battle_log->AddLog(log);
+	log = player_name + "に" + std::to_string(static_cast<int>(damage)) + "のダメージを与えた";
+	battle_log->AddLog(log);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------
 //ブリザード
 
 Blizzard::Blizzard() : Skill(24, "ブリザード", 2.5f, "とてつもない冷気を作り出し爆発させる", 8, AttackType)
 {
+	//属性値を設定する
+	skill_curent_attribute = SkillAttribute::WATER;
+
 	//エフェクトの幅の数
 	effect_width_num = 5;
 
@@ -780,7 +1191,7 @@ void Blizzard::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnecti
 	battle_log->AddLog(log);
 	log = player_name + "はとてつもない冷気を作り出し爆発させた！";
 	battle_log->AddLog(log);
-	log = enemyStatus_.GetEnemyString() + "に" + std::to_string(static_cast<int>(damage)) + "のダメージを与えた";
+	log = enemyStatus_.GetEnemyName() + "に" + std::to_string(static_cast<int>(damage)) + "のダメージを与えた";
 	battle_log->AddLog(log);
 
 	//SEを流す
@@ -794,8 +1205,17 @@ void Blizzard::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnecti
 //------------------------------------------------------------------------------------------------------------------------------
 
 //サンダーボルト
-ThunderBolt::ThunderBolt():Skill(3, "サンダーボルト", 1.5f, "雷属性の爆発魔法", 5 , AttackType)
+ThunderBolt::ThunderBolt(const SkillUserType& user_type):Skill(3, "サンダーボルト", 1.5f, "雷属性の爆発魔法", 5 , AttackType)
 {
+	//もし使っているものがエネミーだったら威力を2.5倍にする
+	if (SkillUserType::ENEMY == user_type) { power = koni::Numeric::SCALE_DOUBLE_AND_HALF; }
+
+	//属性値を設定する
+	skill_curent_attribute = SkillAttribute::THUNDER;
+
+	//スキルの所持者を設定する
+	curnet_user_type = user_type;
+
 	//エフェクトの幅の数
 	effect_width_num = 5;
 
@@ -817,6 +1237,36 @@ ThunderBolt::ThunderBolt():Skill(3, "サンダーボルト", 1.5f, "雷属性の爆発魔法", 
 
 //サンダーボルト使った時の処理
 void ThunderBolt::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemyStatus_, const Shared<BattleLog>& battle_log)
+{
+	//スキルを使ったのがプレイヤーだった場合
+	if (curnet_user_type == SkillUserType::PLAYER) {
+		PlayerSkillUse(playerStatus, enemyStatus_, battle_log);
+	}
+	//敵だった場合
+	else if (curnet_user_type == SkillUserType::ENEMY) {
+		EnemySkillUse(playerStatus, enemyStatus_, battle_log);
+	}
+	//設定できてなかった場合エラーを吐かせる
+	else {
+
+		//ログにエラーを吐かせる
+		battle_log->AddLog("キャラクターが設定できていません");
+
+		tnl::DebugTrace("\n------------------------------------------------------------");
+		tnl::DebugTrace("\n キャラクターが設定できていません");
+		tnl::DebugTrace("\n------------------------------------------------------------");
+	}
+
+	//SEを流す
+	SoundManager::GetSoundManager()->Sound_Play("sound/SoundEffect/ThunderBolt.mp3", DX_PLAYTYPE_BACK);
+
+	//ボリュームを変える
+	SoundManager::GetSoundManager()->ChangeSoundVolume(koni::Numeric::VOLUME_70_PERCENT, "sound/SoundEffect/ThunderBolt.mp3");
+
+}
+
+//プレイヤーがサンダーボルト使った場合
+void ThunderBolt::PlayerSkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemyStatus_, const Shared<BattleLog>& battle_log)
 {
 	auto PlayerMagicPower = playerStatus.GetMagicPower();
 	auto EnemyDefance = enemyStatus_.GetEnemyDefance();
@@ -860,23 +1310,55 @@ void ThunderBolt::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConne
 	battle_log->AddLog(log);
 	log = player_name + "は小さな雷を発生させ、解き放った!";
 	battle_log->AddLog(log);
-	log = enemyStatus_.GetEnemyString() + "に" + std::to_string(static_cast<int>(damage)) + "のダメージを与えた";
+	log = enemyStatus_.GetEnemyName() + "に" + std::to_string(static_cast<int>(damage)) + "のダメージを与えた";
 	battle_log->AddLog(log);
-
-	//SEを流す
-	SoundManager::GetSoundManager()->Sound_Play("sound/SoundEffect/ThunderBolt.mp3", DX_PLAYTYPE_BACK);
-
-	//ボリュームを変える
-	SoundManager::GetSoundManager()->ChangeSoundVolume(koni::Numeric::VOLUME_70_PERCENT, "sound/SoundEffect/ThunderBolt.mp3");
 
 }
 
-//------------------------------------------------------------------------------------------------------------------------------
+//エネミーがスキルを使った場合
+void ThunderBolt::EnemySkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemyStatus_, const Shared<BattleLog>& battle_log)
+{
+	auto EnemyMagicPower = enemyStatus_.GetMagicPower();
+	auto PlayerDefance = playerStatus.GetDefance();
+	auto& player_name = GameManager::GetGameManager()->GetPlayer()->GetPlayerName();
 
+	//プレイヤーが死んでいたら処理をとばす
+	if (enemyStatus_.GetEnemyHp() <= 0) { return; }
+
+	//ランダム値を決める
+	initializeRandomFactor();
+
+	// 攻撃力から防御力を引いてダメージを計算
+	float damage = static_cast<float>(((EnemyMagicPower / static_cast<float>(koni::Numeric::DIVIDER_TWO)) * power) * random_factor);
+
+	//プレイヤーのレベルによる軽減率の計算
+	PlayerReductionRate(damage);
+
+	// ダメージが負の値にならないようにする
+	if (damage <= 0) {
+		damage = 1;
+	}
+
+	//プレイヤーのHpを減らす
+	playerStatus.SetPlayerCurentHp(static_cast<int>(playerStatus.GetcurentHp() - damage));
+
+	//バトルログを流す
+	std::string log = enemyStatus_.GetEnemyName() + "が" + skill_name + "を使用しました。";
+	battle_log->AddLog(log);
+	log = enemyStatus_.GetEnemyName() + "は小さな雷を発生させ、解き放った!";
+	battle_log->AddLog(log);
+	log = player_name + "に" + std::to_string(static_cast<int>(damage)) + "のダメージを与えた";
+	battle_log->AddLog(log);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------
 //ライトニングスラッシュ
 
 LightningSlash::LightningSlash() : Skill(25, "ライトニングスラッシュ", 2.3f, "雷の力を帯びた斬撃でダメージを与える", 8, AttackType)
 {
+	//属性値を設定する
+	skill_curent_attribute = SkillAttribute::THUNDER;
+
 	//エフェクトの幅の数
 	effect_width_num = 5;
 
@@ -946,7 +1428,7 @@ void LightningSlash::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyCo
 	battle_log->AddLog(log);
 	log = player_name + "は雷の力を帯びた斬撃を発生させた!";
 	battle_log->AddLog(log);
-	log = enemyStatus_.GetEnemyString() + "に" + std::to_string(static_cast<int>(damage)) + "のダメージを与えた";
+	log = enemyStatus_.GetEnemyName() + "に" + std::to_string(static_cast<int>(damage)) + "のダメージを与えた";
 	battle_log->AddLog(log);
 
 	//SEを流す
@@ -1088,6 +1570,9 @@ void HighHeels::SkillUse(Player::PlayerStatus& playerStatus, const Shared<Battle
 //スライムの攻撃
 SlimBell::SlimBell() : Skill(20 , "スライムを呼ぶ",5, "スライムの力を借りて攻撃する", 0 , AttackType)
 {
+	//属性値を設定する
+	skill_curent_attribute = SkillAttribute::NON_ATTRIBUTE;
+
 	//エフェクトの幅の数
 	effect_width_num = 5;
 
@@ -1129,7 +1614,7 @@ void SlimBell::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnecti
 	battle_log->AddLog(log);
 	log = player_name + "が鈴をならした。遠くからスライムがやってきた!";
 	battle_log->AddLog(log);
-	log = enemyStatus_.GetEnemyString() + "に" + std::to_string(static_cast<int>(damage)) + "のダメージを与えた";
+	log = enemyStatus_.GetEnemyName() + "に" + std::to_string(static_cast<int>(damage)) + "のダメージを与えた";
 	battle_log->AddLog(log);
 
 
@@ -1141,9 +1626,12 @@ void SlimBell::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnecti
 
 }
 
-//アースワーの鈴を使った時の処理
+//アースワームの鈴を使った時の処理
 SnakeBell::SnakeBell(): Skill(21 , "アースワームを呼ぶ" , 10 , "アースワームの力を借りて攻撃する", 0 , AttackType)
 {
+	//属性値を設定する
+	skill_curent_attribute = SkillAttribute::NON_ATTRIBUTE;
+
 	//エフェクトの幅の数
 	effect_width_num = 5;
 
@@ -1163,7 +1651,7 @@ SnakeBell::SnakeBell(): Skill(21 , "アースワームを呼ぶ" , 10 , "アースワームの力
 	Effect_Animation = std::make_shared<Animation>("graphics/Effect/Snake.png", effect_pos.x, effect_pos.y, effect_width_num, effect_height_num, effect_width_size, effect_height_size, effect_frame_all_num , effect_delay);
 }
 
-//スネークの鈴を使った時の処理
+//アースワームの鈴を使った時の処理
 void SnakeBell::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnection& enemyStatus_, const Shared<BattleLog>& battle_log)
 {
 	//敵が死んで居たら処理をとばす
@@ -1185,9 +1673,14 @@ void SnakeBell::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnect
 	battle_log->AddLog(log);
 	log = player_name + "が鈴をならした。アースワームがやってきて敵に目掛けて飛びついた";
 	battle_log->AddLog(log);
-	log = enemyStatus_.GetEnemyString() + "に" + std::to_string(static_cast<int>(damage)) + "のダメージを与えた";
+	log = enemyStatus_.GetEnemyName() + "に" + std::to_string(static_cast<int>(damage)) + "のダメージを与えた";
 	battle_log->AddLog(log);
 
+	//SEを流す
+	SoundManager::GetSoundManager()->Sound_Play("sound/SoundEffect/monster_bite.mp3", DX_PLAYTYPE_BACK);
+
+	//ボリュームを変える
+	SoundManager::GetSoundManager()->ChangeSoundVolume(koni::Numeric::VOLUME_70_PERCENT, "sound/SoundEffect/monster_bite.mp3");
 
 }
 
@@ -1246,9 +1739,9 @@ void ChaosFlare::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnec
 	playerStatus.SetPlayerCurentHp(playerStatus.GetcurentHp() - static_cast<int>(damage));
 
 	//バトルログを流す
-	std::string log = enemyStatus_.GetEnemyString()+ "が" + skill_name + "を使用しました。";
+	std::string log = enemyStatus_.GetEnemyName()+ "が" + skill_name + "を使用しました。";
 	battle_log->AddLog(log);
-	log = enemyStatus_.GetEnemyString() + "は魔力を極限まで高め、放った";
+	log = enemyStatus_.GetEnemyName() + "は魔力を極限まで高め、放った";
 	battle_log->AddLog(log);
 	log = player_name + "に" + std::to_string(static_cast<int>(damage)) + "のダメージを与えた";
 	battle_log->AddLog(log);
@@ -1306,9 +1799,9 @@ void DeathScytheWind::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyC
 	playerStatus.SetPlayerCurentHp(static_cast<int>(playerStatus.GetcurentHp() - static_cast<int>(damage)));
 
 	//バトルログを流す
-	std::string log = enemyStatus_.GetEnemyString() + "が" + skill_name + "を使用しました。";
+	std::string log = enemyStatus_.GetEnemyName() + "が" + skill_name + "を使用しました。";
 	battle_log->AddLog(log);
-	log = enemyStatus_.GetEnemyString() + "は暗黒の風を作り出した";
+	log = enemyStatus_.GetEnemyName() + "は暗黒の風を作り出した";
 	battle_log->AddLog(log);
 	log = player_name + "に" + std::to_string(static_cast<int>(damage)) + "のダメージを与えた";
 	battle_log->AddLog(log);
@@ -1367,9 +1860,9 @@ void DrakClaw::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnecti
 	playerStatus.SetPlayerCurentHp(static_cast<int>(playerStatus.GetcurentHp() - static_cast<int>(damage)));
 
 	//バトルログを流す
-	std::string log = enemyStatus_.GetEnemyString() + "が" + skill_name + "を使用しました。";
+	std::string log = enemyStatus_.GetEnemyName() + "が" + skill_name + "を使用しました。";
 	battle_log->AddLog(log);
-	log = enemyStatus_.GetEnemyString() + "は自分の魔力で爪を作り出し、攻撃する";
+	log = enemyStatus_.GetEnemyName() + "は自分の魔力で爪を作り出し、攻撃する";
 	battle_log->AddLog(log);
 	log = player_name + "に" + std::to_string(static_cast<int>(damage)) + "のダメージを与えた";
 	battle_log->AddLog(log);
@@ -1436,9 +1929,9 @@ void LifeWind::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnecti
 	enemyStatus_.SetEnemyHp(enemy_hp + heal_amoument);
 
 	//バトルログを流す
-	std::string log = enemyStatus_.GetEnemyString() + "が" + skill_name + "を使用しました。";
+	std::string log = enemyStatus_.GetEnemyName() + "が" + skill_name + "を使用しました。";
 	battle_log->AddLog(log);
-	log = enemyStatus_.GetEnemyString() + "は突風を作りだし攻撃した";
+	log = enemyStatus_.GetEnemyName() + "は突風を作りだし攻撃した";
 	battle_log->AddLog(log);
 	log = player_name + "に" + std::to_string(static_cast<int>(damage)) + "のダメージを与えた";
 	battle_log->AddLog(log);
@@ -1508,9 +2001,9 @@ void EnergyBlast::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConne
 	playerStatus.SetPlayerCurentHp(playerStatus.GetcurentHp() - static_cast<int>(damage));
 
 	// バトルログを流す
-	std::string log = enemyStatus_.GetEnemyString() + "が" + skill_name + "を使用しました。";
+	std::string log = enemyStatus_.GetEnemyName() + "が" + skill_name + "を使用しました。";
 	battle_log->AddLog(log);
-	log = enemyStatus_.GetEnemyString() + "は魔力を集中させ解き放った";
+	log = enemyStatus_.GetEnemyName() + "は魔力を集中させ解き放った";
 	battle_log->AddLog(log);
 	log = player_name + "に" + std::to_string(static_cast<int>(damage)) + "のダメージを与えた";
 	battle_log->AddLog(log);
@@ -1571,9 +2064,9 @@ void DarkCharge::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnec
 	playerStatus.SetPlayerCurentHp(playerStatus.GetcurentHp() - static_cast<int>(damage));
 
 	//バトルログを流す
-	std::string log = enemyStatus_.GetEnemyString() + "が" + skill_name + "を使用しました。";
+	std::string log = enemyStatus_.GetEnemyName() + "が" + skill_name + "を使用しました。";
 	battle_log->AddLog(log);
-	log = enemyStatus_.GetEnemyString() + "は玉から闇の力を抽出し、取り込んで放出した";
+	log = enemyStatus_.GetEnemyName() + "は玉から闇の力を抽出し、取り込んで放出した";
 	battle_log->AddLog(log);
 	log = player_name + "に" + std::to_string(static_cast<int>(damage)) + "のダメージを与えた";
 	battle_log->AddLog(log);
@@ -1633,9 +2126,9 @@ void WaveDarkness::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConn
 	playerStatus.SetPlayerCurentHp(playerStatus.GetcurentHp() - static_cast<int>(damage));
 
 	//バトルログを流す
-	std::string log = enemyStatus_.GetEnemyString() + "が" + skill_name + "を使用しました。";
+	std::string log = enemyStatus_.GetEnemyName() + "が" + skill_name + "を使用しました。";
 	battle_log->AddLog(log);
-	log = enemyStatus_.GetEnemyString() + "は闇の力を増幅させ解き放った";
+	log = enemyStatus_.GetEnemyName() + "は闇の力を増幅させ解き放った";
 	battle_log->AddLog(log);
 	log = player_name + "に" + std::to_string(static_cast<int>(damage)) + "のダメージを与えた";
 	battle_log->AddLog(log);
@@ -1697,9 +2190,9 @@ void HellFlameBlade::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyCo
 	playerStatus.SetPlayerCurentHp(static_cast<int>(playerStatus.GetcurentHp() - static_cast<int>(damage)));
 
 	//バトルログを流す
-	std::string log = enemyStatus_.GetEnemyString() + "が" + skill_name + "を使用しました。";
+	std::string log = enemyStatus_.GetEnemyName() + "が" + skill_name + "を使用しました。";
 	battle_log->AddLog(log);
-	log = enemyStatus_.GetEnemyString() + "は地獄の炎を纏い攻撃した";
+	log = enemyStatus_.GetEnemyName() + "は地獄の炎を纏い攻撃した";
 	battle_log->AddLog(log);
 	log = player_name + "に" + std::to_string(static_cast<int>(damage)) + "のダメージを与えた";
 	battle_log->AddLog(log);
@@ -1762,9 +2255,9 @@ void SlashLight::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnec
 	playerStatus.SetPlayerCurentHp(static_cast<int>(playerStatus.GetcurentHp() - static_cast<int>(damage)));
 
 	//バトルログを流す
-	std::string log = enemyStatus_.GetEnemyString() + "が" + skill_name + "を使用しました。";
+	std::string log = enemyStatus_.GetEnemyName() + "が" + skill_name + "を使用しました。";
 	battle_log->AddLog(log);
-	log = enemyStatus_.GetEnemyString() + "は光を纏い斬撃を発生させた";
+	log = enemyStatus_.GetEnemyName() + "は光を纏い斬撃を発生させた";
 	battle_log->AddLog(log);
 	log = player_name + "に" + std::to_string(static_cast<int>(damage)) + "のダメージを与えた";
 	battle_log->AddLog(log);
@@ -1817,9 +2310,9 @@ void PowerHeroes::SkillUse(Enemy::EnemyConnection& enemyStatus, const Shared<Bat
 	enemyStatus.SetEnemyDefance(static_cast<int>(enemyStatus.GetEnemyDefance() * power));
 
 	//バトルログを流す
-	std::string log = enemyStatus.GetEnemyString() + "が" + skill_name + "を使用しました。";
+	std::string log = enemyStatus.GetEnemyName() + "が" + skill_name + "を使用しました。";
 	battle_log->AddLog(log);
-	log = enemyStatus.GetEnemyString() + "は精神統一して自身の攻撃力と防御力を上昇させた";
+	log = enemyStatus.GetEnemyName() + "は精神統一して自身の攻撃力と防御力を上昇させた";
 	battle_log->AddLog(log);
 
 	//SEを流す
@@ -1881,9 +2374,9 @@ void LightSpear::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnec
 	playerStatus.SetPlayerCurentHp(static_cast<int>(playerStatus.GetcurentHp() - static_cast<int>(damage)));
 
 	//バトルログを流す
-	std::string log = enemyStatus_.GetEnemyString() + "が" + skill_name + "を使用しました。";
+	std::string log = enemyStatus_.GetEnemyName() + "が" + skill_name + "を使用しました。";
 	battle_log->AddLog(log);
-	log = enemyStatus_.GetEnemyString() + "は光の槍を作り出し攻撃してきた";
+	log = enemyStatus_.GetEnemyName() + "は光の槍を作り出し攻撃してきた";
 	battle_log->AddLog(log);
 	log = player_name + "に" + std::to_string(static_cast<int>(damage)) + "のダメージを与えた";
 	battle_log->AddLog(log);
@@ -1952,9 +2445,9 @@ void GrimReaperSickle::SkillUse(Player::PlayerStatus& playerStatus, Enemy::Enemy
 	enemyStatus_.SetEnemyAttack(EnemyAttack + attack_boost);
 
 	//バトルログを流す
-	std::string log = enemyStatus_.GetEnemyString() + "が" + skill_name + "を使用しました。";
+	std::string log = enemyStatus_.GetEnemyName() + "が" + skill_name + "を使用しました。";
 	battle_log->AddLog(log);
-	log = enemyStatus_.GetEnemyString() + "は死神の鎌で攻撃してきた！";
+	log = enemyStatus_.GetEnemyName() + "は死神の鎌で攻撃してきた！";
 	battle_log->AddLog(log);
 	log = player_name + "に" + std::to_string(static_cast<int>(damage)) + "のダメージを与えた";
 	battle_log->AddLog(log);
@@ -2004,7 +2497,7 @@ void SoulReper::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnect
 	//プレイヤーが死んで居たら処理をとばす
 	if (playerStatus.GetcurentHp() <= 0)return;
 
-	// 攻撃力から防御力を引いて基本ダメージを計算
+	// 基本ダメージを計算
 	float damage = (EnemyMagicPower / static_cast<float>(koni::Numeric::DIVIDER_TWO) * power) * BASE_MULTIPLIER;
 
 	//プレイヤーのレベルによる軽減率の計算
@@ -2028,9 +2521,9 @@ void SoulReper::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyConnect
 	enemyStatus_.SetEnemyHp(enemy_hp + heal_amoument);
 
 	//バトルログを流す
-	std::string log = enemyStatus_.GetEnemyString() + "が" + skill_name + "を使用しました。";
+	std::string log = enemyStatus_.GetEnemyName() + "が" + skill_name + "を使用しました。";
 	battle_log->AddLog(log);
-	log = enemyStatus_.GetEnemyString() + "は無数の魂をを作り出しぶつけてきた";
+	log = enemyStatus_.GetEnemyName() + "は無数の魂をを作り出しぶつけてきた";
 	battle_log->AddLog(log);
 	log = player_name + "に" + std::to_string(static_cast<int>(damage)) + "のダメージを与えた";
 	battle_log->AddLog(log);
@@ -2097,9 +2590,9 @@ void LightUnderworld::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyC
 	playerStatus.SetPlayerAttack(playerStatus.GetAttack() - player_attack_down_parcentage);
 
 	//バトルログを流す
-	std::string log = enemyStatus_.GetEnemyString() + "が" + skill_name + "を使用しました。";
+	std::string log = enemyStatus_.GetEnemyName() + "が" + skill_name + "を使用しました。";
 	battle_log->AddLog(log);
-	log = enemyStatus_.GetEnemyString() + "は冥府の光を呼び出し攻撃してきた";
+	log = enemyStatus_.GetEnemyName() + "は冥府の光を呼び出し攻撃してきた";
 	battle_log->AddLog(log);
 	log = player_name + "の攻撃力が少し減少した";
 	battle_log->AddLog(log);
@@ -2111,4 +2604,63 @@ void LightUnderworld::SkillUse(Player::PlayerStatus& playerStatus, Enemy::EnemyC
 
 	//ボリュームを変える
 	SoundManager::GetSoundManager()->ChangeSoundVolume(koni::Numeric::VOLUME_60_PERCENT, "sound/SoundEffect/effect_se_enemy.mp3");
+}
+
+
+//黄泉の雨
+RainOfHell::RainOfHell() : Skill(26 , "黄泉の雨" , 1.1f , "自身の攻撃力と防御力を上昇させる", 0 , BuffType)
+{
+	//エフェクトの幅の数
+	effect_width_num = 5;
+
+	//エフェクトの高さの数 
+	effect_height_num = 4;
+
+	//エフェクトのフレームの合計
+	effect_frame_all_num = effect_width_num * effect_height_num;
+
+	//エフェクトの幅のサイズ
+	effect_width_size = 192;
+
+	//エフェクトの縦のサイズ
+	effect_height_size = 192;
+
+	//遅延時間を変更する
+	effect_delay = 4;
+
+	//アニメーションを作成する
+	Effect_Animation = std::make_shared<Animation>("graphics/Effect/RainOfHell.png", effect_pos.x, effect_pos.y, effect_width_num, effect_height_num, effect_width_size, effect_height_size, effect_frame_all_num, effect_delay, koni::Numeric::SCALE_TRIPLE_AND_HALF);
+
+}
+
+//黄泉の雨を使った際の処理
+void RainOfHell::SkillUse(Enemy::EnemyConnection& enemyStatus, const Shared<BattleLog>& battle_log)
+{
+	auto& player_name = GameManager::GetGameManager()->GetPlayer()->GetPlayerName();
+	auto& playerStatus = GameManager::GetGameManager()->GetPlayer()->GetPlayerStatusSave();
+
+	//敵の攻撃力を1.15倍上昇させる
+	enemyStatus.SetEnemyAttack(static_cast<int>(enemyStatus.GetEnemyAttack() * power));
+
+	//プレイヤーの攻撃力を5％減少させる(今後調整予定)
+	int player_attack_down_parcentage = static_cast<int>(playerStatus.GetAttack() * koni::Numeric::PERCENT_5);
+
+	//プレイヤーの攻撃力を少し減少させる
+	playerStatus.SetPlayerAttack(playerStatus.GetAttack() - player_attack_down_parcentage);
+
+
+	//バトルログを流す
+	std::string log = enemyStatus.GetEnemyName() + "が" + skill_name + "を使用しました。";
+	battle_log->AddLog(log);
+	log = enemyStatus.GetEnemyName() + "は黄泉の雨を降らせた";
+	battle_log->AddLog(log);
+	log = "自身の攻撃力を上昇し、プレイヤーの攻撃力を少し減少させた";
+	battle_log->AddLog(log);
+
+	//SEを流す
+	SoundManager::GetSoundManager()->Sound_Play("sound/SoundEffect/rainofhell.mp3", DX_PLAYTYPE_BACK);
+
+	//ボリュームを変える
+	SoundManager::GetSoundManager()->ChangeSoundVolume(koni::Numeric::VOLUME_60_PERCENT, "sound/SoundEffect/rainofhell.mp3");
+
 }
