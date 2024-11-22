@@ -28,3 +28,5 @@
 イエティ,26,80,45,28,23,45,45,graphics/Enemy/yeti.png,1.5,1,0.5,16,41,sound/SoundEffect/dageki_2.mp3,0,30,5,獣
 魂の戦士,27,500,25,25,30,150,850,graphics/Enemy/soul warrior.png,1.5,0.5,0.5,38,0,,25,100,0,ゾンビ
 影の番人,28,800,30,30,30,180,1000,graphics/Enemy/shadow_enemy.png,0.5,1,1.5,0,0,,28,0,0,悪魔
+兵長,29,500,28,20,20,100,30,graphics/Enemy/corporal.png,1,1.5,0.5,0,42,,20,0,5,人間
+船長,30,1000,35,40,33,300,1000,graphics/Enemy/pirate.png,0.5,1,1.5,0,43,,30,0,5,ゾンビ

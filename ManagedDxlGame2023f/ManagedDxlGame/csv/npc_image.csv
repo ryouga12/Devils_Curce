@@ -19,3 +19,6 @@ NPCの名前,現在のシーン,画像1枚目,画像2枚目,画像3枚目,画像4枚目
 兵士,3,graphics/Npc/soldier_left.png,graphics/Npc/soldier_right.png,graphics/Npc/soldier_up.png,graphics/Npc/soldier_idle.png
 魔王,5,graphics/Npc/maou_left.png,graphics/Npc/maou_right.png,graphics/Npc/maou_up.png,graphics/Npc/maou_idle.png
 影の番人,4,graphics/Npc/shadow_monster_left.png,graphics/Npc/shadow_monster_right.png,graphics/Npc/shadow_monster_up.png,graphics/Npc/shadow_monster_idle.png
+兵長,3,graphics/Npc/corporal_npc_left.png,graphics/Npc/corporal_npc_right.png,graphics/Npc/corporal_npc_up.png,graphics/Npc/corporal_npc_idle.png
+船長,7,graphics/Npc/pirate_left.png,graphics/Npc/pirate_right.png,graphics/Npc/pirate_up.png,graphics/Npc/pirate_idle.png
+僧侶,0,graphics/Npc/monk_left.png,graphics/Npc/monk_right.png,graphics/Npc/monk_up.png,graphics/Npc/monk_idle.png
