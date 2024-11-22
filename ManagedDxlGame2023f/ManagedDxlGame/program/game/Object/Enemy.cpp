@@ -289,7 +289,7 @@ void MobMonster::EnemyAction(const Shared<BattleLog>& battle_log)
 	GameManager::GetGameManager()->GetPlayer()->GetPlayerStatusSave().SetPlayerCurentHp(GameManager::GetGameManager()->GetPlayer()->GetPlayerStatusSave().GetcurentHp() - damage);
 
 	//バトルログを流す
-	const std::string  log = player_name + "は" + enemy_array[enemy_index].GetEnemyString() + "から" + std::to_string(damage) + "ダメージをくらった";
+	const std::string  log = player_name + "は" + enemy_array[enemy_index].GetEnemyName() + "から" + std::to_string(damage) + "ダメージをくらった";
 	battle_log->AddLog(log);
 
 	// SEを流す
@@ -353,6 +353,7 @@ void BossMonster::InitEnemySkill(const int& enemy_id)
 
 		break;
 
+	//中ボス1体目
 	case static_cast<int>(BossType::GROVEGUARDIAN):
 
 		//それぞれのスキルを格納する
@@ -362,6 +363,7 @@ void BossMonster::InitEnemySkill(const int& enemy_id)
 
 		break;
 
+	//中ボス2体目
 	case static_cast<int>(BossType::SOULWARRIOR):
 
 		//それぞれのスキルを格納する
@@ -371,12 +373,35 @@ void BossMonster::InitEnemySkill(const int& enemy_id)
 
 		break;
 
+	//中ボス3体目
 	case static_cast<int>(BossType::SHADOWENEMY):
 
 		//それぞれのスキルを格納する
 		enemy_skill_.emplace_back(std::make_shared<GrimReaperSickle>());
 		enemy_skill_.emplace_back(std::make_shared<SoulReper>());
 		enemy_skill_.emplace_back(std::make_shared<LightUnderworld>());
+
+		break;
+
+	//サブボス
+	case static_cast<int>(BossType::CORPORAL):
+
+		//それぞれのスキルを格納する
+		enemy_skill_.emplace_back(std::make_shared<FlameSlash>(Skill::SkillUserType::ENEMY));
+		enemy_skill_.emplace_back(std::make_shared<WaterBlade>(Skill::SkillUserType::ENEMY));
+		enemy_skill_.emplace_back(std::make_shared<ThunderBolt>(Skill::SkillUserType::ENEMY));
+
+		break;
+
+
+	//裏ボス
+	case static_cast<int>(BossType::PIRATE):
+
+		//それぞれのスキルを格納する
+		enemy_skill_.emplace_back(std::make_shared<WaterForge>(Skill::SkillUserType::ENEMY));
+		enemy_skill_.emplace_back(std::make_shared<WaterBlade>(Skill::SkillUserType::ENEMY));
+		enemy_skill_.emplace_back(std::make_shared<RainOfHell>());
+		enemy_skill_.emplace_back(std::make_shared<ThunderBolt>(Skill::SkillUserType::ENEMY));
 
 		break;
 
@@ -402,7 +427,7 @@ void BossMonster::EnemyAction(const Shared<BattleLog>& battle_log)
 		enmey_skill_index = rand() % enemy_skill_size;
 
 		//敵のスキルが攻撃系だった場合ダメージ計算を行う
-		if (enemy_skill_[enmey_skill_index]->getSkillType() == AttackType) {
+		if (enemy_skill_[enmey_skill_index]->GetSkillType() == AttackType) {
 
 			//プレイヤーのステータス
 			auto& player_status = GameManager::GetGameManager()->GetPlayer()->GetPlayerStatusSave();
@@ -416,7 +441,7 @@ void BossMonster::EnemyAction(const Shared<BattleLog>& battle_log)
 			}
 		}
 		//バフスキルだった場合、バフ効果を適用させる
-		else if (enemy_skill_[enmey_skill_index]->getSkillType() == BuffType) {
+		else if (enemy_skill_[enmey_skill_index]->GetSkillType() == BuffType) {
 
 			//エネミーにバフ効果を適用させる
 			enemy_skill_[enmey_skill_index]->SkillUse(enemy_array[enemy_index], battle_log);

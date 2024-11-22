@@ -26,7 +26,7 @@ public:
 	public:
 
 		//nameを取得する
-		std::string GetEnemyString() const {
+		std::string GetEnemyName() const {
 			return name;
 		}
 		//IDを取得する
@@ -252,7 +252,7 @@ public:
 	void InitEnemyArray(const int& id);
 
 	//敵の攻撃処理(主に子クラスで定義する)
-	virtual void EnemyAction(const Shared<BattleLog>& battle_log) = 0;
+	virtual void EnemyAction(const Shared<BattleLog>& battle_log) {};
 
 	//敵の死亡処理
 	virtual bool ChackDeadEnemy();
@@ -409,7 +409,11 @@ public:
 		//中ボス2体目
 		SOULWARRIOR = 27,
 		//中ボス3体目
-		SHADOWENEMY = 28
+		SHADOWENEMY = 28,
+		//サブボス
+		CORPORAL = 29,
+		//裏ボス
+		PIRATE = 30
 	};
 
 private:
