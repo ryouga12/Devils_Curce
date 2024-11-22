@@ -6,6 +6,7 @@
 #include"../Manager/SoundManager.h"
 #include"../Skill/Skill.h"
 #include"../../koni_name_space/common/common_value.h"
+#include"../Scene/BaseScene.h"
 
 class ItemBase;
 
@@ -86,8 +87,6 @@ public:
 		ITEMDETAILMENU,
 		//スキル表示メニュー
 		SKILLMENU,
-		//スキル説明ウィンドウ
-		SKILLDATAILMENU
 	};
 
 	//インベントリのメニューをセットする
@@ -109,7 +108,7 @@ public:
 	//arg_3 : カーソルのX座標 , 
 	//arg_4 : ページ数
 	//バトルシーンやマップシーンでインベントリの座標が違う為使い分ける為
-	void ItemMenu(const tnl::Vector2i& itemDrawPos, const tnl::Vector2i& curentPageText, const int& CousourX, const int& itemParPage);
+	void ItemMenu(const tnl::Vector2i& itemDrawPos,const tnl::Vector2i& curentPageText, const int& CousourX, const int& itemParPage);
 
 	//インベントリの情報をを取得する
 	MenuWindow_I GetSelectMenuNum() { return select_menu; }
@@ -136,9 +135,15 @@ public:
 
 
 	//武器配列を取得する
-	std::list<ItemBase>& getEquipArray() {
+	std::list<ItemBase>& GetEquipWeaponArray() {
 		return equipped_weapon;
 	}
+
+	//防具配列を取得する
+	std::list<ItemBase>& GetEquipAromorArray() {
+		return equipped_armor;
+	}
+
 
 	//------------------------------------------------------------------------------------------------------------------------
 	//---メニュー---//
@@ -270,7 +275,7 @@ private:
 	//アイテムウィンドウの座標
 	const tnl::Vector2i ITEM_DETAIL_WINDOW_POS = { 600, 50, };
 	//アイテム説明ウィンドウの幅
-	const int ITEM_DETAIL_WINDOW_WIDTH = 400;
+	const int ITEM_DETAIL_WINDOW_WIDTH = 450;
 	//アイテム説明ウィンドウの高さ
 	const int ITEM_DETAIL_WINDOW_HEIGHT = 250;
 	//アイテムの説明をうつす座標
@@ -323,11 +328,7 @@ private:
 	//スキル説明を表示する為のウィンドウの幅
 	const int SKILL_DETAIL_WINDOW_WIDTH = 350;
 	//スキル説明を表示する為のウィンドウの高さ
-	const int SKILL_DETAIL_WINDOW_HEIGHT = 250;
-	//スキルの説明の文字を表示する座標
-	const tnl::Vector2i SKILL_DETAIL_POS = { 380 , 100 };
-	//スキルの必要なMPを表示する座標
-	const int SKILL_CONSME_POS_Y = 250;
+	const int SKILL_DETAIL_WINDOW_HEIGHT = 215;
 
 	//---操作キーの説明座標---//
 
@@ -383,8 +384,11 @@ private:
 	//カーソルのサイズ
 	const float CURSORSIZE = 0.3f;
 
-	//アイテムやスキルを表示する座標
-	const tnl::Vector2i DRAWPOS = { 110 , 100 };
+	//アイテムを表示する座標
+	const tnl::Vector2i ITEMES_DRAW_POS = { 145 , 100 };
+
+	//スキルを表示する座標
+	const tnl::Vector2i SKILL_DRAW_POS = { 100 , 100 };
 
 	//アイテムのコメント表示座標
 	const tnl::Vector2i ITEMCOMENTPOS = { 630 , 100 };
@@ -408,6 +412,17 @@ private:
 	//スキルの要素番号
 	int skill_selected_index = 0;
 
+	//---文字の関連---//
+
+	//効果抜群
+	const std::string EXCELLENT_EFFECT = "敵に効果抜群だ！";
+	//通常耐性
+	const std::string NORMAL_RESISTANCE_STRING = "敵に安定したダメージを与えられる";
+	//強耐性
+	const std::string STRONG_RESISTANCE_STRING = "あまり効果的ではない";
+	//エラーメッセージ
+	const std::string ERROR_MESSAGE = "スキルの属性値を取得できませんでした";
+
 
 public:
 
@@ -420,13 +435,19 @@ public:
 
 	//特技を使用した時の描画
 	//arg_1 : スキルのインデックス
-	void SkillDetailDraw(const int& skill_index);
+	//arg_2 : スキル説明を表示するウィンドウの座標
+	//arg_3 : シーンの状態(バトルシーンのみの機能がある為)
+	//arg_4 : 敵のID(バトルシーンの場合、敵の情報が必要な為)
+	void SkillDetailDraw(const int& skill_index, const tnl::Vector2i& SKILL_WINDOW_POS, const BaseScene::SceneState& curent_scene, const int enemy_id = 0);
 
 	//特技のカーソル
 	void SkillCousorMove();
 
 	//スキルのカーソルの移動処理の際のインデックスの操作
 	void SkillCurourIndex(const int& skil_list_perpage);
+
+	//スキルの属性値によるサポート説明
+	const std::string& SkillSupportExplanation(const Skill::SkillAttribute& curent_attribute, const int& enemy_id);
 
 //------------------------------------------------------------------------------------------------------------------------
 //ポインタ
@@ -436,10 +457,8 @@ private:
 	Shared<Item>item = nullptr;
 	//最初のウィンドウ
 	Shared<MenuWindow>first_menu = nullptr;
-	//攻撃選択ウィンドウ
-	Shared<MenuWindow>select_action_menu = nullptr;
-	//説明ウィンドウ
-	Shared<MenuWindow>select_detail_window = nullptr;
+	//アクションを行うウィンドウ(アイテムの使用や武具の装備など)
+	Shared<MenuWindow>select_action_window = nullptr;
 	//バトルログ
 	Shared<BattleLog>battleLog = nullptr;
 };
