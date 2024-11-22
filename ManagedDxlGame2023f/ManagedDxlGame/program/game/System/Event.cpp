@@ -16,6 +16,9 @@ void Event::InitEventFunction(const std::list<Shared<Npc>>& npc_list)
 	//npcによって処理を初期化する
 	for (auto& npc_list_ : npc_list) {
 
+		//ポインタが存在しない場合配列を抜ける
+		if (!npc_list_) { break; }
+
 		//名前を取得してそれぞれ実行処理を初期化する
 		if (npc_list_->GetNpcName() == "村長") {
 			coment_function_map[npc_list_->GetNpcName()] = std::bind(&Event::ComentProcess, this, std::placeholders::_1, std::placeholders::_2);
@@ -64,6 +67,15 @@ void Event::InitEventFunction(const std::list<Shared<Npc>>& npc_list)
 		}
 		else if (npc_list_->GetNpcName() == "影の番人") {
 			function_map[npc_list_->GetNpcName()] = std::bind(&Event::EventEnemyProcces, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5);
+		}
+		else if (npc_list_->GetNpcName() == "兵長") {
+			function_map[npc_list_->GetNpcName()] = std::bind(&Event::EventEnemyProcces, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5);
+		}
+		else if (npc_list_->GetNpcName() == "船長") {
+			function_map[npc_list_->GetNpcName()] = std::bind(&Event::EventEnemyProcces, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5);
+		}
+		else if (npc_list_->GetNpcName() == "僧侶") {
+			coment_function_map[npc_list_->GetNpcName()] = std::bind(&Event::ComentProcess, this, std::placeholders::_1, std::placeholders::_2);
 		}
 	}
 }

@@ -46,6 +46,7 @@ namespace koni {
 
 
         // ÉpÅ[ÉZÉìÉeÅ[ÉWíËêî
+        static constexpr float PERCENT_5 = 0.05f;               // 5%
         static constexpr float PERCENT_10 = 0.1f;               // 10%
         static constexpr float PERCENT_20 = 0.2f;               // 20%
         static constexpr float PERCENT_30 = 0.3f;               // 30%
@@ -65,6 +66,7 @@ namespace koni {
         static constexpr float SCALE_ONE_F = 1.0f;              // ìôî{Åi1.0î{Åj
         static constexpr float SCALE_ONE_THIRTY_F = 1.3f;       // 1.3î{ÇÃÉXÉPÅ[Éã
         static constexpr float SCALE_ONE_AND_HALF = 1.5f;       // 1.5î{ÇÃÉXÉPÅ[Éã
+        static constexpr float SCALE_ONE_EIGHT_F = 1.8f;        // 1.8î{ÇÃÉXÉPÅ[Éã
         static constexpr float SCALE_DOUBLE_F = 2.0f;           // 2î{ÇÃÉXÉPÅ[Éã
         static constexpr float SCALE_DOUBLE_AND_HALF = 2.5f;    // 2.5î{ÇÃÉXÉPÅ[Éã
         static constexpr float SCALE_TRIPLE_F = 3.0f;           // 3î{ÇÃÉXÉPÅ[Éã
@@ -139,8 +141,9 @@ namespace koni {
         static constexpr int32_t SECONDS_10_I = 10;                // 10ïb
 
         //flaotå^
-        static constexpr float SECONDS_0_2_F = 0.2f;                 // 0.2ïb(float)
-        static constexpr float SECONDS_0_5_F = 0.5f;                 // 0.5ïb(float)
+        static constexpr float SECONDS_0_2_F = 0.2f;                // 0.2ïb(float)
+        static constexpr float SECONDS_0_5_F = 0.5f;                // 0.5ïb(float)
+        static constexpr float SECONDS_0_8_F = 0.8f;                // 0.8ïb(float)
         static constexpr float SECONDS_1_F = 1.0f;                  // 1ïb(float)
         static constexpr float SECONDS_1_AND_HALF = 1.5f;           // 1.5ïb(float)
         static constexpr float SECONDS_2_F = 2.0f;                  // 2ïb(float)
